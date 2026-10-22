@@ -1,306 +1,97 @@
-WEBGL FUNDAMENTALS — EPISODE GUIDE
-==================================
+REAL-TIME WEBGL — EPISODE GUIDE
+===============================
 
-This guide describes the lessons currently implemented in
-../chapters/chapter00 through ../chapters/chapter27. Chapter 0 is the series
-introduction; Chapters 1–27 are the instructional chapters currently
-implemented.
-
-
-PHASE 1 — WEBGL FOUNDATIONS
-"From the first draw to reusable scene objects"
-===============================================
-
-CHAPTER 0 — SERIES INTRODUCTION
--------------------------------
-0 - Introduces the series and its goals.
-
-CHAPTER 1 — FIRST WEBGL DRAW
-----------------------------
-1a - Create a WebGL 2 context, compile and link shaders, configure vertex data,
-     create a VAO, set the viewport, clear the canvas, and draw a triangle.
-
-CHAPTER 2 — THE LESSON TEMPLATE
--------------------------------
-2a - Introduce the series' object-centered code organization and the
-     data-plus-behavior principle.
-2b - Build a basic triangle using the cleaner lesson structure.
-
-CHAPTER 3 — GEOMETRY AND INDEXING
----------------------------------
-3a - Draw multiple triangles from one sequential vertex list.
-3b - Build a rectangle from triangles with drawArrays().
-3c - Reuse rectangle vertices with an index buffer and drawElements().
-3d - Build indexed triangle geometry for a letter F.
-
-CHAPTER 4 — POINTS, LINES, AND OUTLINES
----------------------------------------
-4a - Draw vertices as points with POINTS.
-4b - Draw separate line segments with LINES.
-4c - Connect vertices with LINE_STRIP.
-4d - Close a connected sequence with LINE_LOOP.
-4e - Draw a hexagon outline with LINE_LOOP.
-
-CHAPTER 5 — TRIANGLE TOPOLOGIES
--------------------------------
-5a - Draw independent triangles with TRIANGLES.
-5b - Build connected triangles with TRIANGLE_STRIP.
-5c - Fill a polygon using TRIANGLE_FAN.
-
-CHAPTER 6 — DYNAMIC GEOMETRY
-----------------------------
-6a - Update triangle vertex data after creating its buffer.
-6b - Edit rectangle vertices interactively.
-6c - Generate and update a polygon outline.
-6d - Generate and update a filled polygon.
-
-CHAPTER 7 — VERTEX DATA AND COLOR
----------------------------------
-7a - Use vertex values as color data and observe interpolation.
-7b - Store position and color in separate buffers.
-7c - Interleave position and color in one buffer.
-7d - Observe interpolated colors across a two-triangle rectangle.
-7e - Give the rectangle's triangles different vertex colors.
-
-CHAPTER 8 — UNIFORMS
---------------------
-8a - Pass a float uniform to control brightness.
-8b - Pass color channels as separate float uniforms.
-8c - Pass color as a vector uniform.
-8d - Combine vertex color with a uniform color.
-8e - Demonstrate uniform types and their upload methods.
-
-CHAPTER 9 — MULTIPLE OBJECTS
-----------------------------
-9a - Draw a triangle and rectangle as separate objects with one shader.
-9b - Organize drawing behavior on the objects themselves.
-9c - Draw objects using different primitive topologies.
-9d - Combine different objects, shaders, and color sources.
-9e - Draw a grid and triangle with separate buffers and draw calls.
-
-
-PHASE 2 — 2D COORDINATES AND TRANSFORMATIONS
-"From clip space to a camera-based 2D world"
-============================================
-
-CHAPTER 10 — 2D SPACE AND CAMERA
---------------------------------
-10a - Define geometry in pixel coordinates and map it to clip space.
-10b - Introduce camera bounds and clip-space bounds.
-10c - Invert the Y axis for pixel-space coordinates.
-10d - Adjust camera and clip bounds to control the visible region.
-10e - Map camera bounds to clip space with a camera object.
-
-CHAPTER 11 — PROJECTION MATRIX
-------------------------------
-11a - Build a projection matrix in the shader.
-11b - Build the projection matrix in JavaScript and pass it as a mat3 uniform.
-11c - Render multiple pixel-space rectangles using the projection.
-11d - Build a grid and axes using the projection matrix.
-11e - Combine the grid, axes, and rectangle in the projected 2D world.
-
-CHAPTER 12 — VIEW AND CAMERA CONTROL
-------------------------------------
-12a - Establish a 2D world with a grid and multiple objects.
-12b - Represent camera state as data.
-12c - Add camera zoom.
-12d - Apply a view matrix for camera movement.
-12e - Control the camera with keyboard input.
-12f - Support continuous movement by tracking held-key state.
-
-CHAPTER 13 — TRANSLATION
-------------------------
-13a - Translate an object by updating its geometry.
-13b - Continue object translation with dynamic geometry.
-13c - Pass translation values to the shader as uniforms.
-13d - Represent the translation with a matrix.
-
-CHAPTER 14 — ROTATION
----------------------
-14a - Rotate an object with sine and cosine.
-14b - Represent rotation with a matrix.
-14c - Explore transformation order.
-14d - Rotate around a selected pivot.
-
-CHAPTER 15 — SCALE
-------------------
-15a - Apply scale directly to an object's geometry.
-15b - Represent uniform and non-uniform scaling with a scale matrix.
-
-CHAPTER 16 — MODEL MATRIX
--------------------------
-16a - Combine translation, rotation, and scale in a model matrix.
-16b - Pass a model matrix to the shader as a uniform.
-16c - Apply independent model matrices to objects.
-16d - Compose per-object model matrices with view and projection transforms.
-
-
-PHASE 3 — TEXTURES AND ALPHA
-"Give the 2D world image detail and transparency"
-================================================
-
-CHAPTER 17 — TEXTURES
----------------------
-17a - Create and apply a first texture to a square.
-17b - Reuse one texture on multiple objects.
-17c - Assign different textures to different objects.
-17d - Create and use procedural textures.
-
-CHAPTER 18 — TEXTURE COORDINATES
---------------------------------
-18a - Introduce UV coordinates and apply a texture to a square.
-18b - Map a texture onto letter-F geometry with custom UVs.
-18c - Use UV coordinates outside 0–1 and explore texture wrapping.
-18d - Apply UV-mapped textures to multiple objects.
-18e - Connect UV and wrapping controls to the GUI.
-
-CHAPTER 19 — TEXTURE FILTERING AND MIPMAPS
-------------------------------------------
-19a - Observe LINEAR magnification filtering.
-19b - Compare NEAREST magnification filtering.
-19c - Explore LINEAR minification filtering.
-19d - Introduce mipmaps for differently sized textured objects.
-19e - Continue the mipmap comparison across multiple object sizes.
-
-CHAPTER 20 — ALPHA AND BLENDING
--------------------------------
-20a - Establish opaque output when alpha is not supplied.
-20b - Pass per-object alpha while blending is disabled.
-20c - Enable blending so alpha affects the rendered result.
-20d - Explain source-over alpha compositing and relate blending to render order.
-20e - Apply an opaque Sckorpio texture.
-20f - Add a transparent texture before enabling blending.
-20g - Enable blending for transparent textures.
-20h - Finish with transparent Sckorpio mascot and title textures.
-
+This guide covers Chapters 21–27. For the introductory and foundation lessons
+through Chapter 20, see:
+https://github.com/SckorpioGraphics/sckorpio-graphics-webgl
 
 PHASE 4 — ANIMATION AND SPRITE SHEETS
-"Bring the 2D world to life with time and frame data"
-=======================================================
+=====================================
 
 CHAPTER 21 — RENDER LOOP AND TIME
-----------------------------------
-21a - Understand requestAnimationFrame() and how often the render loop runs.
-21b - Measure elapsed time and inspect the time delta.
+---------------------------------
+21a - Understand requestAnimationFrame() and render-loop frequency.
+21b - Measure elapsed time and frame delta.
 21c - Build a clock object to track frame timing.
 21d - Refine the clock object and centralize timing logic.
 21e - Add FPS reporting to the clock object.
-21f - Create a reusable frame-update clock for animation work.
-21g - Continue the clock-object refinement for animations.
+21f - Create a reusable frame-update clock.
+21g - Refine the clock object for animation.
 21h - Connect the clock object with a rectangle animation.
 
 CHAPTER 22 — TRANSFORM ANIMATION
----------------------------------
+--------------------------------
 22a - Animate translation over time.
 22b - Animate rotation with a time-driven angle.
 22c - Animate scale with a time-driven value.
-22d - Combine translation, rotation, and scale in a single animation.
-22e - Keep a base transform while animating the object.
-22f - Blend multiple transform motions into a richer animation sequence.
+22d - Combine translation, rotation, and scale.
+22e - Keep a base transform while animating.
+22f - Combine multiple transform motions.
 
 CHAPTER 23 — COLOR AND VERTEX ANIMATION
-----------------------------------------
+---------------------------------------
 23a - Animate color values over time.
-23b - Animate both color and alpha.
-23c - Continue the color/alpha animation experiment.
-23d - Animate vertex colors in the shader data.
-23e - Build a more advanced per-vertex color animation.
-23f - Mix color, alpha, and transform animation into one scene.
+23b - Animate color and alpha.
+23c - Continue the color and alpha animation experiment.
+23d - Animate vertex colors in shader data.
+23e - Build a per-vertex color animation.
+23f - Combine color, alpha, and transform animation.
 
 CHAPTER 24 — TEXTURE SCROLLING AND MAPS
-----------------------------------------
-24a - Create a long rectangular texture and map it to an object.
-24b - Offset the texture UVs to study scrolling behavior.
-24c - Animate a scrolling texture across a long rectangle.
-24d - Apply the same idea to an Sckorpio banner texture.
-24e - Animate a wrapped texture across a square object.
-24f - Expand the mapping to a scaled and zoomed rectangular texture.
+---------------------------------------
+24a - Create a long texture and map it to an object.
+24b - Offset texture UVs to study scrolling.
+24c - Animate a scrolling texture.
+24d - Apply scrolling to an Sckorpio banner.
+24e - Animate a wrapped texture on a square.
+24f - Map a scaled and zoomed rectangular texture.
 
 CHAPTER 25 — SPRITE SHEET ANIMATION
-------------------------------------
-25a - Start with a basic sprite sheet and render it on a rectangle.
-25b - Advance the sprite sheet animation through texture picking usimg GUI.
-25c - Continue sprite-sheet playback with frame selection by clock animation
-25d - Create a running horse sprit sheet animation , White BG
-25e - Create a running horse sprit sheet animation , Transparent
-25f - Create a running sckoprio mascot sprit sheet animation , White BG
-25g - Create a running sckoprio mascot sprit sheet animation , Transparent
-
+-----------------------------------
+25a - Render a basic sprite sheet on a rectangle.
+25b - Advance sprite-sheet frames with GUI controls.
+25c - Select playback frames using clock animation.
+25d - Animate a running horse sprite sheet with a white background.
+25e - Animate a running horse sprite sheet with transparency.
+25f - Animate the Sckorpio mascot sprite sheet with a white background.
+25g - Animate the Sckorpio mascot sprite sheet with transparency.
 
 PHASE 5 — MOVEMENT AND BASIC PHYSICS
-"Give objects velocity, gravity, projectile motion, collisions.."
-=======================================================
+====================================
 
 CHAPTER 26 — MOVEMENT AND BASIC PHYSICS
 ---------------------------------------
 26a - Animate an object's translation.
 26b - Organize motion state in a PhysicsInfo object.
-26c - Apply X and Y velocity to move in two dimensions.
-26d - Add acceleration along the X axis.
+26c - Apply X and Y velocity.
+26d - Add X-axis acceleration.
 26e - Add gravity as vertical acceleration.
 26f - Simulate projectile motion.
-26g - Represent launch direction with a unit vector and speed, and apply
-      gravity to the motion.
-26h - Build a basic bow-and-arrow projectile simulation.
-26i - Apply the bow-and-arrow simulation to the textured Sckorpio mascot.
+26g - Represent launch direction and speed, then apply gravity.
+26h - Build a bow-and-arrow projectile simulation.
+26i - Apply the simulation to the textured Sckorpio mascot.
 
 PHASE 6 — COLLISION DETECTION AND RESPONSE
-"Detect when moving objects meet and respond"
-=============================================
+==========================================
 
 CHAPTER 27 — COLLISION DETECTION AND RESPONSE
 ---------------------------------------------
 27a - Observe moving objects that do not collide.
 27b - Introduce object bounding boxes.
-27c - Calculate an object's bounding box from its geometry.
-27d - Find the bounding box of complex geometry such as a letter F.
-27e - Calculate an axis-aligned bounding box using the model matrix.
+27c - Calculate bounds from an object's geometry.
+27d - Find bounds for complex geometry such as a letter F.
+27e - Calculate an axis-aligned bounding box using a model matrix.
 27f - Calculate bounds for multiple objects.
 27g - Detect collisions using axis-aligned bounding boxes.
 27h - Stop objects when a collision is detected.
-27i - Exchange object velocities after a collision and observe sticking.
-27j - Use a single collision check while exchanging velocities between moving
-      objects.
+27i - Exchange object velocities after a collision.
+27j - Use a single collision check while exchanging velocities.
 
+RUNNING
+-------
+Serve the repository root over HTTP and open http://localhost:8000:
 
-BEYOND THE IMPLEMENTED CHAPTERS — ROADMAP
-=========================================
+    python3 -m http.server 8000
 
-The following chapters are planned and are not part of the currently
-implemented 0–27 lessons.
-
-Chapter 28 — Object Interactions
-What happens when they meet
-- 28a: Reacting to a collision — change an object's color
-- 28b: Change textures or switch sprite animations
-- 28c: Show, hide, or destroy an object after an interaction
-- 28d: Collision events — enter, stay, and exit
-- 28e: Trigger zones versus solid collisions
-- 28f: Object-specific interaction behavior and callbacks
-Outcome: collisions can trigger meaningful changes without putting all the
-logic inside the collision detector.
-
-Chapter 29 — Gameplay Mechanics
-How a world becomes playable
-- 29a: Player control and movement intent
-- 29b: Jumping, attacking, and action states
-- 29c: Attack hitboxes and receiving damage
-- 29d: Health, damage, and object destruction
-- 29e: Collectibles and interactive objects
-- 29f: Basic enemy behavior and state transitions
-- 29g: Coordinating gameplay state with sprite animations
-Outcome: individual mechanics work together to create simple gameplay
-systems.
-
-Chapter 30 — Building a Complete 2D World
-Bring everything together
-- 30a: Organize a world containing multiple objects
-- 30b: Build a level with ground, platforms, and obstacles
-- 30c: Integrate the player, camera, physics, and collisions
-- 30d: Add interactive objects and basic enemies
-- 30e: Connect animation, interactions, and gameplay mechanics
-- 30f: Assemble the complete scene and test the world end to end
-
-SPECIAL PROJECT — BUILD SCKORPIO
---------------------------------
-Apply the series concepts in a small 2D game featuring the Sckorpio mascot.
+The default lesson is Chapter 27j. Change its module path in index.html to
+select another lesson.

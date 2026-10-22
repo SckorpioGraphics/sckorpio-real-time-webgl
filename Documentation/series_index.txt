@@ -1,54 +1,22 @@
-SCKORPIO GRAPHICS — WEBGL FUNDAMENTALS
-======================================
+SCKORPIO GRAPHICS — REAL-TIME WEBGL
+===================================
 
-COMPLETED FOUNDATION
---------------------
-Chapter 0: Series introduction
-
-PHASE 1 — WEBGL FOUNDATIONS
-Chapters 1–9: First draw, lesson structure, geometry and indexing, primitive
-topologies, dynamic geometry, vertex color, uniforms, and multiple objects.
-
-PHASE 2 — 2D COORDINATES AND TRANSFORMATIONS
-Chapters 10–16: Pixel and world coordinates, projection and view matrices,
-camera controls, translation, rotation, scale, and model-matrix composition.
-
-PHASE 3 — TEXTURES AND ALPHA
-Chapters 17–20: Texture creation and reuse, UV mapping and wrapping, filtering
-and mipmaps, alpha, blending, and transparent textures.
+This repository continues the WebGL Fundamentals curriculum with Chapters
+21–27. The foundation chapters 0–20 are maintained separately at:
+https://github.com/SckorpioGraphics/sckorpio-graphics-webgl
 
 PHASE 4 — ANIMATION AND SPRITE SHEETS
-Chapters 21–25: The render loop, delta time, clock objects, transform animation,
-animated color and alpha, texture scrolling, and sprite-sheet frame playback.
+Chapters 21–25: The render loop, delta time, clock objects, transform
+animation, animated color and alpha, texture scrolling, and sprite-sheet
+playback.
 
 PHASE 5 — MOVEMENT AND BASIC PHYSICS
 Chapter 26: Two-dimensional velocity, acceleration, gravity, projectile
 motion, and a bow-and-arrow simulation.
 
 PHASE 6 — COLLISION DETECTION AND RESPONSE
-Chapter 27: Object bounds, AABB collision detection, and basic collision
-responses including stopping and exchanging velocities.
-
-Chapter 0 is the introduction; Chapters 1–27 are currently implemented. See
-series_episodes.txt for the lesson-by-lesson guide and the roadmap beyond
-Chapter 27.
-
-
-LESSON CODE ORGANIZATION
-------------------------
-The early lessons introduce WebGL operations directly, then progressively
-organize related state and behavior into objects. The shared lesson pattern
-keeps:
-
-- shader state and program/location setup together
-- camera dimensions and transformation state together
-- geometry, GPU resources, and drawing behavior with their renderable objects
-- application setup and scene drawing in an understandable sequence
-
-The core principle is OBJECT = STATE + BEHAVIOR. The Chapter 10 lesson-template
-notes in ../chapters/chapter10/chapter10a.js explain the convention and its
-purpose.
-
+Chapter 27: Object bounds, AABB collision detection, and collision responses
+including stopping and exchanging velocities.
 
 RUNNING A LESSON
 ----------------
@@ -56,7 +24,6 @@ Serve the repository root over HTTP:
 
     python3 -m http.server 8000
 
-Open http://localhost:8000. index.html currently loads
-chapters/chapter25/chapter25g.js. To run another lesson, change the module path
-in index.html to the desired chapter file. Some lessons also use the CDN-loaded
-Lil GUI or gl-matrix libraries declared in index.html.
+Open http://localhost:8000. index.html loads Chapter 27j by default; change
+its module path to run another lesson. Lil GUI and gl-matrix are loaded from
+CDNs declared in index.html.
