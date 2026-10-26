@@ -1,91 +1,83 @@
 REAL-TIME WEBGL — EPISODE GUIDE
 ===============================
 
-This guide covers Chapters 21–27. For the introductory and foundation lessons
+This guide covers Chapters 1–7. For the introductory and foundation lessons
 through Chapter 20, see:
 https://github.com/SckorpioGraphics/sckorpio-graphics-webgl
 
-PHASE 4 — ANIMATION AND SPRITE SHEETS
-=====================================
 
-CHAPTER 21 — RENDER LOOP AND TIME
+CHAPTER 01 — RENDER LOOP AND TIME
 ---------------------------------
-21a - Understand requestAnimationFrame() and render-loop frequency.
-21b - Measure elapsed time and frame delta.
-21c - Build a clock object to track frame timing.
-21d - Refine the clock object and centralize timing logic.
-21e - Add FPS reporting to the clock object.
-21f - Create a reusable frame-update clock.
-21g - Refine the clock object for animation.
-21h - Connect the clock object with a rectangle animation.
+1a - Understand requestAnimationFrame() and render-loop frequency.
+1b - Measure elapsed time and frame delta.
+1c - Build a clock object to track frame timing.
+1d - Refine the clock object and centralize timing logic.
+1e - Add FPS reporting to the clock object.
+1f - Create a reusable frame-update clock.
+1g - Refine the clock object for animation.
+1h - Connect the clock object with a rectangle animation.
 
-CHAPTER 22 — TRANSFORM ANIMATION
+CHAPTER 02 — TRANSFORM ANIMATION
 --------------------------------
-22a - Animate translation over time.
-22b - Animate rotation with a time-driven angle.
-22c - Animate scale with a time-driven value.
-22d - Combine translation, rotation, and scale.
-22e - Keep a base transform while animating.
-22f - Combine multiple transform motions.
+2a - Animate translation over time.
+2b - Animate rotation with a time-driven angle.
+2c - Animate scale with a time-driven value.
+2d - Combine translation, rotation, and scale.
+2e - Keep a base transform while animating.
+2f - Combine multiple transform motions.
 
-CHAPTER 23 — COLOR AND VERTEX ANIMATION
+CHAPTER 03 — COLOR AND VERTEX ANIMATION
 ---------------------------------------
-23a - Animate color values over time.
-23b - Animate color and alpha.
-23c - Continue the color and alpha animation experiment.
-23d - Animate vertex colors in shader data.
-23e - Build a per-vertex color animation.
-23f - Combine color, alpha, and transform animation.
+3a - Animate color values over time.
+3b - Animate color and alpha.
+3c - Continue the color and alpha animation experiment.
+3d - Animate vertex colors in shader data.
+3e - Build a per-vertex color animation.
+3f - Combine color, alpha, and transform animation.
 
-CHAPTER 24 — TEXTURE SCROLLING AND MAPS
+CHAPTER 04 — TEXTURE SCROLLING AND MAPS
 ---------------------------------------
-24a - Create a long texture and map it to an object.
-24b - Offset texture UVs to study scrolling.
-24c - Animate a scrolling texture.
-24d - Apply scrolling to an Sckorpio banner.
-24e - Animate a wrapped texture on a square.
-24f - Map a scaled and zoomed rectangular texture.
+4a - Create a long texture and map it to an object.
+4b - Offset texture UVs to study scrolling.
+4c - Animate a scrolling texture.
+4d - Apply scrolling to an Sckorpio banner.
+4e - Animate a wrapped texture on a square.
+4f - Map a scaled and zoomed rectangular texture.
 
-CHAPTER 25 — SPRITE SHEET ANIMATION
+CHAPTER 05 — SPRITE SHEET ANIMATION
 -----------------------------------
-25a - Render a basic sprite sheet on a rectangle.
-25b - Advance sprite-sheet frames with GUI controls.
-25c - Select playback frames using clock animation.
-25d - Animate a running horse sprite sheet with a white background.
-25e - Animate a running horse sprite sheet with transparency.
-25f - Animate the Sckorpio mascot sprite sheet with a white background.
-25g - Animate the Sckorpio mascot sprite sheet with transparency.
+5a - Render a basic sprite sheet on a rectangle.
+5b - Advance sprite-sheet frames with GUI controls.
+5c - Select playback frames using clock animation.
+5d - Animate a running horse sprite sheet with a white background.
+5e - Animate a running horse sprite sheet with transparency.
+5f - Animate the Sckorpio mascot sprite sheet with a white background.
+5g - Animate the Sckorpio mascot sprite sheet with transparency.
 
-PHASE 5 — MOVEMENT AND BASIC PHYSICS
-====================================
-
-CHAPTER 26 — MOVEMENT AND BASIC PHYSICS
+CHAPTER 06 — MOVEMENT AND BASIC PHYSICS
 ---------------------------------------
-26a - Animate an object's translation.
-26b - Organize motion state in a PhysicsInfo object.
-26c - Apply X and Y velocity.
-26d - Add X-axis acceleration.
-26e - Add gravity as vertical acceleration.
-26f - Simulate projectile motion.
-26g - Represent launch direction and speed, then apply gravity.
-26h - Build a bow-and-arrow projectile simulation.
-26i - Apply the simulation to the textured Sckorpio mascot.
+6a - Animate an object's translation.
+6b - Organize motion state in a PhysicsInfo object.
+6c - Apply X and Y velocity.
+6d - Add X-axis acceleration.
+6e - Add gravity as vertical acceleration.
+6f - Simulate projectile motion.
+6g - Represent launch direction and speed, then apply gravity.
+6h - Build a bow-and-arrow projectile simulation.
+6i - Apply the simulation to the textured Sckorpio mascot.
 
-PHASE 6 — COLLISION DETECTION AND RESPONSE
-==========================================
-
-CHAPTER 27 — COLLISION DETECTION AND RESPONSE
+CHAPTER 07 — COLLISION DETECTION AND RESPONSE
 ---------------------------------------------
-27a - Observe moving objects that do not collide.
-27b - Introduce object bounding boxes.
-27c - Calculate bounds from an object's geometry.
-27d - Find bounds for complex geometry such as a letter F.
-27e - Calculate an axis-aligned bounding box using a model matrix.
-27f - Calculate bounds for multiple objects.
-27g - Detect collisions using axis-aligned bounding boxes.
-27h - Stop objects when a collision is detected.
-27i - Exchange object velocities after a collision.
-27j - Use a single collision check while exchanging velocities.
+7a - Observe moving objects that do not collide.
+7b - Introduce object bounding boxes.
+7c - Calculate bounds from an object's geometry.
+7d - Find bounds for complex geometry such as a letter F.
+7e - Calculate an axis-aligned bounding box using a model matrix.
+7f - Calculate bounds for multiple objects.
+7g - Detect collisions using axis-aligned bounding boxes.
+7h - Stop objects when a collision is detected.
+7i - Exchange object velocities after a collision.
+7j - Use a single collision check while exchanging velocities.
 
 RUNNING
 -------
@@ -93,5 +85,5 @@ Serve the repository root over HTTP and open http://localhost:8000:
 
     python3 -m http.server 8000
 
-The default lesson is Chapter 27j. Change its module path in index.html to
+The default lesson is Chapter 6i. Change its module path in index.html to
 select another lesson.

@@ -1,21 +1,20 @@
 SCKORPIO GRAPHICS — REAL-TIME WEBGL
 ===================================
 
-This repository continues the WebGL Fundamentals curriculum with Chapters
-21–27. The foundation chapters 0–20 are maintained separately at:
+This repository continues the WebGL Fundamentals curriculum with Chapters 1–7. The foundation chapters 0–20 are maintained separately at:
 https://github.com/SckorpioGraphics/sckorpio-graphics-webgl
 
-PHASE 4 — ANIMATION AND SPRITE SHEETS
-Chapters 21–25: The render loop, delta time, clock objects, transform
+PHASE 1 — ANIMATION AND SPRITE SHEETS
+Chapters 1–5: The render loop, delta time, clock objects, transform
 animation, animated color and alpha, texture scrolling, and sprite-sheet
 playback.
 
-PHASE 5 — MOVEMENT AND BASIC PHYSICS
-Chapter 26: Two-dimensional velocity, acceleration, gravity, projectile
+PHASE 2 — MOVEMENT AND BASIC PHYSICS
+Chapter 6: Two-dimensional velocity, acceleration, gravity, projectile
 motion, and a bow-and-arrow simulation.
 
-PHASE 6 — COLLISION DETECTION AND RESPONSE
-Chapter 27: Object bounds, AABB collision detection, and collision responses
+PHASE 3 — COLLISION DETECTION AND RESPONSE
+Chapter 7: Object bounds, AABB collision detection, and collision responses
 including stopping and exchanging velocities.
 
 RUNNING A LESSON
@@ -24,6 +23,6 @@ Serve the repository root over HTTP:
 
     python3 -m http.server 8000
 
-Open http://localhost:8000. index.html loads Chapter 27j by default; change
+Open http://localhost:8000. index.html loads Chapter 6i by default; change
 its module path to run another lesson. Lil GUI and gl-matrix are loaded from
 CDNs declared in index.html.
