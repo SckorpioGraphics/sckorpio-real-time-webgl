@@ -159,6 +159,71 @@ function createProgram(gl, vertexShader, fragmentShader) {
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
 }
+
+// =============================================================
+// CAMERA
+// =============================================================
+const camera = {
+    // Camera Data
+    width: 0,
+    height: 0,
+    positionX: -300,
+    positionY: -200,
+    zoom: 1.0,
+    panSpeed: 20,
+    zoomSpeed: 0.1,
+
+    // Control state
+    state: {
+        panUp: false,
+        panDown: false,
+        panLeft: false,
+        panRight: false,
+        zoomIn: false,
+        zoomOut: false
+    },
+
+    // View Matrix
+    viewMatrix: mat3.create(),
+    // Projection matrix
+    projectionMatrix: mat3.create(),
+
+    // FUNCTIONs
+    update(gl) {
+        // Match the camera's viewing region
+        this.width = gl.canvas.width;
+        this.height = gl.canvas.height;
+        // Update the pos and zooms
+        if(this.state.panUp) this.positionY += this.panSpeed;
+        if(this.state.panDown) this.positionY -= this.panSpeed;
+        if(this.state.panLeft) this.positionX -= this.panSpeed;
+        if(this.state.panRight) this.positionX += this.panSpeed;
+        if(this.state.zoomIn) this.zoom += this.zoomSpeed;
+        if(this.state.zoomOut) this.zoom = Math.max(0.1, this.zoom - this.zoomSpeed);
+    },
+    updateViewMatrix(gl) {
+        // Update Camera values first
+        this.update(gl);
+        // Create View matrix
+        const matrix = mat3.create();
+        mat3.fromTranslation(matrix, [-camera.positionX, -camera.positionY]);
+        mat3.scale(matrix, matrix, [camera.zoom, camera.zoom]);
+        camera.viewMatrix = matrix;
+    },
+    updateProjectionMatrix(gl) {
+        // Camera bounds
+        this.width = gl.canvas.width;
+        this.height = gl.canvas.height;
+
+        // Create projection matrix
+        this.projectionMatrix = mat3.fromValues(
+            2 / this.width,  0,                  0,
+            0,               2 / this.height,    0,
+            -1,              -1,                 1,
+        );
+    }
+};
+
 // =============================================================
 // TEXTURE RESOURCE
 // =============================================================
@@ -229,70 +294,6 @@ function createTexture(gl, texture) {
 
     texture.image.src = texture.imagePath;
 }
-
-// =============================================================
-// CAMERA
-// =============================================================
-const camera = {
-    // Camera Data
-    width: 0,
-    height: 0,
-    positionX: -300,
-    positionY: -200,
-    zoom: 1.0,
-    panSpeed: 20,
-    zoomSpeed: 0.1,
-
-    // Control state
-    state: {
-        panUp: false,
-        panDown: false,
-        panLeft: false,
-        panRight: false,
-        zoomIn: false,
-        zoomOut: false
-    },
-
-    // View Matrix
-    viewMatrix: mat3.create(),
-    // Projection matrix
-    projectionMatrix: mat3.create(),
-
-    // FUNCTIONs
-    update(gl) {
-        // Match the camera's viewing region
-        this.width = gl.canvas.width;
-        this.height = gl.canvas.height;
-        // Update the pos and zooms
-        if(this.state.panUp) this.positionY += this.panSpeed;
-        if(this.state.panDown) this.positionY -= this.panSpeed;
-        if(this.state.panLeft) this.positionX -= this.panSpeed;
-        if(this.state.panRight) this.positionX += this.panSpeed;
-        if(this.state.zoomIn) this.zoom += this.zoomSpeed;
-        if(this.state.zoomOut) this.zoom = Math.max(0.1, this.zoom - this.zoomSpeed);
-    },
-    updateViewMatrix(gl) {
-        // Update Camera values first
-        this.update(gl);
-        // Create View matrix
-        const matrix = mat3.create();
-        mat3.fromTranslation(matrix, [-camera.positionX, -camera.positionY]);
-        mat3.scale(matrix, matrix, [camera.zoom, camera.zoom]);
-        camera.viewMatrix = matrix;
-    },
-    updateProjectionMatrix(gl) {
-        // Camera bounds
-        this.width = gl.canvas.width;
-        this.height = gl.canvas.height;
-
-        // Create projection matrix
-        this.projectionMatrix = mat3.fromValues(
-            2 / this.width,  0,                  0,
-            0,               2 / this.height,    0,
-            -1,              -1,                 1,
-        );
-    }
-};
 
 // =============================================================
 // MESHES
@@ -606,7 +607,100 @@ function setupModelMatrix(mesh) {
 }
 
 // =============================================================
-// CLOCK 
+// RENDER SYSTEM
+// =============================================================
+const renderSystem = {
+    canvas: null,
+    gl: null,
+
+    initWebgl() {
+        this.canvas = document.querySelector("#c");
+        if (!this.canvas) {
+            console.error("Canvas element not found");
+            return;
+        }
+
+        this.gl = this.canvas.getContext("webgl2");
+        if (!this.gl) {
+            console.error("WebGL2 is not supported by this browser");
+            return;
+        }
+    },
+    resizeCanvasToDisplaySize(multiplier = 1) {
+        const width = (this.canvas.clientWidth * multiplier) | 0;
+        const height = (this.canvas.clientHeight * multiplier) | 0;
+
+        if (this.canvas.width !== width || this.canvas.height !== height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+        }
+    },
+    init() {
+        this.initWebgl();
+        if (!this.gl) return;
+        const gl = this.gl;
+
+        //Shaders
+        shader.init(gl);
+        textureShader.init(gl);
+
+        //Textures
+        texture.init(gl);
+
+        //Objects
+        grid.init(gl, shader);
+        xAxis.init(gl, shader);
+        yAxis.init(gl, shader);
+        square.init(gl, textureShader);
+    },
+    update() {
+        const gl = this.gl;
+
+        camera.updateProjectionMatrix(gl);
+        camera.updateViewMatrix(gl);
+
+    },
+    render() {
+        const gl = this.gl;
+
+        // -------------------------------------
+        // ---------------------------------------
+        gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
+
+        // Background
+        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        // COMMON UNIFORMS
+        // Shader 1
+        gl.useProgram(shader.program);
+        // Pass MVP Matrices
+        gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
+        gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
+        gl.uniformMatrix3fv(shader.uniforms.modelMatrix,false,mat3.create());
+
+        // Shader 2
+        gl.useProgram(textureShader.program);
+        // Pass MVP Matrices
+        gl.uniformMatrix3fv(textureShader.uniforms.projectionMatrix,false,camera.projectionMatrix);
+        gl.uniformMatrix3fv(textureShader.uniforms.viewMatrix,false,camera.viewMatrix);
+        gl.uniformMatrix3fv(textureShader.uniforms.modelMatrix,false,mat3.create());
+
+        // RENDER MESHES
+        // Grid
+        grid.draw(gl);
+        // X-Axis
+        xAxis.draw(gl);
+        // Y-Axis
+        yAxis.draw(gl);
+        // square
+        square.draw(gl);
+
+        //---------------------------------------------------
+    }
+};
+
+// =============================================================
+// CLOCK
 // =============================================================
 const clock = {
     // time
@@ -698,10 +792,10 @@ const clock = {
         console.log("FPS            : ", this.fps?.toFixed(0), "/s");
         console.log("------------------------------");
     }
-};
+}
 
 // =============================================================
-// ANIMATIONS 
+// ANIMATION INFOS
 // =============================================================
 const animationInfo = {
     columns: 4,
@@ -738,10 +832,23 @@ const animationInfo = {
 };
 
 // =============================================================
-// GUI 
+// ANIMATION SYSTEM
+// =============================================================
+const animationSystem = {
+    init() {
+        animationInfo.apply(square);
+    },
+    update() {
+        animationInfo.update(clock.elapsedTime);
+        animationInfo.apply(square);
+    }
+};
+
+// =============================================================
+// GUI
 // =============================================================
 const gui = {
-    init(gl) {
+    init() {
         const gui = new lil.GUI();
 
         const rectangleFolder = gui.addFolder("square");
@@ -765,10 +872,10 @@ const gui = {
 };
 
 // =============================================================
-// KEY EVENTS 
+// KEY EVENTS
 // =============================================================
 const keyEvent = {
-    init(render) {
+    init() {
         window.addEventListener("keydown", event => {
             switch(event.key) {
                 case "ArrowUp":
@@ -824,112 +931,31 @@ const keyEvent = {
 };
 
 // =============================================================
-// RENDER
+// APP
 // =============================================================
-function render(gl, timeStamp) {
-    // CLOCK
+function appInit() {
+    renderSystem.init();
+    if (!renderSystem.gl) return;
+    animationSystem.init();
+    gui.init();
+    keyEvent.init();
+}
+
+function appLoop(timeStamp) {
+    renderSystem.resizeCanvasToDisplaySize();
     clock.update(timeStamp);
-
-    // ANIMATIONS
-    // -------------------------------------
-    animationInfo.update(clock.elapsedTime);
-    animationInfo.apply(square);
-    
-    // CANVAS
-    // ---------------------------------------
-    resizeCanvasToDisplaySize(gl.canvas);
-    gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
-
-    // Background
-    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    // Camera 
-    camera.updateProjectionMatrix(gl);
-    camera.updateViewMatrix(gl);
-
-    // COMMON UNIFORMS
-    //---------------------------------------------------
-    // Shader 1
-    gl.useProgram(shader.program);
-    // Pass MVP Matrices
-    gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
-    gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
-    gl.uniformMatrix3fv(shader.uniforms.modelMatrix,false,mat3.create());
-
-    // Shader 2
-    gl.useProgram(textureShader.program);
-    // Pass MVP Matrices
-    gl.uniformMatrix3fv(textureShader.uniforms.projectionMatrix,false,camera.projectionMatrix);
-    gl.uniformMatrix3fv(textureShader.uniforms.viewMatrix,false,camera.viewMatrix);
-    gl.uniformMatrix3fv(textureShader.uniforms.modelMatrix,false,mat3.create());
-      
-    // RENDER MESHES
-    //---------------------------------------------------
-    // Grid
-    grid.draw(gl);
-    // X-Axis
-    xAxis.draw(gl);
-    // Y-Axis
-    yAxis.draw(gl);
-    // square
-    square.draw(gl);
-
-    //---------------------------------------------------
-    // LOOP
-    requestAnimationFrame((timeStamp) => render(gl, timeStamp));
+    animationSystem.update();
+    renderSystem.update();
+    renderSystem.render();
+    requestAnimationFrame(appLoop);
 }
 
 // =============================================================
 // MAIN
 // =============================================================
 function main() {
-    //Canvas
-    const canvas = document.querySelector("#c");
-    if(!canvas) {console.error("Canvas element not found");return;}
-
-    //Context
-    const gl = canvas.getContext("webgl2");
-    if(!gl) {console.error("WebGL2 is not supported by this browser");return;}
-
-    //GUI
-    gui.init(gl);
-
-    //KeyEvents
-    keyEvent.init(() => render(gl));
-
-    //Shaders
-    shader.init(gl);
-    textureShader.init(gl);
-
-    //Textures
-    texture.init(gl);
-
-    //Objects
-    grid.init(gl, shader);
-    xAxis.init(gl, shader);
-    yAxis.init(gl, shader);
-    square.init(gl, textureShader);
-
-    //Render
-    render(gl);
-}
-
-// =============================================================
-// HELPER FUNCS
-// =============================================================
-// Resize Canvas
-function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
-    const width = (canvas.clientWidth * multiplier) | 0;
-    const height = (canvas.clientHeight * multiplier) | 0;
-
-    if(canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-        return true;
-    }
-
-    return false;
+    appInit();
+    if (renderSystem.gl) requestAnimationFrame(appLoop);
 }
 
 // =============================================================
