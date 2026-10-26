@@ -448,7 +448,92 @@ function setupModelMatrix(mesh) {
 }
 
 // =============================================================
-// ANIMATIONS 
+// RENDER SYSTEM
+// =============================================================
+const renderSystem = {
+    canvas: null,
+    gl: null,
+
+    initWebgl() {
+        this.canvas = document.querySelector("#c");
+        if (!this.canvas) {
+            console.error("Canvas element not found");
+            return;
+        }
+
+        this.gl = this.canvas.getContext("webgl2");
+        if (!this.gl) {
+            console.error("WebGL2 is not supported by this browser");
+            return;
+        }
+    },
+    resizeCanvasToDisplaySize(multiplier = 1) {
+        const width = (this.canvas.clientWidth * multiplier) | 0;
+        const height = (this.canvas.clientHeight * multiplier) | 0;
+
+        if (this.canvas.width !== width || this.canvas.height !== height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+        }
+    },
+    init() {
+        this.initWebgl();
+        if (!this.gl) return;
+        const gl = this.gl;
+
+        //Shaders
+        shader.init(gl);
+
+        //Objects
+        grid.init(gl, shader);
+        xAxis.init(gl, shader);
+        yAxis.init(gl, shader);
+        rectangle.init(gl, shader);
+    },
+    update() {
+            const gl = this.gl;
+
+        camera.updateProjectionMatrix(gl);
+            camera.updateViewMatrix(gl);
+
+    },
+    render() {
+        const gl = this.gl;
+
+        // animate the rectangle ( x = x0 + u * t)
+
+        // Canvas
+        gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
+
+        // Background
+        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        // COMMON UNIFORMS
+        // Shader
+        gl.useProgram(shader.program);
+        // Pass projection matrix to shader
+        gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
+        // Pass View matrix to shader
+        gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
+        // Pass Model Matrix (Identity as default)
+        gl.uniformMatrix3fv(shader.uniforms.modelMatrix,false,mat3.create());
+
+        // RENDER MESHES
+        // Grid
+        grid.draw(gl);
+        // X-Axis
+        xAxis.draw(gl);
+        // Y-Axis
+        yAxis.draw(gl);
+        // Rectangle
+        rectangle.draw(gl);
+
+        //---------------------------------------------------
+    }
+};
+
+// =============================================================
+// CLOCK
 // =============================================================
 const clock = {
     // time
@@ -540,13 +625,28 @@ const clock = {
         console.log("FPS            : ", this.fps?.toFixed(0), "/s");
         console.log("------------------------------");
     }
+}
+
+// =============================================================
+// ANIMATION SYSTEM
+// =============================================================
+const animationSystem = {
+    init() {
+        this.rectangle = rectangle;
+    },
+    update() {
+        if(clock.isPlaying){
+            this.rectangle.translationX = 100 * clock.elapsedTime;
+            this.rectangle.rotation = 100 * clock.elapsedTime;
+        }
+    }
 };
 
 // =============================================================
-// GUI 
+// GUI
 // =============================================================
 const gui = {
-    init(gl) {
+    init() {
         const gui = new lil.GUI();
 
         const rectangleFolder = gui.addFolder("Rectangle");
@@ -570,10 +670,10 @@ const gui = {
 };
 
 // =============================================================
-// KEY EVENTS 
+// KEY EVENTS
 // =============================================================
 const keyEvent = {
-    init(render) {
+    init() {
         window.addEventListener("keydown", event => {
             switch(event.key) {
                 case "ArrowUp":
@@ -629,103 +729,31 @@ const keyEvent = {
 };
 
 // =============================================================
-// RENDER
+// APP
 // =============================================================
-function render(gl, timeStamp) {
-    // CLOCK
+function appInit() {
+    renderSystem.init();
+    if (!renderSystem.gl) return;
+    animationSystem.init();
+    gui.init();
+    keyEvent.init();
+}
+
+function appLoop(timeStamp) {
+    renderSystem.resizeCanvasToDisplaySize();
     clock.update(timeStamp);
-
-    // animate the rectangle ( x = x0 + u * t)
-    if(clock.isPlaying){
-        rectangle.translationX = 100 * clock.elapsedTime;
-        rectangle.rotation = 100 * clock.elapsedTime;
-    }
-    
-    // Canvas
-    resizeCanvasToDisplaySize(gl.canvas);
-    gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
-
-    // Background
-    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    // Camera 
-    camera.updateProjectionMatrix(gl);
-    camera.updateViewMatrix(gl);
-
-    // COMMON UNIFORMS
-    //---------------------------------------------------
-    // Shader
-    gl.useProgram(shader.program);
-    // Pass projection matrix to shader
-    gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
-    // Pass View matrix to shader
-    gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
-    // Pass Model Matrix (Identity as default)
-    gl.uniformMatrix3fv(shader.uniforms.modelMatrix,false,mat3.create());
-    
-    // RENDER MESHES
-    //---------------------------------------------------
-    // Grid
-    grid.draw(gl);
-    // X-Axis
-    xAxis.draw(gl);
-    // Y-Axis
-    yAxis.draw(gl);
-    // Rectangle
-    rectangle.draw(gl);
-
-    //---------------------------------------------------
-    // LOOP
-    requestAnimationFrame((timeStamp) => render(gl, timeStamp));
+    animationSystem.update();
+    renderSystem.update();
+    renderSystem.render();
+    requestAnimationFrame(appLoop);
 }
 
 // =============================================================
 // MAIN
 // =============================================================
 function main() {
-    //Canvas
-    const canvas = document.querySelector("#c");
-    if(!canvas) {console.error("Canvas element not found");return;}
-
-    //Context
-    const gl = canvas.getContext("webgl2");
-    if(!gl) {console.error("WebGL2 is not supported by this browser");return;}
-
-    //GUI
-    gui.init(gl);
-
-    //KeyEvents
-    keyEvent.init(() => render(gl));
-
-    //Shaders
-    shader.init(gl);
-
-    //Objects
-    grid.init(gl, shader);
-    xAxis.init(gl, shader);
-    yAxis.init(gl, shader);
-    rectangle.init(gl, shader);
-
-    //Render
-    render(gl);
-}
-
-// =============================================================
-// HELPER FUNCS
-// =============================================================
-// Resize Canvas
-function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
-    const width = (canvas.clientWidth * multiplier) | 0;
-    const height = (canvas.clientHeight * multiplier) | 0;
-
-    if(canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-        return true;
-    }
-
-    return false;
+    appInit();
+    if (renderSystem.gl) requestAnimationFrame(appLoop);
 }
 
 // =============================================================
