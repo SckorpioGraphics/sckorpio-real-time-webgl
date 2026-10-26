@@ -526,7 +526,100 @@ function setupModelMatrix(mesh) {
 }
 
 // =============================================================
-// CLOCK 
+// RENDER SYSTEM
+// =============================================================
+const renderSystem = {
+    canvas: null,
+    gl: null,
+
+    initWebgl() {
+        this.canvas = document.querySelector("#c");
+        if (!this.canvas) {
+            console.error("Canvas element not found");
+            return;
+        }
+
+        this.gl = this.canvas.getContext("webgl2");
+        if (!this.gl) {
+            console.error("WebGL2 is not supported by this browser");
+            return;
+        }
+    },
+    resizeCanvasToDisplaySize(multiplier = 1) {
+        const width = (this.canvas.clientWidth * multiplier) | 0;
+        const height = (this.canvas.clientHeight * multiplier) | 0;
+
+        if (this.canvas.width !== width || this.canvas.height !== height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+        }
+    },
+    init() {
+        this.initWebgl();
+        if (!this.gl) return;
+        const gl = this.gl;
+
+        // Blending: Enable Alpha Blending
+        gl.enable(gl.BLEND);
+        // Set Blend Function
+        gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+        //Shaders
+        shader.init(gl);
+
+        //Objects
+        grid.init(gl, shader);
+        xAxis.init(gl, shader);
+        yAxis.init(gl, shader);
+        square.init(gl, shader);
+        triangle.init(gl, shader);
+
+    },
+    update() {
+        const gl = this.gl;
+
+        camera.updateProjectionMatrix(gl);
+        camera.updateViewMatrix(gl);
+
+    },
+    render() {
+        const gl = this.gl;
+
+        // -------------------------------------
+        // -------------------------------------
+        // ---------------------------------------
+        gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
+
+        // Background
+        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        // COMMON UNIFORMS
+        // Shader
+        gl.useProgram(shader.program);
+        // Pass projection matrix to shader
+        gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
+        // Pass View matrix to shader
+        gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
+        // Pass Model Matrix (Identity as default)
+        gl.uniformMatrix3fv(shader.uniforms.modelMatrix,false,mat3.create());
+
+        // RENDER MESHES
+        // Grid
+        grid.draw(gl);
+        // X-Axis
+        xAxis.draw(gl);
+        // Y-Axis
+        yAxis.draw(gl);
+        // Square
+        square.draw(gl);
+        // Triangle (unit vector)
+        triangle.draw(gl);
+
+        //---------------------------------------------------
+    }
+};
+
+// =============================================================
+// CLOCK
 // =============================================================
 const clock = {
     // time
@@ -619,10 +712,10 @@ const clock = {
         console.log("FPS            : ", this.fps?.toFixed(0), "/s");
         console.log("------------------------------");
     }
-};
+}
 
 // =============================================================
-// PHYSICS 
+// PHYSICS INFOS
 // =============================================================
 const physicsInfo = {
     // Object connected
@@ -660,10 +753,22 @@ const physicsInfo = {
 };
 
 // =============================================================
-// GUI 
+// PHYSICS SYSTEM
+// =============================================================
+const physicsSystem = {
+    init() {
+        physicsInfo.init(square);
+    },
+    update() {
+        physicsInfo.update(clock.deltaTime);
+    }
+};
+
+// =============================================================
+// GUI
 // =============================================================
 const gui = {
-    init(gl) {
+    init() {
         const gui = new lil.GUI();
 
         const triangleFolder = gui.addFolder("Unit Vector");
@@ -691,10 +796,10 @@ const gui = {
 };
 
 // =============================================================
-// KEY EVENTS 
+// KEY EVENTS
 // =============================================================
 const keyEvent = {
-    init(render) {
+    init() {
         window.addEventListener("keydown", event => {
             switch(event.key) {
                 case "ArrowUp":
@@ -750,117 +855,31 @@ const keyEvent = {
 };
 
 // =============================================================
-// RENDER
+// APP
 // =============================================================
-function render(gl, timeStamp) {
-    // CLOCK
+function appInit() {
+    renderSystem.init();
+    if (!renderSystem.gl) return;
+    physicsSystem.init();
+    gui.init();
+    keyEvent.init();
+}
+
+function appLoop(timeStamp) {
+    renderSystem.resizeCanvasToDisplaySize();
     clock.update(timeStamp);
-
-    // PHYSICS
-    // -------------------------------------
-    physicsInfo.update(clock.deltaTime);
-
-    // ANIMATIONS
-    // -------------------------------------
-
-    
-    // CANVAS
-    // ---------------------------------------
-    resizeCanvasToDisplaySize(gl.canvas);
-    gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
-
-    // Background
-    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    // Camera 
-    camera.updateProjectionMatrix(gl);
-    camera.updateViewMatrix(gl);
-
-    // COMMON UNIFORMS
-    //---------------------------------------------------
-    // Shader
-    gl.useProgram(shader.program);
-    // Pass projection matrix to shader
-    gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
-    // Pass View matrix to shader
-    gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
-    // Pass Model Matrix (Identity as default)
-    gl.uniformMatrix3fv(shader.uniforms.modelMatrix,false,mat3.create());
-    
-    // RENDER MESHES
-    //---------------------------------------------------
-    // Grid
-    grid.draw(gl);
-    // X-Axis
-    xAxis.draw(gl);
-    // Y-Axis
-    yAxis.draw(gl);
-    // Square
-    square.draw(gl);
-    // Triangle (unit vector)
-    triangle.draw(gl);
-
-    //---------------------------------------------------
-    // LOOP
-    requestAnimationFrame((timeStamp) => render(gl, timeStamp));
+    physicsSystem.update();
+    renderSystem.update();
+    renderSystem.render();
+    requestAnimationFrame(appLoop);
 }
 
 // =============================================================
 // MAIN
 // =============================================================
 function main() {
-    //Canvas
-    const canvas = document.querySelector("#c");
-    if(!canvas) {console.error("Canvas element not found");return;}
-
-    //Context
-    const gl = canvas.getContext("webgl2");
-    if(!gl) {console.error("WebGL2 is not supported by this browser");return;}
-
-    // Blending: Enable Alpha Blending
-    gl.enable(gl.BLEND);
-    // Set Blend Function
-    gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
-
-    //GUI
-    gui.init(gl);
-
-    //KeyEvents
-    keyEvent.init(() => render(gl));
-
-    //Shaders
-    shader.init(gl);
-
-    //Objects
-    grid.init(gl, shader);
-    xAxis.init(gl, shader);
-    yAxis.init(gl, shader);
-    square.init(gl, shader);
-    triangle.init(gl, shader);
-
-    // Physics
-    physicsInfo.init(square);
-
-    //Render
-    render(gl);
-}
-
-// =============================================================
-// HELPER FUNCS
-// =============================================================
-// Resize Canvas
-function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
-    const width = (canvas.clientWidth * multiplier) | 0;
-    const height = (canvas.clientHeight * multiplier) | 0;
-
-    if(canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-        return true;
-    }
-
-    return false;
+    appInit();
+    if (renderSystem.gl) requestAnimationFrame(appLoop);
 }
 
 // =============================================================
