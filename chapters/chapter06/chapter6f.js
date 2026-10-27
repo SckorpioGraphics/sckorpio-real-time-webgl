@@ -1,13 +1,12 @@
 /* #############################################################
-   CHAPTER 6f: Projectile Motion
+   CHAPTER 6f: Arrow Head with key controls
 
    Topics:
-   - Apply 2D Projectile Motion on Square
-   - Adding Gravity as Y acceleration
-   - Use velocityX, velocityY
+   - Apply 2D Linear Motion on Arrow head Traingle
+   - Use unitVector & Speed for velocityX, velocityY
    - Use clock for delta time
    - create animation object
-   - apply on the square
+   - apply on the Arrow head
    #############################################################
 */
 
@@ -165,21 +164,21 @@ const camera = {
 // MESHES
 // =============================================================
 const square = {
-    //    v1--------v2
-    //    | \        |
-    //    |    \     |
-    //    |       \  |
-    //    v0--------v1
+    //    v2\--__
+    //       \    --__     
+    //         v1-----_v0
+    //       /    __--      
+    //    v3/___-- 
 
     // CPU DATA
     vertexData: new Float32Array([
-        -100, -100,      // Left Bottom
-        100, -100,      // Right Bottom
-        -100, 100,      // Left Top
+        -50, 0,      // Centre
+        -100, 100,   // Left Wing
+        100, 0,      // Top
 
-        -100, 100,      // Left Top
-        100, -100,      // Right Bottom
-        100, 100       // Right Top
+        -50, 0,      // Centre
+        -100, -100,  // Right Wing
+        100, 0,      // Top
     ]),
 
     translationX: 0,
@@ -637,22 +636,43 @@ const clock = {
 const physicsInfo = {
     // Object connected
     mesh: null,
+    // Speed
+    speed: 0,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 0,
     // Velocity
-    velocityX: 300,
-    velocityY: 200,
-    // Acceleration
-    accelerationX: 0,
-    accelerationY: -98, // mimic gravity
+    velocityX: 100,
+    velocityY: 50,
+    // Control booleans
+    state: {
+        speedUp: false,
+        speedDown: false,
+        angleUp: false,
+        angleDown: false
+    },
 
     init(mesh) {
         this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
     },
     update(deltaTime) {
-        this.velocityX += deltaTime * this.accelerationX;
-        this.velocityY += deltaTime * this.accelerationY;
+        if(this.state.speedUp) this.speed += 10.0;
+        if(this.state.speedDown) this.speed -= 10.0;
+        if(this.state.angleUp) this.directionAngle += 1.0;
+        if(this.state.angleDown) this.directionAngle -= 1.0;
 
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
         this.mesh.translationX += deltaTime * this.velocityX;
         this.mesh.translationY += deltaTime * this.velocityY;
+        this.mesh.rotation = this.directionAngle;
     }
 };
 
@@ -675,10 +695,9 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        const physicsFolder = gui.addFolder("Physics");
-        physicsFolder.add(physicsInfo, "velocityX", -1000, 1000).name("velocityX");
-        physicsFolder.add(physicsInfo, "velocityY", -1000, 1000).name("velocityY");
-        physicsFolder.add(physicsInfo, "accelerationX", -100, 100).name("accelerationX");
+        const physicsFolder = gui.addFolder("Unit Vector");
+        physicsFolder.add(physicsInfo, "speed", 0, 1000).name("Speed");
+        physicsFolder.add(physicsInfo, "directionAngle", 0, 180).name("Angle");
 
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
@@ -720,6 +739,22 @@ const keyEvent = {
                 case "_":
                     camera.state.zoomOut = true;
                     break;
+                case "W":
+                case "w":
+                    physicsInfo.state.speedUp = true;
+                    break;
+                case "S":
+                case "s":
+                    physicsInfo.state.speedDown = true;
+                    break;
+                case "A":
+                case "a":
+                    physicsInfo.state.angleUp = true;
+                    break;
+                case "D":
+                case "d":
+                    physicsInfo.state.angleDown = true;
+                    break;
                 default:
             }
         });
@@ -745,6 +780,22 @@ const keyEvent = {
                 case "-":
                 case "_":
                     camera.state.zoomOut = false;
+                    break;
+                case "W":
+                case "w":
+                    physicsInfo.state.speedUp = false;
+                    break;
+                case "S":
+                case "s":
+                    physicsInfo.state.speedDown = false;
+                    break;
+                case "A":
+                case "a":
+                    physicsInfo.state.angleUp = false;
+                    break;
+                case "D":
+                case "d":
+                    physicsInfo.state.angleDown = false;
                     break;
                 default:
             }
