@@ -1,10 +1,9 @@
 /* #############################################################
-   CHAPTER 6d: Acceleration in X-Axis
+   CHAPTER 6d: 2D-Motion, Unit vector & Speed 
 
    Topics:
    - Apply 2D Linear Motion on Square
-   - Adding acceleration
-   - Use velocityX, velocityY
+   - Use unitVector & Speed for velocityX, velocityY
    - Use clock for delta time
    - create animation object
    - apply on the square
@@ -637,17 +636,28 @@ const clock = {
 const physicsInfo = {
     // Object connected
     mesh: null,
+    // Speed
+    speed: 0,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 0,
     // Velocity
     velocityX: 100,
     velocityY: 50,
-    // Acceleration
-    accelerationX: 400,
 
     init(mesh) {
         this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
     },
     update(deltaTime) {
-        this.velocityX += deltaTime * this.accelerationX;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
         this.mesh.translationX += deltaTime * this.velocityX;
         this.mesh.translationY += deltaTime * this.velocityY;
     }
@@ -672,10 +682,9 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        const physicsFolder = gui.addFolder("Physics");
-        physicsFolder.add(physicsInfo, "velocityX", -1000, 1000).name("velocityX");
-        physicsFolder.add(physicsInfo, "velocityY", -1000, 1000).name("velocityY");
-        physicsFolder.add(physicsInfo, "accelerationX", -1000, 1000).name("accelerationX");
+        const physicsFolder = gui.addFolder("Unit Vector");
+        physicsFolder.add(physicsInfo, "speed", 0, 1000).name("Speed");
+        physicsFolder.add(physicsInfo, "directionAngle", 0, 180).name("Angle");
 
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
