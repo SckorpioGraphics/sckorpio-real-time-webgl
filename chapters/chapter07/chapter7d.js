@@ -1,18 +1,20 @@
 /* #############################################################
-   CHAPTER 7d: Find Bounding Box of complex mesh(LetterF)
+   CHAPTER 7d: PhysicsInfo on multiple wheels
 
    Topics:
-   - Use updateBoundingBox() for calculating BBox 
-   - Apply 1-D Linear Motion on Rectangle & square
-   - Observe it doesnt get collided with the square
+   - Apply Rotational+Translation Motion on Multiple tankWheel Wheel
+   - Instead of animation.. use physicsInfo
+   - PhysicsInfo has meshes[] instead of single mesh
+   - Use clock for elapsed time
    #############################################################
 */
+
 
 // =============================================================
 // SHADER OBJECTS
 // =============================================================
 //Shader Object1
-const shader = {
+const basicShader = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -65,6 +67,67 @@ const shader = {
     }
 };
 
+const textureShader = {
+    vertexShaderSource: `#version 300 es
+        in vec2 a_position;
+        in vec2 a_texCoord;
+
+        uniform mat3 u_modelMatrix;
+        uniform mat3 u_viewMatrix;
+        uniform mat3 u_projectionMatrix;
+
+        out vec2 v_texCoord;
+
+        void main() {
+            vec3 localPosition = vec3(a_position, 1.0);
+            vec3 clipPosition = u_projectionMatrix * u_viewMatrix * u_modelMatrix * localPosition;
+            gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
+            v_texCoord = a_texCoord;
+        }
+    `,
+
+    fragmentShaderSource: `#version 300 es
+        precision mediump float;
+
+        uniform sampler2D u_texture;
+        in vec2 v_texCoord;
+        out vec4 out_color;
+
+        void main() {
+            out_color = texture(u_texture, v_texCoord);
+        }
+    `,
+
+    program: null,
+
+    attributes: {
+        position: null,
+        texCoord: null
+    },
+
+    uniforms: {
+        modelMatrix: null,
+        viewMatrix: null,
+        projectionMatrix: null,
+        texture: null
+    },
+
+    init(gl) {
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, this.vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, this.fragmentShaderSource);
+        // program
+        this.program = createProgram(gl, vertexShader, fragmentShader);
+        // attribute
+        this.attributes.position = gl.getAttribLocation(this.program, "a_position");
+        this.attributes.texCoord = gl.getAttribLocation(this.program, "a_texCoord");
+        // uniform
+        this.uniforms.modelMatrix = gl.getUniformLocation(this.program, "u_modelMatrix");
+        this.uniforms.viewMatrix = gl.getUniformLocation(this.program, "u_viewMatrix");
+        this.uniforms.projectionMatrix = gl.getUniformLocation(this.program, "u_projectionMatrix");
+        this.uniforms.texture = gl.getUniformLocation(this.program, "u_texture");
+    }
+};
+
 // Compile Shader
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
@@ -92,6 +155,77 @@ function createProgram(gl, vertexShader, fragmentShader) {
 
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
+}
+
+// =============================================================
+// TEXTURE OBJECTS
+// =============================================================
+const tankWheelTexture = {
+    imagePath: "chapters/chapter07/assets/tankWheel_Texture.png",
+
+    image: null,
+    handle: null,
+    loaded: false,
+
+    init(gl) {
+        createTexture(gl, this);
+    },
+
+    bind(gl, textureUnit = 0) {
+        gl.activeTexture(gl.TEXTURE0 + textureUnit);
+        gl.bindTexture(gl.TEXTURE_2D, this.handle);
+    }
+};
+
+function createTexture(gl, texture) {
+    texture.handle = gl.createTexture();
+
+    gl.bindTexture(gl.TEXTURE_2D, texture.handle);
+
+    // Temporary cyan pixel while the image loads.
+    gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        1,
+        1,
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        new Uint8Array([82, 161, 171, 255])
+    );
+
+    // No mipmaps yet.
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+
+    texture.image = new Image();
+
+    texture.image.onload = () => {
+        gl.bindTexture(gl.TEXTURE_2D, texture.handle);
+
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            texture.image
+        );
+
+        texture.loaded = true;
+        console.log("Texture loaded:", texture.imagePath);
+    };
+
+    texture.image.onerror = () => {
+        console.error(
+            "Could not load texture image:",
+            texture.imagePath
+        );
+    };
+
+    texture.image.src = texture.imagePath;
 }
 
 // =============================================================
@@ -161,300 +295,107 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const letterF = {
-    /*
-        v2-------v3--------v4
-        |\       |\         |
-        |\       |   \      |
-        | \      |      \   |
-        |  \     v6________v5
-        |   \    |
-        |    \   v7_____v8
-        |     \  |  \    |
-        |      \ |    \  |
-        |       \v10____v9
-        |        |
-        |        |
-        v0_______v1
-    */
+let tankWheels = [];
 
-    // CPU DATA
-    vertexData: new Float32Array([
-        -100, -100,
-        -60 , -100,
-        -100,  100,
-        -60 ,  100,
+function createTankWheel(positionX, positionY) {
+    return {
+        //    v1--------v2
+        //    | \        |
+        //    |    \     |
+        //    |       \  |
+        //    v0--------v1
 
-        // Top bar
-        40  ,  100,
-        40  ,   60,
-        -60,   60,
+        // CPU DATA
+        vertexData: new Float32Array([
+            // Position     // UV
+            -100, -100,     0, 0,
+            100, -100,      1, 0,
+            -100,  100,     0, 1,
 
-        // Middle bar
-        -60,  20,
-        0   ,  20,
-        0   , -20,
-        -60, -20
-    ]),
-    indices: new Uint16Array([
-        // LEFT COLUMN
-        0, 1, 2,
-        2, 1, 3,
+            -100,  100,     0, 1,
+            100, -100,      1, 0,
+            100,  100,      1, 1
+        ]),
 
-        // TOP BAR
-        3, 6, 5,
-        3, 5, 4,
+        translationX: positionX,
+        translationY: positionY,
+        rotation: 0,
+        scaleX: 1.0,
+        scaleY: 1.0,
+        modelMatrix: mat3.create(),
 
-        // MIDDLE BAR
-        7, 10, 9,
-        7, 9, 8
-    ]),
+        //GPU DATA
+        shader: null,
+        texture: null,
+        vao: null,
+        vbo: null,
+        drawMode: null,
+        drawOffset: 0,
+        drawCount: 0,
 
-    translationX: 0,
-    translationY: 0,
-    rotation: 0,
-    scaleX: 1.0,
-    scaleY: 1.0,
-    modelMatrix: mat3.create(),
-    color: [1.0, 0.0, 0.0, 0.3],
+        //FUNCTIONS
+        init(gl, shader, texture) {
+            // Connect shader to mesh
+            this.shader = shader;
+            this.texture = texture;
 
-    //GPU DATA
-    shader: null,
-    vao: null,
-    vbo: null,
-    positionOffset: 0,
-    stride: 0,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0,
+            // Vertex Buffer
+            this.vbo = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+            gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
 
-    //FUNCTIONS
-    init(gl, shader) {
-        // Connect shader to mesh
-        this.shader = shader;
+            // Vertex Array
+            this.vao = gl.createVertexArray();
+            gl.bindVertexArray(this.vao);
 
-        // Vertex Buffer
-        this.vbo = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
+            // Enable position attribute
+            gl.enableVertexAttribArray(this.shader.attributes.position);
 
-        // Index Buffer
-        this.ibo = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
+            // Bind Vertex Buffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
 
-        // Vertex Array
-        this.vao = gl.createVertexArray();
-        gl.bindVertexArray(this.vao);
+            // Vertex data format
+            gl.vertexAttribPointer(
+                this.shader.attributes.position,
+                2,          // size: 2 components (X, Y)
+                gl.FLOAT,   // type: 32-bit float
+                false,      // normalize
+                4 * Float32Array.BYTES_PER_ELEMENT, // stride: 4(tightly packed)
+                0           // offset: start of buffer
+            );
 
-        // Enable position attribute
-        gl.enableVertexAttribArray(this.shader.attributes.position);
+            // Texture coordinates: u, v
+            gl.enableVertexAttribArray(this.shader.attributes.texCoord);
+            gl.vertexAttribPointer(
+                this.shader.attributes.texCoord,
+                2,
+                gl.FLOAT,
+                false,
+                4 * Float32Array.BYTES_PER_ELEMENT,
+                2 * Float32Array.BYTES_PER_ELEMENT
+            );
 
-        // Bind Vertex Buffer
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-
-        // Vertex data format
-        gl.vertexAttribPointer(
-            this.shader.attributes.position,
-            2,                                      // size: 2 components (X, Y)
-            gl.FLOAT,                               // type: 32-bit float
-            false,                                  // normalize
-            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
-            0                                       // offset: start of buffer
-        );
-
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo);
-
-        // Important for retrieving position data
-        this.positionOffset = 0;
-        this.stride = 2;
-
-        // Draw Data
-        this.drawMode = gl.TRIANGLES;
-        this.drawOffset = 0;
-        this.drawCount = this.indices.length;
-        this.drawType = gl.UNSIGNED_SHORT;
-    },
-    draw(gl) {
-        setupModelMatrix(this);
-        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-        gl.uniform4fv(this.shader.uniforms.color,this.color);
-        gl.bindVertexArray(this.vao);
-        gl.drawElements(this.drawMode,this.drawCount,this.drawType,this.drawOffset);
+            // Draw data
+            this.drawMode = gl.TRIANGLES;
+            this.drawOffset = 0;
+            this.drawCount = 6;
+        },
+        draw(gl) {
+            // Shader
+            gl.useProgram(this.shader.program);
+            // Modle Matrix
+            setupModelMatrix(this);
+            gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
+            // Texture
+            this.texture.bind(gl, 0);
+            gl.uniform1i(this.shader.uniforms.texture, 0);
+            // vao
+            gl.bindVertexArray(this.vao);
+            // draw call
+            gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
+        }
     }
-};
-
-const square = {
-    //    v1--------v2
-    //    | \        |
-    //    |    \     |
-    //    |       \  |
-    //    v0--------v1
-
-    // CPU DATA
-    vertexData: new Float32Array([
-        -100, -100,      // Left Bottom
-        100, -100,      // Right Bottom
-        -100, 100,      // Left Top
-
-        -100, 100,      // Left Top
-        100, -100,      // Right Bottom
-        100, 100       // Right Top
-    ]),
-
-    translationX: 800,
-    translationY: 0,
-    rotation: 0,
-    scaleX: 1.0,
-    scaleY: 1.0,
-    modelMatrix: mat3.create(),
-    color: [0.0, 1.0, 0.0, 0.3],
-
-    //GPU DATA
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0,
-
-    //FUNCTIONS
-    init(gl, shader) {
-        // Connect shader to mesh
-        this.shader = shader;
-
-        // Vertex Buffer
-        this.vbo = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
-
-        // Vertex Array
-        this.vao = gl.createVertexArray();
-        gl.bindVertexArray(this.vao);
-
-        // Enable position attribute
-        gl.enableVertexAttribArray(this.shader.attributes.position);
-
-        // Bind Vertex Buffer
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-
-        // Vertex data format
-        gl.vertexAttribPointer(
-            this.shader.attributes.position,
-            2,                                      // size: 2 components (X, Y)
-            gl.FLOAT,                               // type: 32-bit float
-            false,                                  // normalize
-            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
-            0                                       // offset: start of buffer
-        );
-
-        // Draw data
-        this.drawMode = gl.TRIANGLES;
-        this.drawOffset = 0;
-        this.drawCount = 6;
-    },
-    draw(gl) {
-        setupModelMatrix(this);
-        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-        gl.uniform4fv(this.shader.uniforms.color,this.color);
-        gl.bindVertexArray(this.vao);
-        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
-    }
-};
-
-const boundingBoxes = {
-    //    v1--------v2
-    //    |          |
-    //    |          |
-    //    |          |
-    //    v0--------v1
-
-    // CPU DATA
-    vertexData: null,
-
-    translationX: 0,
-    translationY: 0,
-    rotation: 0,
-    scaleX: 1.0,
-    scaleY: 1.0,
-    modelMatrix: mat3.create(),
-    color: [0.0, 0.0, 0.0, 1.0],     // BLACK
-
-    //GPU DATA
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0,
-
-    //FUNCTIONS
-    init(gl, shader) {
-        // Connect shader to mesh
-        this.shader = shader;
-
-        // Vertex Buffer
-        this.vbo = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        // NOTE: Vertex data will be updated from the UI during rendering.
-
-        // Vertex Array
-        this.vao = gl.createVertexArray();
-        gl.bindVertexArray(this.vao);
-
-        // Enable position attribute
-        gl.enableVertexAttribArray(this.shader.attributes.position);
-
-        // Bind Vertex Buffer
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-
-        // Vertex data format
-        gl.vertexAttribPointer(
-            this.shader.attributes.position,
-            2,                                      // size: 2 components (X, Y)
-            gl.FLOAT,                               // type: 32-bit float
-            false,                                  // normalize
-            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
-            0                                       // offset: start of buffer
-        );
-
-        // Draw data
-        this.drawMode = gl.LINES;
-        this.drawOffset = 0;
-        this.drawCount = 8;
-    },
-    draw(gl) {
-        setupModelMatrix(this);
-        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-        gl.uniform4fv(this.shader.uniforms.color,this.color);
-        gl.bindVertexArray(this.vao);
-        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
-    },
-    updateData(gl) {
-        gl.bindVertexArray(this.vao);
-
-        const bbox1 = physicsInfoLetterF.boundingBox;
-
-        // Vertex data CPU side
-        this.vertexData = new Float32Array([
-            bbox1.minX, bbox1.minY,      // Left Bottom
-            bbox1.maxX, bbox1.minY,      // Right Bottom
-
-            bbox1.maxX, bbox1.minY,      // Right Bottom
-            bbox1.maxX, bbox1.maxY,      // Right Top
-
-            bbox1.maxX, bbox1.maxY,      // Right Top
-            bbox1.minX, bbox1.maxY,      // Left Top
-
-            bbox1.minX, bbox1.maxY,      // Left Top
-            bbox1.minX, bbox1.minY,      // Left Bottom
-        ]);
-
-        // Update vertex data on the GPU
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.DYNAMIC_DRAW);
-    }
-};
+}
 
 const grid = {
     //    v1------------v2
@@ -701,24 +642,33 @@ const renderSystem = {
         gl.enable(gl.BLEND);
         // Set Blend Function
         gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+
+        //Textures
+        tankWheelTexture.init(gl);
+
         //Shaders
-        shader.init(gl);
+        basicShader.init(gl);
+        textureShader.init(gl);
 
         //Objects
-        grid.init(gl, shader);
-        xAxis.init(gl, shader);
-        yAxis.init(gl, shader);
-        letterF.init(gl, shader);
-        square.init(gl, shader);
-        boundingBoxes.init(gl, shader);
+        grid.init(gl, basicShader);
+        xAxis.init(gl, basicShader);
+        yAxis.init(gl, basicShader);
 
+        // Tank Wheels
+        tankWheels = [
+            createTankWheel(  0, 0),
+            createTankWheel(200, 0),
+            createTankWheel(400, 0),
+            createTankWheel(600, 0)
+        ];
+        tankWheels.forEach(wheel => wheel.init(gl, textureShader, tankWheelTexture));
     },
     update() {
         const gl = this.gl;
 
         camera.updateProjectionMatrix(gl);
         camera.updateViewMatrix(gl);
-        boundingBoxes.updateData(gl);
 
     },
     render() {
@@ -732,15 +682,20 @@ const renderSystem = {
         // Background
         gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
         gl.clear(gl.COLOR_BUFFER_BIT);
+
         // COMMON UNIFORMS
-        // Shader
-        gl.useProgram(shader.program);
-        // Pass projection matrix to shader
-        gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
-        // Pass View matrix to shader
-        gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
-        // Pass Model Matrix (Identity as default)
-        gl.uniformMatrix3fv(shader.uniforms.modelMatrix,false,mat3.create());
+        // Shader 1
+        gl.useProgram(basicShader.program);
+        gl.uniformMatrix3fv(basicShader.uniforms.projectionMatrix,false,camera.projectionMatrix);
+        gl.uniformMatrix3fv(basicShader.uniforms.viewMatrix,false,camera.viewMatrix);
+        gl.uniformMatrix3fv(basicShader.uniforms.modelMatrix,false,mat3.create());
+
+        // Shader 2
+        gl.useProgram(textureShader.program);
+        gl.uniformMatrix3fv(textureShader.uniforms.viewMatrix,false,camera.viewMatrix);
+        gl.uniformMatrix3fv(textureShader.uniforms.projectionMatrix,false,camera.projectionMatrix);
+        gl.uniformMatrix3fv(textureShader.uniforms.modelMatrix,false,mat3.create());
+
         // RENDER MESHES
         // Grid
         grid.draw(gl);
@@ -748,13 +703,8 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // LetterF
-        letterF.draw(gl);
-        // Square
-        square.draw(gl);
-
-        // LetterF BBox
-        boundingBoxes.draw(gl);
+        // tankWheels
+        tankWheels.forEach(wheel => wheel.draw(gl));
 
         //---------------------------------------------------
     }
@@ -859,89 +809,34 @@ const clock = {
 // =============================================================
 // PHYSICS INFOS
 // =============================================================
-const physicsInfoLetterF = {
-    // Object
+const physicsInfo = {
+    // Object connected
     mesh: null,
-    // Velocity
-    velocityX: 100,
-    // Bounding Box
-    boundingBox: {
-        minX: 0,
-        minY: 0,
-        maxX: 0,
-        maxY: 0
-    },
+    // Linear velocity
+    velocityX: 0,
+    // Angular Velocity
+    angularVelocity: 0,
 
-    init(mesh) {
-        this.mesh = mesh;
-        updateBoundingBox(this);
+    init(meshes) {
+        this.meshes = meshes;
     },
     update(deltaTime) {
-        this.mesh.translationX += deltaTime * this.velocityX;
+        this.meshes.forEach((mesh)=>{
+            mesh.translationX += deltaTime * this.velocityX;
+            mesh.rotation += deltaTime * this.angularVelocity;
+        });
     }
 };
-
-const physicsInfoSquare = {
-    // Object
-    mesh: null,
-    // Velocity
-    velocityX: -70,
-    // Bounding Box
-    boundingBox: {
-        minX: -100,
-        minY: -100,
-        maxX: 100,
-        maxY: 100
-    },
-
-    init(mesh) {
-        this.mesh = mesh;
-    },
-    update(deltaTime) {
-        this.mesh.translationX += deltaTime * this.velocityX;
-    }
-};
-
-function updateBoundingBox(physicsInfo) {
-    const mesh = physicsInfo.mesh;
-    const vertexData = mesh.vertexData;
-
-    // For retrieving pos values from vertex data
-    const stride = mesh.stride;
-    const positionOffset = mesh.positionOffset;
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    for (let i = positionOffset; i < vertexData.length; i += stride) {
-        const x = vertexData[i];
-        const y = vertexData[i + 1];
-
-        minX = Math.min(minX, x);
-        minY = Math.min(minY, y);
-        maxX = Math.max(maxX, x);
-        maxY = Math.max(maxY, y);
-    }
-
-    physicsInfo.boundingBox.minX = minX;
-    physicsInfo.boundingBox.minY = minY;
-    physicsInfo.boundingBox.maxX = maxX;
-    physicsInfo.boundingBox.maxY = maxY;
-}
 
 // =============================================================
 // PHYSICS SYSTEM
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfoLetterF.init(letterF);
-        physicsInfoSquare.init(square);
+        physicsInfo.init(tankWheels);
     },
     update() {
-        physicsInfoLetterF.update(clock.deltaTime);
-        physicsInfoSquare.update(clock.deltaTime);
+        physicsInfo.update(clock.deltaTime);
     }
 };
 
@@ -952,27 +847,9 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        // Rectangle
-        const letterFFolder = gui.addFolder("LetterF");
-        letterFFolder.add(letterF, "translationX", -1000, 1000).name("translationX");
-        letterFFolder.add(letterF, "translationY", -1000, 1000).name("translationY");
-        letterFFolder.add(letterF, "rotation", 0, 360).name("rotation");
-        letterFFolder.add(letterF, "scaleX", 0.1, 3.0).name("scaleX");
-        letterFFolder.add(letterF, "scaleY", 0.1, 3.0).name("scaleY");
-
-        // Square
-        const squareFolder = gui.addFolder("Square");
-        squareFolder.add(square, "translationX", -1000, 1000).name("translationX");
-        squareFolder.add(square, "translationY", -1000, 1000).name("translationY");
-        squareFolder.add(square, "rotation", 0, 360).name("rotation");
-        squareFolder.add(square, "scaleX", 0.1, 3.0).name("scaleX");
-        squareFolder.add(square, "scaleY", 0.1, 3.0).name("scaleY");
-
-        const physicsFolder1 = gui.addFolder("Physics Rectangle");
-        physicsFolder1.add(physicsInfoLetterF, "velocityX", -1000, 1000).name("velocityX");
-
-        const physicsFolder2 = gui.addFolder("Physics Square");
-        physicsFolder2.add(physicsInfoSquare, "velocityX", -1000, 1000).name("velocityX");
+        const physicsFolder = gui.addFolder("Physics");
+        physicsFolder.add(physicsInfo, "velocityX", -1000, 1000).name("velocityX");
+        physicsFolder.add(physicsInfo, "angularVelocity", -1000, 1000).name("angularVelocity");
     
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
@@ -1014,6 +891,22 @@ const keyEvent = {
                 case "_":
                     camera.state.zoomOut = true;
                     break;
+                case "W":
+                case "w":
+                    physicsInfo.state.speedUp = true;
+                    break;
+                case "S":
+                case "s":
+                    physicsInfo.state.speedDown = true;
+                    break;
+                case "A":
+                case "a":
+                    physicsInfo.state.angleUp = true;
+                    break;
+                case "D":
+                case "d":
+                    physicsInfo.state.angleDown = true;
+                    break;
                 default:
             }
         });
@@ -1039,6 +932,22 @@ const keyEvent = {
                 case "-":
                 case "_":
                     camera.state.zoomOut = false;
+                    break;
+                case "W":
+                case "w":
+                    physicsInfo.state.speedUp = false;
+                    break;
+                case "S":
+                case "s":
+                    physicsInfo.state.speedDown = false;
+                    break;
+                case "A":
+                case "a":
+                    physicsInfo.state.angleUp = false;
+                    break;
+                case "D":
+                case "d":
+                    physicsInfo.state.angleDown = false;
                     break;
                 default:
             }
