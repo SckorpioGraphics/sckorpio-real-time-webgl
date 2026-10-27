@@ -1,9 +1,11 @@
 /* #############################################################
-   CHAPTER 7a: Showing No Collision
+   CHAPTER 7a: Roational motion
 
    Topics:
-   - Apply 1-D Linear Motion on Rectangle & square
-   - Observe it doesnt get collided with the square
+   - Apply Rotational Motion on Square
+   - Instead of animation.. use physicsInfo
+   - Use clock for elapsed time
+   - apply on the square
    #############################################################
 */
 
@@ -160,84 +162,6 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const rectangle = {
-    //    v1--------v2
-    //    | \        |
-    //    |    \     |
-    //    |       \  |
-    //    v0--------v1
-
-    // CPU DATA
-    vertexData: new Float32Array([
-        -200, -100,     // Left Bottom
-        200, -100,      // Right Bottom
-        -200, 100,      // Left Top
-
-        -200, 100,      // Left Top
-        200, -100,      // Right Bottom
-        200, 100        // Right Top
-    ]),
-
-    translationX: 0,
-    translationY: 0,
-    rotation: 0,
-    scaleX: 1.0,
-    scaleY: 1.0,
-    modelMatrix: mat3.create(),
-    color: [1.0, 0.0, 0.0, 0.3],
-
-    //GPU DATA
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0,
-
-    //FUNCTIONS
-    init(gl, shader) {
-        // Connect shader to mesh
-        this.shader = shader;
-
-        // Vertex Buffer
-        this.vbo = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
-
-        // Vertex Array
-        this.vao = gl.createVertexArray();
-        gl.bindVertexArray(this.vao);
-
-        // Enable position attribute
-        gl.enableVertexAttribArray(this.shader.attributes.position);
-
-        // Bind Vertex Buffer
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-
-        // Vertex data format
-        gl.vertexAttribPointer(
-            this.shader.attributes.position,
-            2,                                  // size: 2 components (X, Y)
-            gl.FLOAT,                           // type: 32-bit float
-            false,                              // normalize
-            2 * Float32Array.BYTES_PER_ELEMENT, // stride: 0(tightly packed)
-            0                                   // offset: start of buffer
-        );
-
-        // Draw data
-        this.drawMode = gl.TRIANGLES;
-        this.drawOffset = 0;
-        this.drawCount = 6;
-    },
-    draw(gl) {
-        setupModelMatrix(this);
-        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-        gl.uniform4fv(this.shader.uniforms.color,this.color);
-        gl.bindVertexArray(this.vao);
-        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
-    }
-};
-
 const square = {
     //    v1--------v2
     //    | \        |
@@ -256,13 +180,13 @@ const square = {
         100, 100       // Right Top
     ]),
 
-    translationX: 800,
+    translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
     modelMatrix: mat3.create(),
-    color: [0.0, 1.0, 0.0, 0.3],
+    color: [0.39, 0.33, 0.58, 1.0],     // Sckorpio Purple
 
     //GPU DATA
     shader: null,
@@ -557,10 +481,6 @@ const renderSystem = {
         if (!this.gl) return;
         const gl = this.gl;
 
-        // Blending: Enable Alpha Blending
-        gl.enable(gl.BLEND);
-        // Set Blend Function
-        gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
         //Shaders
         shader.init(gl);
 
@@ -568,7 +488,6 @@ const renderSystem = {
         grid.init(gl, shader);
         xAxis.init(gl, shader);
         yAxis.init(gl, shader);
-        rectangle.init(gl, shader);
         square.init(gl, shader);
 
     },
@@ -607,8 +526,6 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // Rectangle
-        rectangle.draw(gl);
         // Square
         square.draw(gl);
 
@@ -715,31 +632,17 @@ const clock = {
 // =============================================================
 // PHYSICS INFOS
 // =============================================================
-const physicsInfoRectangle = {
-    // Object
+const physicsInfo = {
+    // Object connected
     mesh: null,
-    // Velocity
-    velocityX: 200,
+    // Angular Velocity
+    angularVelocity: 90,
 
     init(mesh) {
         this.mesh = mesh;
     },
     update(deltaTime) {
-        this.mesh.translationX += deltaTime * this.velocityX;
-    }
-};
-
-const physicsInfoSquare = {
-    // Object
-    mesh: null,
-    // Velocity
-    velocityX: -100,
-
-    init(mesh) {
-        this.mesh = mesh;
-    },
-    update(deltaTime) {
-        this.mesh.translationX += deltaTime * this.velocityX;
+        this.mesh.rotation += deltaTime * this.angularVelocity;
     }
 };
 
@@ -748,12 +651,10 @@ const physicsInfoSquare = {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfoRectangle.init(rectangle);
-        physicsInfoSquare.init(square);
+        physicsInfo.init(square);
     },
     update() {
-        physicsInfoRectangle.update(clock.deltaTime);
-        physicsInfoSquare.update(clock.deltaTime);
+        physicsInfo.update(clock.deltaTime);
     }
 };
 
@@ -764,11 +665,8 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        const physicsFolder1 = gui.addFolder("Physics Rectangle");
-        physicsFolder1.add(physicsInfoRectangle, "velocityX", -1000, 1000).name("velocityX");
-
-        const physicsFolder2 = gui.addFolder("Physics Square");
-        physicsFolder2.add(physicsInfoSquare, "velocityX", -1000, 1000).name("velocityX");
+        const physicsFolder = gui.addFolder("Physics");
+        physicsFolder.add(physicsInfo, "angularVelocity", -1000, 1000).name("angularVelocity");
     
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
