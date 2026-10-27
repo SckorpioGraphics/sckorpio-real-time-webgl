@@ -1,12 +1,12 @@
 /* #############################################################
-   CHAPTER 6e: Gravity
+   CHAPTER 6e: Arrow Head 2D motion
 
    Topics:
-   - Apply 2D Linear Motion on Square
-   - Adding Gravity as Y acceleration
-   - Use velocityY
+   - Apply 2D Linear Motion on Arrow head Traingle
+   - Use unitVector & Speed for velocityX, velocityY
    - Use clock for delta time
-   - apply on the square
+   - create animation object
+   - apply on the Arrow head
    #############################################################
 */
 
@@ -164,21 +164,21 @@ const camera = {
 // MESHES
 // =============================================================
 const square = {
-    //    v1--------v2
-    //    | \        |
-    //    |    \     |
-    //    |       \  |
-    //    v0--------v1
+    //    v2\--__
+    //       \    --__     
+    //         v1-----_v0
+    //       /    __--      
+    //    v3/___-- 
 
     // CPU DATA
     vertexData: new Float32Array([
-        -100, -100,      // Left Bottom
-        100, -100,      // Right Bottom
-        -100, 100,      // Left Top
+        -50, 0,      // Centre
+        -100, 100,   // Left Wing
+        100, 0,      // Top
 
-        -100, 100,      // Left Top
-        100, -100,      // Right Bottom
-        100, 100       // Right Top
+        -50, 0,      // Centre
+        -100, -100,  // Right Wing
+        100, 0,      // Top
     ]),
 
     translationX: 0,
@@ -636,22 +636,31 @@ const clock = {
 const physicsInfo = {
     // Object connected
     mesh: null,
+    // Speed
+    speed: 0,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 0,
     // Velocity
-    velocityX: 0,
-    velocityY: 300,
-    // Acceleration
-    accelerationX: 0,
-    accelerationY: -98, // mimic gravity
+    velocityX: 100,
+    velocityY: 50,
 
     init(mesh) {
         this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
     },
     update(deltaTime) {
-        this.velocityX += deltaTime * this.accelerationX;
-        this.velocityY += deltaTime * this.accelerationY;
-
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
         this.mesh.translationX += deltaTime * this.velocityX;
         this.mesh.translationY += deltaTime * this.velocityY;
+        this.mesh.rotation = this.directionAngle;
     }
 };
 
@@ -674,10 +683,9 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        const physicsFolder = gui.addFolder("Physics");
-        physicsFolder.add(physicsInfo, "velocityX", -1000, 1000).name("velocityX");
-        physicsFolder.add(physicsInfo, "velocityY", -1000, 1000).name("velocityY");
-        physicsFolder.add(physicsInfo, "accelerationX", -100, 100).name("accelerationX");
+        const physicsFolder = gui.addFolder("Unit Vector");
+        physicsFolder.add(physicsInfo, "speed", 0, 1000).name("Speed");
+        physicsFolder.add(physicsInfo, "directionAngle", 0, 180).name("Angle");
 
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
