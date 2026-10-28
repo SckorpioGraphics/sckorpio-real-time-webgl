@@ -872,26 +872,10 @@ const keyEvent = {
                 case "_":
                     camera.state.zoomOut = true;
                     break;
-                case "W":
-                case "w":
-                    physicsInfo.state.speedUp = true;
-                    break;
-                case "S":
-                case "s":
-                    physicsInfo.state.speedDown = true;
-                    break;
-                case "A":
-                case "a":
-                    physicsInfo.state.angleUp = true;
-                    break;
-                case "D":
-                case "d":
-                    physicsInfo.state.angleDown = true;
-                    break;
                 default:
             }
         });
-
+        
         window.addEventListener("keyup", event => {
             switch(event.key) {
                 case "ArrowUp":
@@ -913,22 +897,6 @@ const keyEvent = {
                 case "-":
                 case "_":
                     camera.state.zoomOut = false;
-                    break;
-                case "W":
-                case "w":
-                    physicsInfo.state.speedUp = false;
-                    break;
-                case "S":
-                case "s":
-                    physicsInfo.state.speedDown = false;
-                    break;
-                case "A":
-                case "a":
-                    physicsInfo.state.angleUp = false;
-                    break;
-                case "D":
-                case "d":
-                    physicsInfo.state.angleDown = false;
                     break;
                 default:
             }
