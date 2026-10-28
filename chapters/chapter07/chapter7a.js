@@ -1,11 +1,10 @@
 /* #############################################################
-   CHAPTER 7a: Roational motion
+   CHAPTER 7a: Statring with Linear motion
 
    Topics:
-   - Apply Rotational Motion on Square
-   - Instead of animation.. use physicsInfo
-   - Use clock for elapsed time
-   - apply on the square
+   - Apply 1-D Linear Motion on Square
+   - No Acceleration
+   - Velocity can be changed by GUI
    #############################################################
 */
 
@@ -635,14 +634,15 @@ const clock = {
 const physicsInfo = {
     // Object connected
     mesh: null,
-    // Angular Velocity
-    angularVelocity: 90,
+    // Velocity
+    velocityX: 50,
 
     init(mesh) {
         this.mesh = mesh;
     },
     update(deltaTime) {
-        this.mesh.rotation += deltaTime * this.angularVelocity;
+        // mesh transforms
+        this.mesh.translationX += deltaTime * this.velocityX;
     }
 };
 
@@ -666,7 +666,7 @@ const gui = {
         const gui = new lil.GUI();
 
         const physicsFolder = gui.addFolder("Physics");
-        physicsFolder.add(physicsInfo, "angularVelocity", -1000, 1000).name("angularVelocity");
+        physicsFolder.add(physicsInfo, "velocityX", -1000, 1000).name("velocityX");
     
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
