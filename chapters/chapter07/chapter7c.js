@@ -803,11 +803,16 @@ const physicsInfo = {
     velocityX: 0,
     // Angular Velocity
     angularVelocity: 0,
+    // Radius
+    radius: 100,
 
     init(mesh) {
         this.mesh = mesh;
     },
     update(deltaTime) {
+        // When pure rolling is needed
+        this.angularVelocity = -((this.velocityX / this.radius) * (180.0/Math.PI));
+        
         this.mesh.translationX += deltaTime * this.velocityX;
         this.mesh.rotation += deltaTime * this.angularVelocity;
     }

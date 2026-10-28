@@ -948,13 +948,17 @@ const physicsInfoWheel = {
     velocityX: 0,
     // Angular Velocity
     angularVelocity: 0,
+    // radius
+    radius: 100,
 
     init(meshes) {
         this.meshes = meshes;
     },
     update(deltaTime) {
         this.velocityX = physicsInfoTank.velocityX;
-        this.angularVelocity = -this.velocityX/2;
+        // When pure rolling is needed
+        this.angularVelocity = -((this.velocityX / this.radius) * (180.0/Math.PI));
+        
         this.meshes.forEach((mesh)=>{
             mesh.translationX += deltaTime * this.velocityX;
             mesh.rotation += deltaTime * this.angularVelocity;
