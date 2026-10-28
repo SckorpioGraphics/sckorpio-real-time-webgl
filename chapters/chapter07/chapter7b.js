@@ -1,19 +1,17 @@
 /* #############################################################
-   CHAPTER 7b: Roational motion
+   CHAPTER 7b: Acceleration in X-Axis
 
    Topics:
-   - Apply Rotational Motion on tankWheel Wheel
-   - Instead of animation.. use physicsInfo
-   - Use clock for elapsed time
+   - Apply Linear Motion on Square Use velocityX
+   - Adding acceleration in x direction only
    #############################################################
 */
-
 
 // =============================================================
 // SHADER OBJECTS
 // =============================================================
 //Shader Object1
-const basicShader = {
+const shader = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -66,67 +64,6 @@ const basicShader = {
     }
 };
 
-const textureShader = {
-    vertexShaderSource: `#version 300 es
-        in vec2 a_position;
-        in vec2 a_texCoord;
-
-        uniform mat3 u_modelMatrix;
-        uniform mat3 u_viewMatrix;
-        uniform mat3 u_projectionMatrix;
-
-        out vec2 v_texCoord;
-
-        void main() {
-            vec3 localPosition = vec3(a_position, 1.0);
-            vec3 clipPosition = u_projectionMatrix * u_viewMatrix * u_modelMatrix * localPosition;
-            gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
-            v_texCoord = a_texCoord;
-        }
-    `,
-
-    fragmentShaderSource: `#version 300 es
-        precision mediump float;
-
-        uniform sampler2D u_texture;
-        in vec2 v_texCoord;
-        out vec4 out_color;
-
-        void main() {
-            out_color = texture(u_texture, v_texCoord);
-        }
-    `,
-
-    program: null,
-
-    attributes: {
-        position: null,
-        texCoord: null
-    },
-
-    uniforms: {
-        modelMatrix: null,
-        viewMatrix: null,
-        projectionMatrix: null,
-        texture: null
-    },
-
-    init(gl) {
-        const vertexShader = createShader(gl, gl.VERTEX_SHADER, this.vertexShaderSource);
-        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, this.fragmentShaderSource);
-        // program
-        this.program = createProgram(gl, vertexShader, fragmentShader);
-        // attribute
-        this.attributes.position = gl.getAttribLocation(this.program, "a_position");
-        this.attributes.texCoord = gl.getAttribLocation(this.program, "a_texCoord");
-        // uniform
-        this.uniforms.modelMatrix = gl.getUniformLocation(this.program, "u_modelMatrix");
-        this.uniforms.viewMatrix = gl.getUniformLocation(this.program, "u_viewMatrix");
-        this.uniforms.projectionMatrix = gl.getUniformLocation(this.program, "u_projectionMatrix");
-        this.uniforms.texture = gl.getUniformLocation(this.program, "u_texture");
-    }
-};
-
 // Compile Shader
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
@@ -154,77 +91,6 @@ function createProgram(gl, vertexShader, fragmentShader) {
 
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
-}
-
-// =============================================================
-// TEXTURE OBJECTS
-// =============================================================
-const tankWheelTexture = {
-    imagePath: "chapters/chapter07/assets/tankWheel_Texture.png",
-
-    image: null,
-    handle: null,
-    loaded: false,
-
-    init(gl) {
-        createTexture(gl, this);
-    },
-
-    bind(gl, textureUnit = 0) {
-        gl.activeTexture(gl.TEXTURE0 + textureUnit);
-        gl.bindTexture(gl.TEXTURE_2D, this.handle);
-    }
-};
-
-function createTexture(gl, texture) {
-    texture.handle = gl.createTexture();
-
-    gl.bindTexture(gl.TEXTURE_2D, texture.handle);
-
-    // Temporary cyan pixel while the image loads.
-    gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        1,
-        1,
-        0,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        new Uint8Array([82, 161, 171, 255])
-    );
-
-    // No mipmaps yet.
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-
-    texture.image = new Image();
-
-    texture.image.onload = () => {
-        gl.bindTexture(gl.TEXTURE_2D, texture.handle);
-
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
-        gl.texImage2D(
-            gl.TEXTURE_2D,
-            0,
-            gl.RGBA,
-            gl.RGBA,
-            gl.UNSIGNED_BYTE,
-            texture.image
-        );
-
-        texture.loaded = true;
-        console.log("Texture loaded:", texture.imagePath);
-    };
-
-    texture.image.onerror = () => {
-        console.error(
-            "Could not load texture image:",
-            texture.imagePath
-        );
-    };
-
-    texture.image.src = texture.imagePath;
 }
 
 // =============================================================
@@ -294,7 +160,7 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const tankWheel = {
+const square = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -303,14 +169,13 @@ const tankWheel = {
 
     // CPU DATA
     vertexData: new Float32Array([
-        // Position     // UV
-        -100, -100,     0, 0,
-        100, -100,      1, 0,
-        -100,  100,     0, 1,
+        -100, -100,      // Left Bottom
+        100, -100,      // Right Bottom
+        -100, 100,      // Left Top
 
-        -100,  100,     0, 1,
-        100, -100,      1, 0,
-        100,  100,      1, 1
+        -100, 100,      // Left Top
+        100, -100,      // Right Bottom
+        100, 100       // Right Top
     ]),
 
     translationX: 0,
@@ -319,10 +184,10 @@ const tankWheel = {
     scaleX: 1.0,
     scaleY: 1.0,
     modelMatrix: mat3.create(),
+    color: [0.39, 0.33, 0.58, 1.0],     // Sckorpio Purple
 
     //GPU DATA
     shader: null,
-    texture: null,
     vao: null,
     vbo: null,
     drawMode: null,
@@ -330,10 +195,9 @@ const tankWheel = {
     drawCount: 0,
 
     //FUNCTIONS
-    init(gl, shader, texture) {
+    init(gl, shader) {
         // Connect shader to mesh
         this.shader = shader;
-        this.texture = texture;
 
         // Vertex Buffer
         this.vbo = gl.createBuffer();
@@ -353,22 +217,11 @@ const tankWheel = {
         // Vertex data format
         gl.vertexAttribPointer(
             this.shader.attributes.position,
-            2,          // size: 2 components (X, Y)
-            gl.FLOAT,   // type: 32-bit float
-            false,      // normalize
-            4 * Float32Array.BYTES_PER_ELEMENT, // stride: 4(tightly packed)
-            0           // offset: start of buffer
-        );
-
-        // Texture coordinates: u, v
-        gl.enableVertexAttribArray(this.shader.attributes.texCoord);
-        gl.vertexAttribPointer(
-            this.shader.attributes.texCoord,
-            2,
-            gl.FLOAT,
-            false,
-            4 * Float32Array.BYTES_PER_ELEMENT,
-            2 * Float32Array.BYTES_PER_ELEMENT
+            2,                                      // size: 2 components (X, Y)
+            gl.FLOAT,                               // type: 32-bit float
+            false,                                  // normalize
+            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
+            0                                       // offset: start of buffer
         );
 
         // Draw data
@@ -377,17 +230,10 @@ const tankWheel = {
         this.drawCount = 6;
     },
     draw(gl) {
-        // Shader
-        gl.useProgram(this.shader.program);
-        // Modle Matrix
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-        // Texture
-        this.texture.bind(gl, 0);
-        gl.uniform1i(this.shader.uniforms.texture, 0);
-        // vao
+        gl.uniform4fv(this.shader.uniforms.color,this.color);
         gl.bindVertexArray(this.vao);
-        // draw call
         gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
@@ -633,23 +479,15 @@ const renderSystem = {
         if (!this.gl) return;
         const gl = this.gl;
 
-        // Blending: Enable Alpha Blending
-        gl.enable(gl.BLEND);
-        // Set Blend Function
-        gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
-
-        //Textures
-        tankWheelTexture.init(gl);
-
         //Shaders
-        basicShader.init(gl);
-        textureShader.init(gl);
+        shader.init(gl);
 
         //Objects
-        grid.init(gl, basicShader);
-        xAxis.init(gl, basicShader);
-        yAxis.init(gl, basicShader);
-        tankWheel.init(gl, textureShader, tankWheelTexture);
+        grid.init(gl, shader);
+        xAxis.init(gl, shader);
+        yAxis.init(gl, shader);
+        square.init(gl, shader);
+
     },
     update() {
         const gl = this.gl;
@@ -669,19 +507,15 @@ const renderSystem = {
         // Background
         gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
         gl.clear(gl.COLOR_BUFFER_BIT);
-
         // COMMON UNIFORMS
-        // Shader 1
-        gl.useProgram(basicShader.program);
-        gl.uniformMatrix3fv(basicShader.uniforms.projectionMatrix,false,camera.projectionMatrix);
-        gl.uniformMatrix3fv(basicShader.uniforms.viewMatrix,false,camera.viewMatrix);
-        gl.uniformMatrix3fv(basicShader.uniforms.modelMatrix,false,mat3.create());
-
-        // Shader 2
-        gl.useProgram(textureShader.program);
-        gl.uniformMatrix3fv(textureShader.uniforms.viewMatrix,false,camera.viewMatrix);
-        gl.uniformMatrix3fv(textureShader.uniforms.projectionMatrix,false,camera.projectionMatrix);
-        gl.uniformMatrix3fv(textureShader.uniforms.modelMatrix,false,mat3.create());
+        // Shader
+        gl.useProgram(shader.program);
+        // Pass projection matrix to shader
+        gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
+        // Pass View matrix to shader
+        gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
+        // Pass Model Matrix (Identity as default)
+        gl.uniformMatrix3fv(shader.uniforms.modelMatrix,false,mat3.create());
 
         // RENDER MESHES
         // Grid
@@ -690,8 +524,8 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // tankWheel
-        tankWheel.draw(gl);
+        // Square
+        square.draw(gl);
 
         //---------------------------------------------------
     }
@@ -799,14 +633,19 @@ const clock = {
 const physicsInfo = {
     // Object connected
     mesh: null,
-    // Angular Velocity
-    angularVelocity: 90,
+    // Velocity
+    velocityX: 100,
+    // Acceleration
+    accelerationX: 400,
 
     init(mesh) {
         this.mesh = mesh;
     },
     update(deltaTime) {
-        this.mesh.rotation += deltaTime * this.angularVelocity;
+        // Velocity (with acceleration)
+        this.velocityX += deltaTime * this.accelerationX;
+        // mesh transforms
+        this.mesh.translationX += deltaTime * this.velocityX;
     }
 };
 
@@ -815,7 +654,7 @@ const physicsInfo = {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfo.init(tankWheel);
+        physicsInfo.init(square);
     },
     update() {
         physicsInfo.update(clock.deltaTime);
@@ -830,8 +669,9 @@ const gui = {
         const gui = new lil.GUI();
 
         const physicsFolder = gui.addFolder("Physics");
-        physicsFolder.add(physicsInfo, "angularVelocity", -1000, 1000).name("angularVelocity");
-    
+        physicsFolder.add(physicsInfo, "velocityX", -1000, 1000).name("velocityX");
+        physicsFolder.add(physicsInfo, "accelerationX", -1000, 1000).name("accelerationX");
+
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
@@ -875,7 +715,7 @@ const keyEvent = {
                 default:
             }
         });
-        
+
         window.addEventListener("keyup", event => {
             switch(event.key) {
                 case "ArrowUp":
