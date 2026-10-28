@@ -1,13 +1,14 @@
 /* #############################################################
-   CHAPTER 7f: Apply Multiple Wheels with Tank Body(+ follow camera)
+   CHAPTER 7f: Revisiting Sckorpio driving Tank (top view)
 
    Topics:
-   - Apply Rotational Motion on Multiple tankWheel Wheel
-   - Instead of animation.. use physicsInfo
-   - Use clock for elapsed time
+   - Apply 2D Linear Motion on Tank
+   - Use unitVector & Speed for velocityX, velocityY
+   - Use clock for delta time
+   - create animation object
+   - apply on the Square Textured with Tank 
    #############################################################
 */
-
 
 // =============================================================
 // SHADER OBJECTS
@@ -159,25 +160,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
 // =============================================================
 // TEXTURE OBJECTS
 // =============================================================
-const tankSideTexture = {
-    imagePath: "chapters/chapter07/assets/tankSide_Texture.png",
-
-    image: null,
-    handle: null,
-    loaded: false,
-
-    init(gl) {
-        createTexture(gl, this);
-    },
-
-    bind(gl, textureUnit = 0) {
-        gl.activeTexture(gl.TEXTURE0 + textureUnit);
-        gl.bindTexture(gl.TEXTURE_2D, this.handle);
-    }
-};
-
-const tankWheelTexture = {
-    imagePath: "chapters/chapter07/assets/tankWheel_Texture.png",
+const tankTexture = {
+    imagePath: "chapters/chapter07/assets/tank_Texture.png",
 
     image: null,
     handle: null,
@@ -311,108 +295,6 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-let tankWheels = [];
-
-function createTankWheel(positionX, positionY) {
-    return {
-        //    v1--------v2
-        //    | \        |
-        //    |    \     |
-        //    |       \  |
-        //    v0--------v1
-
-        // CPU DATA
-        vertexData: new Float32Array([
-            // Position     // UV
-            -100, -100,     0, 0,
-            100, -100,      1, 0,
-            -100,  100,     0, 1,
-
-            -100,  100,     0, 1,
-            100, -100,      1, 0,
-            100,  100,      1, 1
-        ]),
-
-        translationX: positionX,
-        translationY: positionY,
-        rotation: 0,
-        scaleX: 0.15,
-        scaleY: 0.15,
-        modelMatrix: mat3.create(),
-
-        //GPU DATA
-        shader: null,
-        texture: null,
-        vao: null,
-        vbo: null,
-        drawMode: null,
-        drawOffset: 0,
-        drawCount: 0,
-
-        //FUNCTIONS
-        init(gl, shader, texture) {
-            // Connect shader to mesh
-            this.shader = shader;
-            this.texture = texture;
-
-            // Vertex Buffer
-            this.vbo = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-            gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
-
-            // Vertex Array
-            this.vao = gl.createVertexArray();
-            gl.bindVertexArray(this.vao);
-
-            // Enable position attribute
-            gl.enableVertexAttribArray(this.shader.attributes.position);
-
-            // Bind Vertex Buffer
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-
-            // Vertex data format
-            gl.vertexAttribPointer(
-                this.shader.attributes.position,
-                2,          // size: 2 components (X, Y)
-                gl.FLOAT,   // type: 32-bit float
-                false,      // normalize
-                4 * Float32Array.BYTES_PER_ELEMENT, // stride: 4(tightly packed)
-                0           // offset: start of buffer
-            );
-
-            // Texture coordinates: u, v
-            gl.enableVertexAttribArray(this.shader.attributes.texCoord);
-            gl.vertexAttribPointer(
-                this.shader.attributes.texCoord,
-                2,
-                gl.FLOAT,
-                false,
-                4 * Float32Array.BYTES_PER_ELEMENT,
-                2 * Float32Array.BYTES_PER_ELEMENT
-            );
-
-            // Draw data
-            this.drawMode = gl.TRIANGLES;
-            this.drawOffset = 0;
-            this.drawCount = 6;
-        },
-        draw(gl) {
-            // Shader
-            gl.useProgram(this.shader.program);
-            // Modle Matrix
-            setupModelMatrix(this);
-            gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-            // Texture
-            this.texture.bind(gl, 0);
-            gl.uniform1i(this.shader.uniforms.texture, 0);
-            // vao
-            gl.bindVertexArray(this.vao);
-            // draw call
-            gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
-        }
-    }
-}
-
 const tank = {
     //    v1--------v2
     //    | \        |
@@ -433,7 +315,7 @@ const tank = {
     ]),
 
     translationX: 0,
-    translationY: 100,
+    translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
@@ -758,8 +640,7 @@ const renderSystem = {
         gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 
         //Textures
-        tankWheelTexture.init(gl);
-        tankSideTexture.init(gl);
+        tankTexture.init(gl);
 
         //Shaders
         basicShader.init(gl);
@@ -769,16 +650,7 @@ const renderSystem = {
         grid.init(gl, basicShader);
         xAxis.init(gl, basicShader);
         yAxis.init(gl, basicShader);
-        tank.init(gl, textureShader, tankSideTexture);
-
-        // Tank Wheels
-        tankWheels = [
-            createTankWheel(-80, 15),
-            createTankWheel(-45, 15),
-            createTankWheel(-10, 15),
-            createTankWheel(25, 15)
-        ];
-        tankWheels.forEach(wheel => wheel.init(gl, textureShader, tankWheelTexture));
+        tank.init(gl, textureShader, tankTexture);
     },
     update() {
         const gl = this.gl;
@@ -821,8 +693,8 @@ const renderSystem = {
         yAxis.draw(gl);
         // tank
         tank.draw(gl);
-        // tankWheels
-        tankWheels.forEach(wheel => wheel.draw(gl));
+
+        //---------------------------------------------------
     }
 };
 
@@ -925,44 +797,47 @@ const clock = {
 // =============================================================
 // PHYSICS INFOS
 // =============================================================
-const physicsInfoTank = {
+const physicsInfo = {
     // Object connected
     mesh: null,
-    // Linear velocity
-    velocityX: 0,
+    // Speed
+    speed: 0,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 0,
+    // Velocity
+    velocityX: 100,
+    velocityY: 50,
+    // Control booleans
+    state: {
+        angleUp: false,
+        angleDown: false
+    },
 
     init(mesh) {
         this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
     },
     update(deltaTime) {
+        // key controls
+        if(this.state.angleUp) this.directionAngle += 1.0;
+        if(this.state.angleDown) this.directionAngle -= 1.0;
+
+        // direction unit vector
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        // Velocity
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        // mesh transforms
         this.mesh.translationX += deltaTime * this.velocityX;
-        camera.positionX = (this.mesh.translationX - 300) * camera.zoom;
-        camera.positionY = (this.mesh.translationY - 400);
-    }
-};
+        this.mesh.translationY += deltaTime * this.velocityY;
+        this.mesh.rotation = this.directionAngle;
 
-const physicsInfoWheel = {
-    // Object connected
-    meshes: null,
-    // Linear velocity
-    velocityX: 0,
-    // Angular Velocity
-    angularVelocity: 0,
-    // radius
-    radius: 100,
-
-    init(meshes) {
-        this.meshes = meshes;
-    },
-    update(deltaTime) {
-        this.velocityX = physicsInfoTank.velocityX;
-        // When pure rolling is needed
-        this.angularVelocity = -((this.velocityX / this.radius) * (180.0/Math.PI));
-        
-        this.meshes.forEach((mesh)=>{
-            mesh.translationX += deltaTime * this.velocityX;
-            mesh.rotation += deltaTime * this.angularVelocity;
-        });
     }
 };
 
@@ -971,12 +846,10 @@ const physicsInfoWheel = {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfoTank.init(tank);
-        physicsInfoWheel.init(tankWheels);
+        physicsInfo.init(tank);
     },
     update() {
-        physicsInfoTank.update(clock.deltaTime);
-        physicsInfoWheel.update(clock.deltaTime);
+        physicsInfo.update(clock.deltaTime);
     }
 };
 
@@ -987,9 +860,10 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        const physicsFolder = gui.addFolder("Physics");
-        physicsFolder.add(physicsInfoTank, "velocityX", -1000, 1000).name("velocityX");
-    
+        const physicsFolder = gui.addFolder("Unit Vector");
+        physicsFolder.add(physicsInfo, "speed", 0, 1000).name("Speed");
+        physicsFolder.add(physicsInfo, "directionAngle", 0, 180).name("Angle");
+
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
@@ -1030,10 +904,19 @@ const keyEvent = {
                 case "_":
                     camera.state.zoomOut = true;
                     break;
+                
+                case "A":
+                case "a":
+                    physicsInfo.state.angleUp = true;
+                    break;
+                case "D":
+                case "d":
+                    physicsInfo.state.angleDown = true;
+                    break;
                 default:
             }
         });
-        
+
         window.addEventListener("keyup", event => {
             switch(event.key) {
                 case "ArrowUp":
@@ -1055,6 +938,14 @@ const keyEvent = {
                 case "-":
                 case "_":
                     camera.state.zoomOut = false;
+                    break;
+                case "A":
+                case "a":
+                    physicsInfo.state.angleUp = false;
+                    break;
+                case "D":
+                case "d":
+                    physicsInfo.state.angleDown = false;
                     break;
                 default:
             }
