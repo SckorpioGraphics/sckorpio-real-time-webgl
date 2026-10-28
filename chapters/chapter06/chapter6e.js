@@ -654,10 +654,13 @@ const physicsInfo = {
         this.velocityY = this.speed * this.directionY;
     },
     update(deltaTime) {
+        // direction unit vector
         this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
         this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        // velocity
         this.velocityX = this.speed * this.directionX;
         this.velocityY = this.speed * this.directionY;
+        // mesh transforms
         this.mesh.translationX += deltaTime * this.velocityX;
         this.mesh.translationY += deltaTime * this.velocityY;
         this.mesh.rotation = this.directionAngle;

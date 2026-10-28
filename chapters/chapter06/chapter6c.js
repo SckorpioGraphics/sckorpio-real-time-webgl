@@ -644,6 +644,7 @@ const physicsInfo = {
         this.mesh = mesh;
     },
     update(deltaTime) {
+        // mesh transforms
         this.mesh.translationX += deltaTime * this.velocityX;
         this.mesh.translationY += deltaTime * this.velocityY;
     }
