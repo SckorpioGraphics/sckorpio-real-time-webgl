@@ -854,8 +854,8 @@ const physicsInfo = {
         this.mesh.rotation = this.directionAngle;
 
         // camera follow
-        camera.positionX = this.mesh.translationX - 500;
-        camera.positionY = this.mesh.translationY - 400;
+        camera.positionX = this.mesh.translationX * camera.zoom - 500;
+        camera.positionY = this.mesh.translationY * camera.zoom - 400;
     }
 };
 
