@@ -79,6 +79,43 @@ CHAPTER 07 — COLLISION DETECTION AND RESPONSE
 7i - Exchange object velocities after a collision.
 7j - Use a single collision check while exchanging velocities.
 
+
+
+
+Chapter 0 — Clock & Time
+The foundation for every time-dependent system.
+
+Phase 1 — Animation
+1	Transform Animation
+2	Color & Alpha Animation
+3	Vertex Animation
+4	Texture Scrolling & Animation
+5	Sprite-Sheet Animation
+
+Phase 2 — Kinematics
+6	Linear Motion
+7	Accelerated Motion
+8	Gravity & Other Acceleration Sources
+9	Projectile Motion
+10	Rotational Motion
+
+Phase 3 — Mechanics
+11	Circular BBox & Collision 
+12	Axis-Aligned BBox & Collision 
+13	Oriented BBox & Collision (SAT)
+14	Forces, Mass & Newton's Laws
+15	Momentum, Impulse & Collision Response
+
+Phase 4 — Game Systems & Integration
+16	Physics + Animation
+17	Physics + Sprite-Sheet Animation
+18	Multiple Objects & Interactions
+19	Combining Rendering, Animation & Physics
+20	Building the Complete Game Framework
+
+
+
+
 RUNNING
 -------
 Serve the repository root over HTTP and open http://localhost:8000:
