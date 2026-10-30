@@ -1,10 +1,11 @@
 /* #############################################################
-   CHAPTER 1c: Create clock object
+   CHAPTER 0h: Connect clock object with Animating the rectangle
 
    Topics:
-   - save timer related variable in clock object
-   - log the clock object
-   - Observe flickering to much
+   - Create full Play > Pause > Reset
+   - Create full GUI
+   - Also add Timer Text in GUI
+   - Connect clock time to animate rectangle
    #############################################################
 */
 
@@ -491,12 +492,18 @@ const renderSystem = {
     },
     update() {
         const gl = this.gl;
-
         camera.updateProjectionMatrix(gl);
         camera.updateViewMatrix(gl);
+        // Apply animation
+        if(clock.isPlaying){
+            rectangle.translationX = 100 * clock.elapsedTime;
+            rectangle.rotation = 100 * clock.elapsedTime;
+        }
     },
     render() {
         const gl = this.gl;
+
+        // animate the rectangle ( x = x0 + u * t)
 
         // Canvas
         gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
@@ -532,36 +539,93 @@ const renderSystem = {
 // CLOCK
 // =============================================================
 const clock = {
-    startTime: 0.0,
+    // time
+    isPlaying: false,
+    elapsedTime: 0,
+    lastElapsedTime: 0,
+
+    // per frame
+    startTime: 0,
     previousTime: 0,
     currentTime: 0,
-    elapsedTime: 0,
     deltaTime: 0,
+    fps: 0,
+    
+    // for log
+    timerDisplay: 0,
+    lastLogTime: 0,
 
+    play() {
+        // Already playing? Do nothing.
+        if (this.isPlaying) return;
+        // Play
+        this.isPlaying = true;
+        // Reset startTime
+        this.startTime = 0;
+    },
+    pause() {
+        // Already paused? Do nothing.
+        if (!this.isPlaying) return;
+        // Preserve the elapsed time
+        this.lastElapsedTime = this.elapsedTime;
+        // Pause
+        this.isPlaying = false;
+        // Reset startTime
+        this.startTime = 0;
+    },
+    reset() {
+        // Reset all
+        this.isPlaying = false;
+        this.elapsedTime = 0;
+        this.lastElapsedTime = 0;
+        this.startTime = 0;
+        this.previousTime = 0;
+        this.currentTime = 0;
+        this.deltaTime = 0;
+        this.fps = 0;
+        this.timerDisplay = "0.00 s"
+        this.log();
+    },
     update(timeStamp) {
-        console.log(timeStamp, this.startTime);
-        if(this.startTime === 0 && timeStamp!= undefined) {
-            this.startTime = timeStamp;
-            this.previousTime = 0;
+        this.currentTime = timeStamp;
+
+        // Don't advance the clock while paused
+        if (!this.isPlaying) return;
+
+        // First frame of a play/resume session
+        if (this.startTime === 0 && timeStamp!= undefined) {
+            this.startTime = this.currentTime;
+            this.previousTime = this.currentTime;
         }
 
-        this.currentTime = timeStamp;
-        this.elapsedTime = (this.currentTime - this.startTime) * 0.001;
+        // Total time = previous sessions + current session
+        this.elapsedTime = this.lastElapsedTime + (this.currentTime - this.startTime) * 0.001;
+
+        // Time since the previous frame
         this.deltaTime = (this.currentTime - this.previousTime) * 0.001;
-        this.log();
+
+        this.fps = this.deltaTime > 0 ? 1 / this.deltaTime: 0;
+
+        // Log only once every second
+        if (this.currentTime - this.lastLogTime >= 100) {
+            this.log();
+            this.lastLogTime = this.currentTime;
+        }
+
         this.previousTime = this.currentTime;
+        this.timerDisplay = this.elapsedTime.toFixed(2) + " s";
     },
     log() {
         console.clear();
-
-        console.log("----- clock -----------------");
-        console.log("Start Time:   ", this.startTime?.toFixed(2), "ms");
-        console.log("Previous Time:", this.previousTime?.toFixed(2), "ms");
-        console.log("Current Time: ", this.currentTime?.toFixed(2), "ms");
-
-        console.log("---------------------------------");
-        console.log("Delta Time:   ", this.deltaTime?.toFixed(4), "s");
-        console.log("Elapsed Time: ", this.elapsedTime?.toFixed(2), "s");
+        console.log("----- Timer ------------------");
+        console.log("Elapsed Time   : ", this.elapsedTime?.toFixed(2), "s");
+        console.log("----- Frames -----------------");
+        console.log("Start Time     : ", this.startTime?.toFixed(2), "ms");
+        console.log("Current Time   : ", this.currentTime?.toFixed(2), "ms");
+        console.log("Previous Time  : ", this.previousTime?.toFixed(2), "ms");
+        console.log("Delta Time     : ", this.deltaTime?.toFixed(4), "s");
+        console.log("FPS            : ", this.fps?.toFixed(0), "/s");
+        console.log("------------------------------");
     }
 }
 
@@ -578,6 +642,17 @@ const gui = {
         rectangleFolder.add(rectangle, "rotation", 0, 360).name("rotation");
         rectangleFolder.add(rectangle, "scaleX", 0.1, 3.0).name("scaleX");
         rectangleFolder.add(rectangle, "scaleY", 0.1, 3.0).name("scaleY");
+
+        const animationFolder = gui.addFolder("Clock");
+        animationFolder.add(clock, "play");
+        animationFolder.add(clock, "pause");
+        animationFolder.add(clock, "reset");
+
+        // Elapsed time display
+        clock.timerDisplay = "0.00 s";
+
+        const timerController = animationFolder.add(clock, "timerDisplay").name("Elapsed Time");
+        timerController.listen();
     }
 };
 

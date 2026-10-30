@@ -1,10 +1,10 @@
 /* #############################################################
-   CHAPTER 1b: Understand requestAnimationFrame() time
+   CHAPTER 0c: Create clock object
 
    Topics:
-   - Pass time in render
-   - Check by looking at logs how often render() gets called
-   - log with both millisec and seconds
+   - save timer related variable in clock object
+   - log the clock object
+   - Observe flickering to much
    #############################################################
 */
 
@@ -491,19 +491,19 @@ const renderSystem = {
     },
     update() {
         const gl = this.gl;
+
         camera.updateProjectionMatrix(gl);
         camera.updateViewMatrix(gl);
-
     },
     render() {
         const gl = this.gl;
 
         // Canvas
         gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
+
         // Background
         gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
         gl.clear(gl.COLOR_BUFFER_BIT);
-
         // COMMON UNIFORMS
         // Shader
         gl.useProgram(shader.program);
@@ -523,8 +523,47 @@ const renderSystem = {
         yAxis.draw(gl);
         // Rectangle
         rectangle.draw(gl);
+
+        //---------------------------------------------------
     }
 };
+
+// =============================================================
+// CLOCK
+// =============================================================
+const clock = {
+    startTime: 0.0,
+    previousTime: 0,
+    currentTime: 0,
+    elapsedTime: 0,
+    deltaTime: 0,
+
+    update(timeStamp) {
+        console.log(timeStamp, this.startTime);
+        if(this.startTime === 0 && timeStamp!= undefined) {
+            this.startTime = timeStamp;
+            this.previousTime = 0;
+        }
+
+        this.currentTime = timeStamp;
+        this.elapsedTime = (this.currentTime - this.startTime) * 0.001;
+        this.deltaTime = (this.currentTime - this.previousTime) * 0.001;
+        this.log();
+        this.previousTime = this.currentTime;
+    },
+    log() {
+        console.clear();
+
+        console.log("----- clock -----------------");
+        console.log("Start Time:   ", this.startTime?.toFixed(2), "ms");
+        console.log("Previous Time:", this.previousTime?.toFixed(2), "ms");
+        console.log("Current Time: ", this.currentTime?.toFixed(2), "ms");
+
+        console.log("---------------------------------");
+        console.log("Delta Time:   ", this.deltaTime?.toFixed(4), "s");
+        console.log("Elapsed Time: ", this.elapsedTime?.toFixed(2), "s");
+    }
+}
 
 // =============================================================
 // GUI
@@ -612,18 +651,11 @@ function appInit() {
 }
 
 function appLoop(timeStamp) {
-
-    // Logs
-    // Timestamp : observe its in milliseconds
-    console.clear();
-    console.log("-------appLoop()-----------");
-    console.log("time (ms) :", timeStamp);
-    console.log("time (sec):", (timeStamp * 0.001)?.toFixed(2));
-
     renderSystem.resizeCanvasToDisplaySize();
+    clock.update(timeStamp);
     renderSystem.update();
     renderSystem.render();
-    requestAnimationFrame(appLoop,timeStamp);
+    requestAnimationFrame(appLoop);
 }
 
 // =============================================================

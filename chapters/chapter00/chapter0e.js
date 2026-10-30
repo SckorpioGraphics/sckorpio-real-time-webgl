@@ -1,8 +1,8 @@
 /* #############################################################
-   CHAPTER 1a: Understand requestAnimationFrame()
+   CHAPTER 0e: Add FPS in clock object 
 
    Topics:
-   - Check by looking at logs how often render() gets called
+   - Add FPS data in clock object
    #############################################################
 */
 
@@ -503,7 +503,6 @@ const renderSystem = {
         // Background
         gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
         gl.clear(gl.COLOR_BUFFER_BIT);
-
         // COMMON UNIFORMS
         // Shader
         gl.useProgram(shader.program);
@@ -523,8 +522,61 @@ const renderSystem = {
         yAxis.draw(gl);
         // Rectangle
         rectangle.draw(gl);
+
+        //---------------------------------------------------
     }
 };
+
+// =============================================================
+// CLOCK
+// =============================================================
+const clock = {
+    startTime: null,
+    previousTime: null,
+    currentTime: 0,
+    deltaTime: 0,
+    lastLogTime: 0,
+    elapsedTime: 0,
+    fps: 0,
+    
+    update(timeStamp) {
+        this.currentTime = timeStamp;
+
+        if (this.startTime === null && timeStamp!= undefined) {
+            this.startTime = timeStamp;
+            this.previousTime = timeStamp;
+        }
+
+        this.elapsedTime = (this.currentTime - this.startTime) * 0.001;
+        this.deltaTime = (this.currentTime - this.previousTime) * 0.001;
+        // Calculate FPS
+        if (this.deltaTime > 0) {
+            this.fps = 1 / this.deltaTime;
+        }
+
+        // Log only once every second
+        if (this.currentTime - this.lastLogTime >= 100) {
+            this.log();
+            this.lastLogTime = this.currentTime;
+        }
+
+        this.previousTime = this.currentTime;
+    },
+
+    log() {
+        console.clear();
+
+        console.log("----- clock -----------------");
+        console.log("Start Time     : ", this.startTime?.toFixed(2), "ms");
+        console.log("Previous Time  : ", this.previousTime?.toFixed(2), "ms");
+        console.log("Current Time   : ", this.currentTime?.toFixed(2), "ms");
+
+        console.log("---------------------------------");
+        console.log("Delta Time     : ", this.deltaTime?.toFixed(4), "s");
+        console.log("Elapsed Time   : ", this.elapsedTime?.toFixed(2), "s");
+        console.log("FPS            : ", this.fps?.toFixed(0), "/s");
+    }
+}
 
 // =============================================================
 // GUI
@@ -611,11 +663,9 @@ function appInit() {
     keyEvent.init();
 }
 
-function appLoop() {
-    // Logs
-    console.log("appLoop() called");
-
+function appLoop(timeStamp) {
     renderSystem.resizeCanvasToDisplaySize();
+    clock.update(timeStamp);
     renderSystem.update();
     renderSystem.render();
     requestAnimationFrame(appLoop);

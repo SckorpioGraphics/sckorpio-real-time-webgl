@@ -1,8 +1,10 @@
 /* #############################################################
-   CHAPTER 1e: Add FPS in clock object 
+   CHAPTER 0d: Create clock object
 
    Topics:
-   - Add FPS data in clock object
+   - save timer related variable in clock object
+   - log the clock object
+   - Fix flickering by lastLogTime > 100ms
    #############################################################
 */
 
@@ -537,7 +539,6 @@ const clock = {
     deltaTime: 0,
     lastLogTime: 0,
     elapsedTime: 0,
-    fps: 0,
     
     update(timeStamp) {
         this.currentTime = timeStamp;
@@ -549,10 +550,6 @@ const clock = {
 
         this.elapsedTime = (this.currentTime - this.startTime) * 0.001;
         this.deltaTime = (this.currentTime - this.previousTime) * 0.001;
-        // Calculate FPS
-        if (this.deltaTime > 0) {
-            this.fps = 1 / this.deltaTime;
-        }
 
         // Log only once every second
         if (this.currentTime - this.lastLogTime >= 100) {
@@ -567,14 +564,13 @@ const clock = {
         console.clear();
 
         console.log("----- clock -----------------");
-        console.log("Start Time     : ", this.startTime?.toFixed(2), "ms");
-        console.log("Previous Time  : ", this.previousTime?.toFixed(2), "ms");
-        console.log("Current Time   : ", this.currentTime?.toFixed(2), "ms");
+        console.log("Start Time:   ", this.startTime?.toFixed(2), "ms");
+        console.log("Previous Time:", this.previousTime?.toFixed(2), "ms");
+        console.log("Current Time: ", this.currentTime?.toFixed(2), "ms");
 
         console.log("---------------------------------");
-        console.log("Delta Time     : ", this.deltaTime?.toFixed(4), "s");
-        console.log("Elapsed Time   : ", this.elapsedTime?.toFixed(2), "s");
-        console.log("FPS            : ", this.fps?.toFixed(0), "/s");
+        console.log("Delta Time:   ", this.deltaTime?.toFixed(4), "s");
+        console.log("Elapsed Time: ", this.elapsedTime?.toFixed(2), "s");
     }
 }
 
