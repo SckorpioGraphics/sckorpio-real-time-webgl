@@ -86,11 +86,11 @@ Chapter 0 — Clock & Time
 The foundation for every time-dependent system.
 
 Phase 1 — Animation
-1	Transform Animation
-2	Color & Alpha Animation
-3	Vertex Animation
-4	Texture Scrolling & Animation
-5	Sprite-Sheet Animation
+1	Vertex Animation
+2	Transform Animation
+3	Color & Alpha Animation
+4	Texture Scrolling Animation
+5	Texture Sprite-Sheet Animation
 
 Phase 2 — Kinematics
 6	Linear Motion
@@ -114,7 +114,80 @@ Phase 4 — Game Systems & Integration
 20	Building the Complete Game Framework
 
 
+Phase 3 — Mechanics
+Proposed final structure
+Chapter 11 — Axis-Aligned Bounding Boxes (AABB)
+Understanding rectangular bounds and basic collision detection.
+Subchapter	Topic	Crisp detail
+11.1	Bounding Volumes	What are bounding volumes and why do we need them?
+11.2	AABB Geometry	Min/max coordinates, center, width and height.
+11.3	Local AABB	Calculate bounding boxes from mesh vertices.
+11.4	World AABB	Transform local bounds into world-space bounds.
+11.5	AABB Transformations	Update bounds under translation, scaling and rotation.
+11.6	AABB Collision Detection	Detect overlap between two AABBs.
+11.7	Collision Visualization	Render debug bounding boxes and demonstrate collisions.
 
+Practical demo: Two moving rectangles with visible AABBs and collision highlighting.
+Chapter 12 — Circular Bounding Volumes
+Circle geometry, bounding circles and circle collision detection.
+Subchapter	Topic	Crisp detail
+12.1	Circle Geometry	Center, radius and circumference.
+12.2	Bounding Circles	Represent objects using circular bounds.
+12.3	Local Bounding Circle	Define local center and radius from geometry or known sprite dimensions.
+12.4	World Bounding Circle	Transform the center and update the radius using object scale.
+12.5	Circle Transformations	Translation, uniform/non-uniform scaling and rotation.
+12.6	Circle Collision Detection	Circle-circle intersection using center distance and radii.
+12.7	Collision Visualization	Render debug circles and demonstrate false-positive collisions.
+
+Practical demo: Moving circular sprites (balls) colliding with each other.
+
+A useful additional demonstration: put a circular bounding volume around a rectangle and show how it can report a collision even when the actual rectangles don't touch.
+
+Important implementation decision: For non-uniform scaling, use the maximum absolute scale factor to maintain a conservative circular bound. No ellipse collision system needed.
+Chapter 13 — Oriented Bounding Boxes (OBB) & SAT
+Handling rotated objects and more advanced collision detection.
+Subchapter	Topic	Crisp detail
+13.1	OBB Geometry	Center, half-extents and orientation axes.
+13.2	Local OBB	Define an oriented bounding box in object-local space.
+13.3	World OBB	Transform its center, axes and half-extents into world space.
+13.4	OBB Transformations	Translation, rotation and scaling.
+13.5	Separating Axis Theorem	Understand separating axes and the SAT principle.
+13.6	Projection onto Axes	Project OBB corners onto candidate axes and compare intervals.
+13.7	OBB Collision Detection	Implement OBB vs OBB collision detection using SAT.
+13.8	Collision Visualization	Show projections, separating axes and collision states.
+
+Practical demo: Two rotating rectangles with OBB collision detection.
+
+This chapter introduces a genuinely new idea: two objects can overlap in their AABBs without actually colliding, and SAT helps us determine whether their OBBs intersect.
+Chapter 14 — Forces, Mass & Newton's Laws
+Understanding why objects accelerate and how forces affect motion.
+Subchapter	Topic	Crisp detail
+14.1	Introduction to Forces	What is a force? Magnitude and direction.
+14.2	Mass & Inertia	How mass affects an object's resistance to changes in motion.
+14.3	Newton's First Law	Inertia and the law of motion.
+14.4	Newton's Second Law	Relationship between force, mass and acceleration: \(F=ma\).
+14.5	Newton's Third Law	Action and reaction forces.
+14.6	Applying Forces	Convert forces into acceleration and update velocity.
+14.7	Multiple Forces	Combine gravity, thrust, friction and other forces.
+14.8	Force-Based Simulation	Build a simple simulation using mass and applied forces.
+
+Practical demo: A box pushed by different forces and masses, followed by a simple rocket propulsion demonstration.
+
+One important distinction: here we move beyond prescribing acceleration directly. We calculate acceleration from the forces acting on an object.
+Chapter 15 — Momentum, Impulse & Collision Response
+Moving from detecting collisions to physically responding to them.
+Subchapter	Topic	Crisp detail
+15.1	Linear Momentum	Momentum as mass multiplied by velocity.
+15.2	Conservation of Momentum	Understand momentum conservation during collisions.
+15.3	Collision Normal	Determine the direction of impact between objects.
+15.4	Impulse	Understand how an impact changes momentum and velocity.
+15.5	Coefficient of Restitution	Model elastic and inelastic collisions.
+15.6	Collision Response	Calculate post-collision velocities for two objects.
+15.7	Penetration Correction	Separate overlapping objects to prevent them from sticking together.
+15.8	Friction in Collisions	Introduce tangential impulses and collision friction.
+15.9	2D Collision Simulation	Combine collision detection and physical response.
+
+Practical demo: Carrom-style collisions between multiple discs, including different masses, impact angles and bounce behaviour.
 
 RUNNING
 -------
