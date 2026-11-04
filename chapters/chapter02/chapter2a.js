@@ -180,13 +180,24 @@ const rectangle = {
         200, 100       // Right Top
     ]),
 
+    // base transforms
+    baseTranslationX: 0,
+    baseTranslationY: 0,
+    baseRotation: 0,
+    baseScaleX: 1.0,
+    baseScaleY: 1.0,
+
+    // current transforms
     translationX: 0,
     translationY: 400,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
+    // model matrix
     modelMatrix: mat3.create(),
-    color: [0.39, 0.33, 0.58, 1.0],     // Sckorpio Purple
+    // color ( Sckorpio Purple )
+    color: [0.39, 0.33, 0.58, 1.0],
 
     //GPU DATA
     shader: null,
@@ -230,6 +241,23 @@ const rectangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+
+        // save base transform
+        this.saveBaseTransform();
+    },
+    saveBaseTransform() {
+        this.baseTranslationX = this.translationX;
+        this.baseTranslationY = this.translationY;
+        this.baseRotation = this.rotation;
+        this.baseScaleX = this.scaleX;
+        this.baseScaleY = this.scaleY;
+    },
+    resetTransform() {
+        this.translationX = this.baseTranslationX;
+        this.translationY = this.baseTranslationY;
+        this.rotation = this.baseRotation;
+        this.scaleX = this.baseScaleX;
+        this.scaleY = this.baseScaleY;
     },
     draw(gl) {
         setupModelMatrix(this);
@@ -582,7 +610,6 @@ const clock = {
         this.timerDisplay = "0.00 s"
         this.log();
     },
-
     update(timeStamp) {
         this.currentTime = timeStamp;
 
@@ -630,9 +657,8 @@ const clock = {
 // ANIMATION INFOS
 // =============================================================
 const animationInfo = {
-    // Animation state
-    translationX: 0,
-    translationY: 0,
+    // mesh
+    mesh: null,
 
     // Translation params
     translationSpeedX: 100,
@@ -642,13 +668,16 @@ const animationInfo = {
     translationFrequencyX: 1,
     translationFrequencyY: 1,
 
+    init(mesh) {
+        this.mesh = mesh;
+    },
     update(elapsedTime) {
         // 2a.1 — Linear X
         // this.translationX = elapsedTime * this.translationParams.speedX;
 
         // 2a.2 — Linear X + Y
-        this.translationX = elapsedTime * this.translationSpeedX;
-        this.translationY = elapsedTime * this.translationSpeedY;
+        this.mesh.translationX = elapsedTime * this.translationSpeedX;
+        this.mesh.translationY = elapsedTime * this.translationSpeedY;
 
         // 2a.3 — Oscillating X
         // this.translationX = Math.sin(elapsedTime * this.translationFrequencyX) * this.translationAmplitudeX;
@@ -658,9 +687,8 @@ const animationInfo = {
         // this.translationY = Math.sin(elapsedTime * this.translationFrequencyY) * this.translationAmplitudeY;
     },
 
-    apply(mesh) {
-        mesh.translationX = this.translationX;
-        mesh.translationY = this.translationY;
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
@@ -669,11 +697,10 @@ const animationInfo = {
 // =============================================================
 const animationSystem = {
     init() {
-        animationInfo.apply(rectangle);
+        animationInfo.init(rectangle);
     },
     update() {
         animationInfo.update(clock.elapsedTime);
-        animationInfo.apply(rectangle);
     }
 };
 
@@ -691,15 +718,21 @@ const gui = {
         rectangleFolder.add(rectangle, "scaleX", 0.1, 3.0).name("scaleX");
         rectangleFolder.add(rectangle, "scaleY", 0.1, 3.0).name("scaleY");
 
-        const animationFolder = gui.addFolder("Clock");
-        animationFolder.add(clock, "play");
-        animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        const clockFolder = gui.addFolder("Clock");
+        clockFolder.add(clock, "play");
+        clockFolder.add(clock, "pause");
+        // Reset everything
+        clockFolder.add({
+            reset: () => {
+                clock.reset();
+                animationSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";
 
-        const timerController = animationFolder.add(clock, "timerDisplay").name("Elapsed Time");
+        const timerController = clockFolder.add(clock, "timerDisplay").name("Elapsed Time");
         timerController.listen();
     }
 };
