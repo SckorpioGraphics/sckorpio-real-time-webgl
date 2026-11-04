@@ -181,15 +181,15 @@ const rectangle = {
     ]),
 
     // base transforms
-    baseTranslationX: 0,
-    baseTranslationY: 0,
-    baseRotation: 0,
-    baseScaleX: 1.0,
-    baseScaleY: 1.0,
+    initialTranslationX: 0,
+    initialTranslationY: 0,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
 
     // current transforms
     translationX: 0,
-    translationY: 400,
+    translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
@@ -242,22 +242,15 @@ const rectangle = {
         this.drawOffset = 0;
         this.drawCount = 6;
 
-        // save base transform
-        this.saveBaseTransform();
-    },
-    saveBaseTransform() {
-        this.baseTranslationX = this.translationX;
-        this.baseTranslationY = this.translationY;
-        this.baseRotation = this.rotation;
-        this.baseScaleX = this.scaleX;
-        this.baseScaleY = this.scaleY;
+        // set to init transform
+        this.resetTransform();
     },
     resetTransform() {
-        this.translationX = this.baseTranslationX;
-        this.translationY = this.baseTranslationY;
-        this.rotation = this.baseRotation;
-        this.scaleX = this.baseScaleX;
-        this.scaleY = this.baseScaleY;
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         setupModelMatrix(this);
@@ -673,23 +666,24 @@ const animationInfo = {
     },
     update(elapsedTime) {
         // 2a.1 — Linear X
-        // this.translationX = elapsedTime * this.translationParams.speedX;
+        // this.mesh.translationX = elapsedTime * this.translationParams.speedX;
 
         // 2a.2 — Linear X + Y
         this.mesh.translationX = elapsedTime * this.translationSpeedX;
         this.mesh.translationY = elapsedTime * this.translationSpeedY;
 
         // 2a.3 — Oscillating X
-        // this.translationX = Math.sin(elapsedTime * this.translationFrequencyX) * this.translationAmplitudeX;
+        // this.mesh.translationX = Math.sin(elapsedTime * this.translationFrequencyX) * this.translationAmplitudeX;
 
         // 2a.4 — Oscillating X + Y
-        // this.translationX = Math.sin(elapsedTime * this.translationFrequencyX) * this.translationAmplitudeX;
-        // this.translationY = Math.sin(elapsedTime * this.translationFrequencyY) * this.translationAmplitudeY;
+        // this.mesh.translationX = Math.sin(elapsedTime * this.translationFrequencyX) * this.translationAmplitudeX;
+        // this.mesh.translationY = Math.sin(elapsedTime * this.translationFrequencyY) * this.translationAmplitudeY;
     },
 
     reset() {
         this.mesh.resetTransform();
     }
+
 };
 
 // =============================================================
@@ -701,6 +695,9 @@ const animationSystem = {
     },
     update() {
         animationInfo.update(clock.elapsedTime);
+    },
+    reset() {
+        animationInfo.reset();
     }
 };
 

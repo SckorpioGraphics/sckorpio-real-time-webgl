@@ -180,13 +180,24 @@ const rectangle = {
         200, 100       // Right Top
     ]),
 
+    // base transforms
+    initialTranslationX: 0,
+    initialTranslationY: 400,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+
+    // current transforms
     translationX: 0,
-    translationY: 400,
+    translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
+    // model matrix
     modelMatrix: mat3.create(),
-    color: [0.39, 0.33, 0.58, 1.0],     // Sckorpio Purple
+    // color ( Sckorpio Purple )
+    color: [0.39, 0.33, 0.58, 1.0],
 
     //GPU DATA
     shader: null,
@@ -230,6 +241,16 @@ const rectangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+
+        // set to init transform
+        this.resetTransform();
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         setupModelMatrix(this);
@@ -630,24 +651,28 @@ const clock = {
 // ANIMATION INFOS
 // =============================================================
 const animationInfo = {
-    // Animation state
-    rotation: 0,
+    // Mesh
+    mesh: null,
 
     // Rotation params
     rotationSpeed: 50,
     rotationAmplitude: 200,
     rotationFrequency: 1,
 
+    init(mesh) {
+        this.mesh = mesh;
+    },
     update(elapsedTime) {
         // 15c.1 — Constant Rotation
-        this.rotation = elapsedTime * this.rotationSpeed;
+        this.mesh.rotation = elapsedTime * this.rotationSpeed;
 
         // 15c.2 — Oscillating Rotation
-        // this.rotation = Math.sin(elapsedTime * this.rotationFrequency) * this.rotationAmplitude;
+        // this.mesh.rotation = Math.sin(elapsedTime * this.rotationFrequency) * this.rotationAmplitude;
     },
-    apply(mesh) {
-        mesh.rotation = this.rotation;
+    reset() {
+        this.mesh.resetTransform();
     }
+
 };
 
 // =============================================================
@@ -655,12 +680,15 @@ const animationInfo = {
 // =============================================================
 const animationSystem = {
     init() {
-        animationInfo.apply(rectangle);
+        animationInfo.init(rectangle);
     },
     update() {
         animationInfo.update(clock.elapsedTime);
-        animationInfo.apply(rectangle);
+    },
+    reset() {
+        animationInfo.reset();
     }
+
 };
 
 // =============================================================
@@ -680,7 +708,12 @@ const gui = {
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                animationSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";

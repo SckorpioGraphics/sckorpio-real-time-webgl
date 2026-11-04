@@ -176,15 +176,23 @@ const triangle = {
         100,  -100,      // Right Bottom
     ]),
 
-    baseTranslationX: 0,
-    baseTranslationY: 0,
+    // base transforms
+    initialTranslationX: 0,
+    initialTranslationY: 0,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
 
+    // current transforms
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
+    // model matrix
     modelMatrix: mat3.create(),
+    // color
     color: [0.0, 1.0, 0.0, 1.0],
 
     //GPU DATA
@@ -229,6 +237,15 @@ const triangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 3;
+        // set to init transform
+        this.resetTransform();
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         setupModelMatrix(this);
@@ -257,15 +274,23 @@ const square = {
         100, 100       // Right Top
     ]),
 
-    baseTranslationX: 0,
-    baseTranslationY: 400,
+    // base transforms
+    initialTranslationX: 0,
+    initialTranslationY: 400,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
 
+    // current transforms
     translationX: 0,
-    translationY: 400,
+    translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
+    // model matrix
     modelMatrix: mat3.create(),
+    // color
     color: [1.0, 0.0, 0.0, 1.0],
 
     //GPU DATA
@@ -310,6 +335,15 @@ const square = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+        // set to init transform
+        this.resetTransform();
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         setupModelMatrix(this);
@@ -338,15 +372,23 @@ const rectangle = {
         200, 100       // Right Top
     ]),
 
-    baseTranslationX: 600,
-    baseTranslationY: 100,
+    // base transforms
+    initialTranslationX: 600,
+    initialTranslationY: 100,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
 
-    translationX: 600,
-    translationY: 100,
+    // current transforms
+    translationX: 0,
+    translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
+    // model matrix
     modelMatrix: mat3.create(),
+    // color
     color: [0.0, 0.0, 1.0, 1.0],
 
     //GPU DATA
@@ -391,6 +433,15 @@ const rectangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+        // set to init transform
+        this.resetTransform();
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         setupModelMatrix(this);
@@ -796,51 +847,49 @@ const clock = {
 // =============================================================
 // ANIMATION INFOS
 // =============================================================
-const animationInfo1 = {
-    // Animation state
-    translationX: 0,
-    translationY: 0,
-    rotation: 0,
-    scaleX: 1,
-    scaleY: 1,
+const animationInfo1 = {    
+    // Mesh
+    mesh: null,
+
     // params
     translationFrequencyX: 1,
     translationAmplitudeX: 100,
 
     update(elapsedTime) {
         // Translation
-        this.translationX = Math.sin(elapsedTime * this.translationFrequencyX) * this.translationAmplitudeX;
+        this.mesh.translationX = this.mesh.initialTranslationX + (Math.sin(elapsedTime * this.translationFrequencyX) * this.translationAmplitudeX);
     },
-    apply(mesh) {
-        mesh.translationX = mesh.baseTranslationX + this.translationX;
+    init(mesh) {
+        this.mesh = mesh;
+    },
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
-const animationInfo2 = {
-    // Animation state
-    translationX: 0,
-    translationY: 0,
-    rotation: 0,
-    scaleX: 1,
-    scaleY: 1,
-    rotationSpeed: 200,
+const animationInfo2 = {    
+    // Mesh
+    mesh: null,
+
     // params
+    rotationSpeed: 200,
+    
     update(elapsedTime) {
         // Rotation
-        this.rotation = elapsedTime * this.rotationSpeed;
+        this.mesh.rotation = elapsedTime * this.rotationSpeed;
     },
-    apply(mesh) {
-        mesh.rotation = this.rotation;
+    init(mesh) {
+        this.mesh = mesh;
+    },
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
-const animationInfo3 = {
-    // Animation state
-    translationX: 0,
-    translationY: 0,
-    rotation: 0,
-    scaleX: 1,
-    scaleY: 1,
+const animationInfo3 = {    
+    // Mesh
+    mesh: null,
+
     // params
     scaleFrequencyX: 1,
     scaleAmplitudeX: 0.2,
@@ -849,12 +898,14 @@ const animationInfo3 = {
 
     update(elapsedTime) {
         // Scale
-        this.scaleX = 1 + Math.sin(elapsedTime * this.scaleFrequencyX) * this.scaleAmplitudeX;
-        this.scaleY = 1 + Math.sin(elapsedTime * this.scaleFrequencyY) * this.scaleAmplitudeY;
+        this.mesh.scaleX = 1 + Math.sin(elapsedTime * this.scaleFrequencyX) * this.scaleAmplitudeX;
+        this.mesh.scaleY = 1 + Math.sin(elapsedTime * this.scaleFrequencyY) * this.scaleAmplitudeY;
     },
-    apply(mesh) {
-        mesh.scaleX = this.scaleX;
-        mesh.scaleY = this.scaleY;
+    init(mesh) {
+        this.mesh = mesh;
+    },
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
@@ -863,17 +914,19 @@ const animationInfo3 = {
 // =============================================================
 const animationSystem = {
     init() {
-        animationInfo1.apply(rectangle);
-        animationInfo2.apply(triangle);
-        animationInfo3.apply(square);
+        animationInfo1.init(rectangle);
+        animationInfo2.init(triangle);
+        animationInfo3.init(square);
     },
     update() {
         animationInfo1.update(clock.elapsedTime);
         animationInfo2.update(clock.elapsedTime);
         animationInfo3.update(clock.elapsedTime);
-        animationInfo1.apply(rectangle);
-        animationInfo2.apply(triangle);
-        animationInfo3.apply(square);
+    },
+    reset() {
+        animationInfo1.reset();
+        animationInfo2.reset();
+        animationInfo3.reset();
     }
 };
 
@@ -894,7 +947,12 @@ const gui = {
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                animationSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";
