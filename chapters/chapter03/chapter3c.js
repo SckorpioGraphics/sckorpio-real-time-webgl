@@ -178,13 +178,22 @@ const square = {
         100, 100       // Right Top
     ]),
 
+    // initial transform
+    initialTranslationX: 200,
+    initialTranslationY: 300,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+    // current transforms
     translationX: 200,
     translationY: 300,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
-    color: [1.0, 0.0, 0.0, 0.6],
+    // model
     modelMatrix: mat3.create(),
+    // color
+    color: [1.0, 0.0, 0.0, 0.6],
 
     //GPU DATA
     shader: null,
@@ -229,6 +238,13 @@ const square = {
         this.drawOffset = 0;
         this.drawCount = 6;
     },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
+    },
     draw(gl) {
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
@@ -256,11 +272,18 @@ const rectangle = {
         200, 100       // Right Top
     ]),
 
+    initialTranslationX: 400,
+    initialTranslationY: 200,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+
     translationX: 400,
     translationY: 200,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
     color: [0.0, 1.0, 0.0, 0.4],
     modelMatrix: mat3.create(),
 
@@ -306,6 +329,13 @@ const rectangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         setupModelMatrix(this);
@@ -712,33 +742,42 @@ const clock = {
 // =============================================================
 // ANIMATION INFOS
 // =============================================================
-const animationInfo1 = {
-    // Animation state
-    color: [1.0, 1.0, 1.0, 1.0],
-    colorFrequency: 1,
+const animationInfo1 = {    // Mesh
+    mesh: null,
+colorFrequency: 1,
     colorAmplitude: 1,
 
     update(elapsedTime) {
         let channel = (1.0 + Math.sin(elapsedTime * this.colorFrequency) * this.colorAmplitude) / 2.0;
-        this.color[3] = channel;
+        this.mesh.color[3] = channel;
+
     },
-    apply(mesh) {
-        mesh.color[3] = this.color[3];
+    init(mesh) {
+        this.mesh = mesh;
+    },
+    reset() {
+        this.mesh.resetTransform();
+
     }
+
 };
 
-const animationInfo2 = {
-    // Animation state
-    color: [1.0, 1.0, 1.0, 1.0],
+const animationInfo2 = {    
+    // Mesh
+    mesh: null,
+    // color param
     colorFrequency: 3,
     colorAmplitude: 1,
 
     update(elapsedTime) {
         let channel = (1.0 + Math.sin(elapsedTime * this.colorFrequency) * this.colorAmplitude) / 2.0;
-        this.color[3] = 1.0 - channel;
+        this.mesh.color[3] = 1.0 - channel;
     },
-    apply(mesh) {
-        mesh.color[3] = this.color[3];
+    init(mesh) {
+        this.mesh = mesh;
+    },
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
@@ -747,14 +786,16 @@ const animationInfo2 = {
 // =============================================================
 const animationSystem = {
     init() {
-        animationInfo1.apply(rectangle);
-        animationInfo2.apply(square);
+        animationInfo1.init(rectangle);
+        animationInfo2.init(square);
     },
     update() {
         animationInfo1.update(clock.elapsedTime);
         animationInfo2.update(clock.elapsedTime);
-        animationInfo1.apply(rectangle);
-        animationInfo2.apply(square);
+    },
+    reset() {
+        animationInfo1.reset();
+        animationInfo2.reset();
     }
 };
 
@@ -775,7 +816,12 @@ const gui = {
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                animationSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";

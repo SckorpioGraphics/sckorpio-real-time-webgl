@@ -178,13 +178,22 @@ const rectangle = {
         200, 100       // Right Top
     ]),
 
+    // initial transform
+    initialTranslationX: 0,
+    initialTranslationY: 400,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+    // current transforms
     translationX: 0,
     translationY: 400,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+    // model matrix
     modelMatrix: mat3.create(),
-    color: [0.39, 0.33, 0.58, 1.0],     // Sckorpio Purple
+    // color (Sckorpio Purple)
+    color: [0.39, 0.33, 0.58, 1.0],    
 
     //GPU DATA
     shader: null,
@@ -228,6 +237,13 @@ const rectangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         setupModelMatrix(this);
@@ -627,18 +643,22 @@ const clock = {
 // =============================================================
 // ANIMATION INFOS
 // =============================================================
-const animationInfo = {
-    // Animation state
-    color: [1.0, 1.0, 1.0, 1.0],
+const animationInfo = {    
+    // Mesh
+    mesh: null,
+    // param
     colorFrequency: 3,
     colorAmplitude: 1,
 
     update(elapsedTime) {
         let channel = Math.abs(Math.sin(elapsedTime * this.colorFrequency)) * this.colorAmplitude;
-        this.color = [channel, 1.0 - channel, 1.0, 1.0];
+        this.mesh.color = [channel, 1.0 - channel, 1.0, 1.0];
     },
-    apply(mesh) {
-        mesh.color = this.color;
+    init(mesh) {
+        this.mesh = mesh;
+    },
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
@@ -647,11 +667,13 @@ const animationInfo = {
 // =============================================================
 const animationSystem = {
     init() {
-        animationInfo.apply(rectangle);
+        animationInfo.init(rectangle);
     },
     update() {
         animationInfo.update(clock.elapsedTime);
-        animationInfo.apply(rectangle);
+    },
+    reset() {
+        animationInfo.reset();
     }
 };
 
@@ -672,7 +694,12 @@ const gui = {
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                animationSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";

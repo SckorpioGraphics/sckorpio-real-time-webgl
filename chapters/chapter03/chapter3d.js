@@ -1,9 +1,10 @@
 /* #############################################################
-   CHAPTER 3d: Animation Vertex Color
+   CHAPTER 3d: Animation Uniform Color
 
    Topics:
    - Animate color of rectangle
-   - But by vertex Color data
+   - But by uniform mixing with vertex Color data
+   - No vertexData manipulation
    #############################################################
 */
 
@@ -74,11 +75,12 @@ const colorVertexShader = {
     uniform mat3 u_modelMatrix;
     uniform mat3 u_viewMatrix;
     uniform mat3 u_projectionMatrix;
+    uniform vec4 u_color;
 
     void main() {
         vec3 localPosition = vec3(a_position, 1.0);
         vec3 clipPosition = u_projectionMatrix * u_viewMatrix * u_modelMatrix * localPosition;
-        v_color = a_color;
+        v_color = mix(a_color, u_color, 0.5);
         gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
     }
 `,
@@ -100,7 +102,9 @@ const colorVertexShader = {
     uniforms: {
         modelMatrix: null,
         viewMatrix: null,
-        projectionMatrix: null
+        projectionMatrix: null,
+        color: null,
+        animationFactor: null
     },
 
     //FUNCTIONS
@@ -117,6 +121,7 @@ const colorVertexShader = {
         this.uniforms.modelMatrix = gl.getUniformLocation(this.program, "u_modelMatrix");
         this.uniforms.viewMatrix = gl.getUniformLocation(this.program, "u_viewMatrix");
         this.uniforms.projectionMatrix = gl.getUniformLocation(this.program, "u_projectionMatrix");
+        this.uniforms.color = gl.getUniformLocation(this.program, "u_color");
     }
 };
 
@@ -234,13 +239,22 @@ const rectangle = {
         200,  100,      0.0, 0.0, 1.0, 1.0, // Right Top
     ]),
 
+    // initial transform
+    initialTranslationX: 0,
+    initialTranslationY: 400,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+    // current transforms
     translationX: 0,
     translationY: 400,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+    // model matrix
     modelMatrix: mat3.create(),
-    color: [0.39, 0.33, 0.58, 1.0],     // Sckorpio Purple
+    // color (Sckorpio Purple)
+    color: [0.39, 0.33, 0.58, 1.0],     
 
     //GPU DATA
     shader: null,
@@ -258,7 +272,7 @@ const rectangle = {
         // Vertex Buffer
         this.vbo = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.DYNAMIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
 
         // Vertex Array
         this.vao = gl.createVertexArray();
@@ -293,15 +307,19 @@ const rectangle = {
         this.drawOffset = 0;
         this.drawCount = 6;
     },
-    update(gl){
-        gl.bindVertexArray(this.vao);
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.DYNAMIC_DRAW);
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         gl.useProgram(this.shader.program);
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
+        gl.uniform4fv(this.shader.uniforms.color,this.color);
+        gl.uniform1f(this.shader.uniforms.animationFactor,this.animationFactor);
         gl.bindVertexArray(this.vao);
         gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
@@ -561,7 +579,6 @@ const renderSystem = {
     update() {
         const gl = this.gl;
 
-        rectangle.update(gl)
         camera.updateProjectionMatrix(gl);
         camera.updateViewMatrix(gl);
 
@@ -570,8 +587,6 @@ const renderSystem = {
         const gl = this.gl;
 
         // -------------------------------------
-
-        // Update Rectangle
         // ---------------------------------------
         gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
@@ -709,26 +724,20 @@ const clock = {
 // =============================================================
 // ANIMATION INFOS
 // =============================================================
-const animationInfo = {
-    // Animation state
-    colorFrequency: 7,
+const animationInfo = {    // Mesh
+    mesh: null,
+    colorFrequency: 8,
     colorAmplitude: 1,
-    channel: 0,
 
-    update(elapsedTime) {
-        this.channel = (1 + (Math.sin(elapsedTime * this.colorFrequency)))/2.0 * this.colorAmplitude;
+    init(mesh) {
+        this.mesh = mesh;
     },
-    apply(mesh) {
-        const c = this.channel;
-        mesh.vertexData = new Float32Array([
-            -200,-100,      c,    1-c,      1-c,    1.0, // Left Bottom
-            200, -100,    1-c,      c,      1-c,    1.0, // Right Bottom
-            -200, 100,      c,      c,      1-c,    1.0, // Left Top
-
-            -200, 100,      c,      c,      1-c,    1.0, // Left Top
-            200, -100,    1-c,      c,      1-c,    1.0, // Right Bottom
-            200,  100,    1-c,    1-c,        c,    1.0, // Right Top
-        ]);
+    update(elapsedTime) {
+        let channel = (1.0 + Math.sin(elapsedTime * this.colorFrequency) * this.colorAmplitude) / 2.0;
+        this.mesh.color = [channel, channel/2.0 , 1 - channel, 1.0];
+    },
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
@@ -737,11 +746,13 @@ const animationInfo = {
 // =============================================================
 const animationSystem = {
     init() {
-        animationInfo.apply(rectangle);
+        animationInfo.init(rectangle);
     },
     update() {
         animationInfo.update(clock.elapsedTime);
-        animationInfo.apply(rectangle);
+    },
+    reset() {
+        animationInfo.reset();
     }
 };
 
@@ -762,7 +773,12 @@ const gui = {
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                animationSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";
