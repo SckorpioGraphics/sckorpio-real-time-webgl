@@ -180,6 +180,11 @@ const square = {
         100, 100       // Right Top
     ]),
 
+    initialTranslationX: 0,
+    initialTranslationY: 400,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
     translationX: 0,
     translationY: 400,
     rotation: 0,
@@ -230,6 +235,13 @@ const square = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         setupModelMatrix(this);
@@ -630,27 +642,26 @@ const clock = {
 // =============================================================
 // ANIMATION INFOS
 // =============================================================
-const animationInfo = {
-    // Animation state
-    translationX: 0,
-    translationY: 0,
-
+const animationInfo = {    
+    // Mesh
+    mesh: null,
     // Translation params
     translationSpeedX: 100,
     translationSpeedY: 50,
 
+    init(mesh) {
+        this.mesh = mesh;
+    },
     update(elapsedTime) {
         // 2a.1 — Linear X
         // this.translationX = elapsedTime * this.translationParams.speedX;
 
         // 2a.2 — Linear X + Y
-        this.translationX = elapsedTime * this.translationSpeedX;
-        this.translationY = elapsedTime * this.translationSpeedY;
+        this.mesh.translationX = elapsedTime * this.translationSpeedX;
+        this.mesh.translationY = elapsedTime * this.translationSpeedY;
     },
-
-    apply(mesh) {
-        mesh.translationX = this.translationX;
-        mesh.translationY = this.translationY;
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
@@ -659,12 +670,15 @@ const animationInfo = {
 // =============================================================
 const animationSystem = {
     init() {
-        animationInfo.apply(square);
+        animationInfo.init(square);
     },
     update() {
         animationInfo.update(clock.elapsedTime);
-        animationInfo.apply(square);
+    },
+    reset() {
+        animationInfo.reset();
     }
+
 };
 
 // =============================================================
@@ -684,7 +698,12 @@ const gui = {
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                animationSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";

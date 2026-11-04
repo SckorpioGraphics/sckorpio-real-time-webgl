@@ -1,12 +1,12 @@
 /* #############################################################
-   CHAPTER 6g: Sckorpio driving Tank (top view)
+   CHAPTER 6g: Sckorpio driving airplane (top view)
 
    Topics:
-   - Apply 2D Linear Motion on Tank
+   - Apply 2D Linear Motion on airplane
    - Use unitVector & Speed for velocityX, velocityY
    - Use clock for delta time
    - create animation object
-   - apply on the Square Textured with Tank 
+   - apply on the Square Textured with airplane 
    #############################################################
 */
 
@@ -160,8 +160,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
 // =============================================================
 // TEXTURE OBJECTS
 // =============================================================
-const tankTexture = {
-    imagePath: "chapters/chapter06/assets/tank_Texture.png",
+const airplaneTexture = {
+    imagePath: "chapters/chapter06/assets/airplane_Texture.png",
 
     image: null,
     handle: null,
@@ -295,7 +295,7 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const tank = {
+const airplane = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -314,11 +314,18 @@ const tank = {
         100,  100,      1, 1
     ]),
 
+    initialTranslationX: 0,
+    initialTranslationY: 0,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+    
     modelMatrix: mat3.create(),
 
     //GPU DATA
@@ -376,6 +383,13 @@ const tank = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         // Shader
@@ -640,7 +654,7 @@ const renderSystem = {
         gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 
         //Textures
-        tankTexture.init(gl);
+        airplaneTexture.init(gl);
 
         //Shaders
         basicShader.init(gl);
@@ -650,7 +664,7 @@ const renderSystem = {
         grid.init(gl, basicShader);
         xAxis.init(gl, basicShader);
         yAxis.init(gl, basicShader);
-        tank.init(gl, textureShader, tankTexture);
+        airplane.init(gl, textureShader, airplaneTexture);
     },
     update() {
         const gl = this.gl;
@@ -691,8 +705,8 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // tank
-        tank.draw(gl);
+        // airplane
+        airplane.draw(gl);
 
         //---------------------------------------------------
     }
@@ -836,6 +850,9 @@ const physicsInfo = {
         this.mesh.translationX += deltaTime * this.velocityX;
         this.mesh.translationY += deltaTime * this.velocityY;
         this.mesh.rotation = this.directionAngle;
+    },
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
@@ -844,10 +861,13 @@ const physicsInfo = {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfo.init(tank);
+        physicsInfo.init(airplane);
     },
     update() {
         physicsInfo.update(clock.deltaTime);
+    },
+    reset() {
+        physicsInfo.reset();
     }
 };
 
@@ -865,7 +885,12 @@ const gui = {
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                physicsSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";
