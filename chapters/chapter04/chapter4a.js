@@ -786,9 +786,18 @@ const clock = {
 // =============================================================
 // ANIMATION INFOS
 // =============================================================
-const animationInfo = {
+const animationInfo = {    
+    // Mesh
+    mesh: null,
+    
+    init(mesh) {
+        this.mesh = mesh;
+    },
     update(elapsedTime) {
         
+    },
+    reset() {
+
     }
 };
 
@@ -809,7 +818,11 @@ const gui = {
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";

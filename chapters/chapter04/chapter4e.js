@@ -319,11 +319,18 @@ const square = {
         100,  100,      1, 1
     ]),
 
+    initialTranslationX: 100,
+    initialTranslationY: 100,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+
     translationX: 100,
     translationY: 100,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
     modelMatrix: mat3.create(),
     texCoordOffset : [0.0, 0.0],
     texCoordScale : [0.1, 1.0],
@@ -381,6 +388,13 @@ const square = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         // Shader
@@ -800,14 +814,20 @@ const clock = {
 // =============================================================
 // ANIMATION INFOS
 // =============================================================
-const animationInfo = {
+const animationInfo = {    
+    // Mesh
+    mesh: null,
     offSetX: 0,
     speed: 0.5,
+    init(mesh) {
+        this.mesh = mesh;
+    },
     update(elapsedTime) {
         this.offSetX = elapsedTime * this.speed;
+        this.mesh.texCoordOffset = [this.offSetX, 0];
     },
-    apply(mesh) {
-        mesh.texCoordOffset = [this.offSetX, 0];
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
@@ -816,12 +836,15 @@ const animationInfo = {
 // =============================================================
 const animationSystem = {
     init() {
-        animationInfo.apply(square);
+        animationInfo.init(square);
     },
     update() {
         animationInfo.update(clock.elapsedTime);
-        animationInfo.apply(square);
+    },
+    reset() {
+        animationInfo.reset();
     }
+
 };
 
 // =============================================================
@@ -841,7 +864,12 @@ const gui = {
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                animationSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";
