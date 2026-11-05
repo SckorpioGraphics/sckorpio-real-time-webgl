@@ -1,13 +1,13 @@
 /* #############################################################
-   CHAPTER 7g: Sckorpio driving Tank Accelerated (top view)
+   CHAPTER 7g: Sckorpio driving car Accelerated (top view)
 
    Topics:
-   - Apply 2D Accelerated Motion on Tank
+   - Apply 2D Accelerated Motion on car
    - Use unitVector & Speed for velocityX, velocityY
    - Adding acceleration in direction of motion only
    - Use A,W,S,D as controls
    - Use clock for delta time
-   - apply on the Square Textured with Tank 
+   - apply on the Square Textured with car 
    #############################################################
 */
 
@@ -161,8 +161,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
 // =============================================================
 // TEXTURE OBJECTS
 // =============================================================
-const tankTexture = {
-    imagePath: "chapters/chapter07/assets/tank_Texture.png",
+const carTexture = {
+    imagePath: "chapters/chapter07/assets/car_Texture.png",
 
     image: null,
     handle: null,
@@ -296,7 +296,7 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const tank = {
+const car = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -315,11 +315,18 @@ const tank = {
         100,  100,      1, 1
     ]),
 
+    initialTranslationX: 0,
+    initialTranslationY: 0,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
     modelMatrix: mat3.create(),
 
     //GPU DATA
@@ -377,6 +384,13 @@ const tank = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         // Shader
@@ -641,7 +655,7 @@ const renderSystem = {
         gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 
         //Textures
-        tankTexture.init(gl);
+        carTexture.init(gl);
 
         //Shaders
         basicShader.init(gl);
@@ -651,7 +665,7 @@ const renderSystem = {
         grid.init(gl, basicShader);
         xAxis.init(gl, basicShader);
         yAxis.init(gl, basicShader);
-        tank.init(gl, textureShader, tankTexture);
+        car.init(gl, textureShader, carTexture);
     },
     update() {
         const gl = this.gl;
@@ -692,8 +706,8 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // tank
-        tank.draw(gl);
+        // car
+        car.draw(gl);
 
         //---------------------------------------------------
     }
@@ -844,6 +858,9 @@ const physicsInfo = {
         this.mesh.translationX += deltaTime * this.velocityX;
         this.mesh.translationY += deltaTime * this.velocityY;
         this.mesh.rotation = this.directionAngle;
+    },
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
@@ -852,10 +869,13 @@ const physicsInfo = {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfo.init(tank);
+        physicsInfo.init(car);
     },
     update() {
         physicsInfo.update(clock.deltaTime);
+    },
+    reset() {
+        physicsInfo.reset();
     }
 };
 
@@ -874,7 +894,12 @@ const gui = {
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                physicsSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";

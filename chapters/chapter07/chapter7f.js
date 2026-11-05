@@ -314,11 +314,18 @@ const tank = {
         100,  100,      1, 1
     ]),
 
+    initialTranslationX: 0,
+    initialTranslationY: 0,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
     modelMatrix: mat3.create(),
 
     //GPU DATA
@@ -376,6 +383,13 @@ const tank = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         // Shader
@@ -837,7 +851,9 @@ const physicsInfo = {
         this.mesh.translationX += deltaTime * this.velocityX;
         this.mesh.translationY += deltaTime * this.velocityY;
         this.mesh.rotation = this.directionAngle;
-
+    },
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
@@ -850,6 +866,9 @@ const physicsSystem = {
     },
     update() {
         physicsInfo.update(clock.deltaTime);
+    },
+    reset() {
+        physicsInfo.reset();
     }
 };
 
@@ -867,7 +886,12 @@ const gui = {
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                physicsSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";
