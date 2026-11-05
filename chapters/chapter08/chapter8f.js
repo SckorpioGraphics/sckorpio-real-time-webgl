@@ -1,13 +1,12 @@
 /* #############################################################
-   CHAPTER 8f: Projectile with Missile Texture missile
+   CHAPTER 8f: Add thrust for rocket
 
    Topics:
-   - Using speed and Unit vector instead of velocity
-   - Apply 2D Projectile Motion on Arrow head
+   - Initial velocity for rocket
+   - Adding thrust acceleration for rocket
    - Adding Gravity as Y acceleration
-   - Use Speed and unit vector
    - Use clock for delta time
-   - Also rotate missile head according to X-Y velocity
+   - Also rotate rocket head according to X-Y velocity
    #############################################################
 */
 
@@ -161,8 +160,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
 // =============================================================
 // TEXTURE OBJECTS
 // =============================================================
-const missileTexture = {
-    imagePath: "chapters/chapter08/assets/tankMissile_Texture.png",
+const rocketTexture = {
+    imagePath: "chapters/chapter08/assets/rocket_Texture.png",
 
     image: null,
     handle: null,
@@ -296,7 +295,7 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const missile = {
+const rocket = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -315,11 +314,18 @@ const missile = {
         100,  100,      1, 1
     ]),
 
+    initialTranslationX: 0,
+    initialTranslationY: 0,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
     modelMatrix: mat3.create(),
 
     //GPU DATA
@@ -377,6 +383,13 @@ const missile = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         // Shader
@@ -645,13 +658,13 @@ const renderSystem = {
         textureShader.init(gl);
 
         //Textures
-        missileTexture.init(gl);
+        rocketTexture.init(gl);
 
         //Objects
         grid.init(gl, basicShader);
         xAxis.init(gl, basicShader);
         yAxis.init(gl, basicShader);
-        missile.init(gl, textureShader, missileTexture);
+        rocket.init(gl, textureShader, rocketTexture);
     },
     update() {
         const gl = this.gl;
@@ -689,8 +702,8 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // missile
-        missile.draw(gl);
+        // rocket
+        rocket.draw(gl);
     }
 };
 
@@ -796,41 +809,33 @@ const clock = {
 const physicsInfo = {
     // Object connected
     mesh: null,
-    // Speed
-    speed: 1200,
-    // Unit Direction Vector
-    directionX: 1.0,
-    directionY: 0.0,
-    directionAngle: 45,
     // Velocity
-    velocityX: 0,
     velocityY: 0,
+    // Thrust acceleration 
+    thrustY: 2000,
     // Acceleration
-    accelerationX: 0,
     accelerationY: -980, // mimic gravity
 
     init(mesh) {
         this.mesh = mesh;
-        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
-        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
-        this.velocityX = this.speed * this.directionX;
-        this.velocityY = this.speed * this.directionY;
-    },
-    updateVelocity() {
-        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
-        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
-        this.velocityX = this.speed * this.directionX;
-        this.velocityY = this.speed * this.directionY;
-        this.mesh.rotation = this.directionAngle;
     },
     update(deltaTime) {
-        this.velocityX += deltaTime * this.accelerationX;
-        this.velocityY += deltaTime * this.accelerationY;
-        this.directionAngle = Math.atan(this.velocityY/this.velocityX) * 180 / Math.PI;
-
-        this.mesh.translationX += deltaTime * this.velocityX;
+        // velocity Y ( update with gravity )
+        this.velocityY += deltaTime * (this.accelerationY + this.thrustY);
+        // mesh transforms
         this.mesh.translationY += deltaTime * this.velocityY;
-        this.mesh.rotation = this.directionAngle;
+        // mesh orientation
+        if(this.velocityY >= 0){
+            this.mesh.rotation = 0;
+        } else {
+            this.mesh.rotation = 180;
+        }
+        // chase camera
+        camera.positionX = (this.mesh.translationX - 300) * camera.zoom;
+        camera.positionY = (this.mesh.translationY - 400) * camera.zoom;
+    },
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
@@ -839,10 +844,13 @@ const physicsInfo = {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfo.init(missile);
+        physicsInfo.init(rocket);
     },
     update() {
         physicsInfo.update(clock.deltaTime);
+    },
+    reset() {
+        physicsInfo.reset();
     }
 };
 
@@ -854,13 +862,19 @@ const gui = {
         const gui = new lil.GUI();
 
         const physicsFolder = gui.addFolder("Physics");
-        physicsFolder.add(physicsInfo, "speed", 0, 3000).name("Speed").onChange(() => physicsInfo.updateVelocity());
-        physicsFolder.add(physicsInfo, "directionAngle", 0, 180).name("Angle").onChange(() => physicsInfo.updateVelocity()); 
-        
+        physicsFolder.add(physicsInfo, "velocityY", -500, 4000).name("velocityY");
+        physicsFolder.add(physicsInfo, "thrustY", -1000, 5000).name("thrustY");
+        physicsFolder.add(physicsInfo, "accelerationY", -1000, 1000).name("accelerationY");
+
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                physicsSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";

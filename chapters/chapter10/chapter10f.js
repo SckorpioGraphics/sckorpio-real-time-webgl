@@ -973,7 +973,7 @@ const physicsInfoWheel = {
     // Angular Velocity
     angularVelocity: 0,
     // radius
-    radius: 100,
+    radius: 50,
 
     init(meshes) {
         this.meshes = meshes;

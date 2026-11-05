@@ -1,14 +1,11 @@
 /* #############################################################
-   CHAPTER 8d: Projectile Motion
+   CHAPTER 8d: orientation or Rocket during gravity
 
    Topics:
-   - Apply 2D Projectile Motion on Square
+   - Initial velocity for rocket
    - Adding Gravity as Y acceleration
-   - No acceleration X
-   - Use velocityX, velocityY
    - Use clock for delta time
-   - create animation object
-   - apply on the square
+   - Also rotate rocket head according to X-Y velocity
    #############################################################
 */
 
@@ -16,7 +13,7 @@
 // SHADER OBJECTS
 // =============================================================
 //Shader Object1
-const shader = {
+const basicShader = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -69,6 +66,67 @@ const shader = {
     }
 };
 
+const textureShader = {
+    vertexShaderSource: `#version 300 es
+        in vec2 a_position;
+        in vec2 a_texCoord;
+
+        uniform mat3 u_modelMatrix;
+        uniform mat3 u_viewMatrix;
+        uniform mat3 u_projectionMatrix;
+
+        out vec2 v_texCoord;
+
+        void main() {
+            vec3 localPosition = vec3(a_position, 1.0);
+            vec3 clipPosition = u_projectionMatrix * u_viewMatrix * u_modelMatrix * localPosition;
+            gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
+            v_texCoord = a_texCoord;
+        }
+    `,
+
+    fragmentShaderSource: `#version 300 es
+        precision mediump float;
+
+        uniform sampler2D u_texture;
+        in vec2 v_texCoord;
+        out vec4 out_color;
+
+        void main() {
+            out_color = texture(u_texture, v_texCoord);
+        }
+    `,
+
+    program: null,
+
+    attributes: {
+        position: null,
+        texCoord: null
+    },
+
+    uniforms: {
+        modelMatrix: null,
+        viewMatrix: null,
+        projectionMatrix: null,
+        texture: null
+    },
+
+    init(gl) {
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, this.vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, this.fragmentShaderSource);
+        // program
+        this.program = createProgram(gl, vertexShader, fragmentShader);
+        // attribute
+        this.attributes.position = gl.getAttribLocation(this.program, "a_position");
+        this.attributes.texCoord = gl.getAttribLocation(this.program, "a_texCoord");
+        // uniform
+        this.uniforms.modelMatrix = gl.getUniformLocation(this.program, "u_modelMatrix");
+        this.uniforms.viewMatrix = gl.getUniformLocation(this.program, "u_viewMatrix");
+        this.uniforms.projectionMatrix = gl.getUniformLocation(this.program, "u_projectionMatrix");
+        this.uniforms.texture = gl.getUniformLocation(this.program, "u_texture");
+    }
+};
+
 // Compile Shader
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
@@ -96,6 +154,77 @@ function createProgram(gl, vertexShader, fragmentShader) {
 
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
+}
+
+// =============================================================
+// TEXTURE OBJECTS
+// =============================================================
+const rocketTexture = {
+    imagePath: "chapters/chapter08/assets/rocket_Texture.png",
+
+    image: null,
+    handle: null,
+    loaded: false,
+
+    init(gl) {
+        createTexture(gl, this);
+    },
+
+    bind(gl, textureUnit = 0) {
+        gl.activeTexture(gl.TEXTURE0 + textureUnit);
+        gl.bindTexture(gl.TEXTURE_2D, this.handle);
+    }
+};
+
+function createTexture(gl, texture) {
+    texture.handle = gl.createTexture();
+
+    gl.bindTexture(gl.TEXTURE_2D, texture.handle);
+
+    // Temporary cyan pixel while the image loads.
+    gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        1,
+        1,
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        new Uint8Array([82, 161, 171, 255])
+    );
+
+    // No mipmaps yet.
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+
+    texture.image = new Image();
+
+    texture.image.onload = () => {
+        gl.bindTexture(gl.TEXTURE_2D, texture.handle);
+
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            texture.image
+        );
+
+        texture.loaded = true;
+        console.log("Texture loaded:", texture.imagePath);
+    };
+
+    texture.image.onerror = () => {
+        console.error(
+            "Could not load texture image:",
+            texture.imagePath
+        );
+    };
+
+    texture.image.src = texture.imagePath;
 }
 
 // =============================================================
@@ -165,7 +294,7 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const square = {
+const rocket = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -174,25 +303,33 @@ const square = {
 
     // CPU DATA
     vertexData: new Float32Array([
-        -100, -100,      // Left Bottom
-        100, -100,      // Right Bottom
-        -100, 100,      // Left Top
+        // Position     // UV
+        -100, -100,     0, 0,
+        100, -100,      1, 0,
+        -100,  100,     0, 1,
 
-        -100, 100,      // Left Top
-        100, -100,      // Right Bottom
-        100, 100       // Right Top
+        -100,  100,     0, 1,
+        100, -100,      1, 0,
+        100,  100,      1, 1
     ]),
+
+    initialTranslationX: 0,
+    initialTranslationY: 0,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
 
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
     modelMatrix: mat3.create(),
-    color: [0.39, 0.33, 0.58, 1.0],     // Sckorpio Purple
 
     //GPU DATA
     shader: null,
+    texture: null,
     vao: null,
     vbo: null,
     drawMode: null,
@@ -200,9 +337,10 @@ const square = {
     drawCount: 0,
 
     //FUNCTIONS
-    init(gl, shader) {
+    init(gl, shader, texture) {
         // Connect shader to mesh
         this.shader = shader;
+        this.texture = texture;
 
         // Vertex Buffer
         this.vbo = gl.createBuffer();
@@ -222,11 +360,22 @@ const square = {
         // Vertex data format
         gl.vertexAttribPointer(
             this.shader.attributes.position,
-            2,                                      // size: 2 components (X, Y)
-            gl.FLOAT,                               // type: 32-bit float
-            false,                                  // normalize
-            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
-            0                                       // offset: start of buffer
+            2,          // size: 2 components (X, Y)
+            gl.FLOAT,   // type: 32-bit float
+            false,      // normalize
+            4 * Float32Array.BYTES_PER_ELEMENT, // stride: 4(tightly packed)
+            0           // offset: start of buffer
+        );
+
+        // Texture coordinates: u, v
+        gl.enableVertexAttribArray(this.shader.attributes.texCoord);
+        gl.vertexAttribPointer(
+            this.shader.attributes.texCoord,
+            2,
+            gl.FLOAT,
+            false,
+            4 * Float32Array.BYTES_PER_ELEMENT,
+            2 * Float32Array.BYTES_PER_ELEMENT
         );
 
         // Draw data
@@ -234,11 +383,25 @@ const square = {
         this.drawOffset = 0;
         this.drawCount = 6;
     },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
+    },
     draw(gl) {
+        // Shader
+        gl.useProgram(this.shader.program);
+        // Modle Matrix
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-        gl.uniform4fv(this.shader.uniforms.color,this.color);
+        // Texture
+        this.texture.bind(gl, 0);
+        gl.uniform1i(this.shader.uniforms.texture, 0);
+        // vao
         gl.bindVertexArray(this.vao);
+        // draw call
         gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
@@ -484,15 +647,23 @@ const renderSystem = {
         if (!this.gl) return;
         const gl = this.gl;
 
+        // Blending: Enable Alpha Blending
+        gl.enable(gl.BLEND);
+        // Set Blend Function
+        gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+        
         //Shaders
-        shader.init(gl);
+        basicShader.init(gl);
+        textureShader.init(gl);
+
+        //Textures
+        rocketTexture.init(gl);
 
         //Objects
-        grid.init(gl, shader);
-        xAxis.init(gl, shader);
-        yAxis.init(gl, shader);
-        square.init(gl, shader);
-
+        grid.init(gl, basicShader);
+        xAxis.init(gl, basicShader);
+        yAxis.init(gl, basicShader);
+        rocket.init(gl, textureShader, rocketTexture);
     },
     update() {
         const gl = this.gl;
@@ -504,23 +675,24 @@ const renderSystem = {
     render() {
         const gl = this.gl;
 
-        // -------------------------------------
-        // -------------------------------------
-        // ---------------------------------------
         gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
         // Background
         gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
         gl.clear(gl.COLOR_BUFFER_BIT);
+
         // COMMON UNIFORMS
-        // Shader
-        gl.useProgram(shader.program);
-        // Pass projection matrix to shader
-        gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
-        // Pass View matrix to shader
-        gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
-        // Pass Model Matrix (Identity as default)
-        gl.uniformMatrix3fv(shader.uniforms.modelMatrix,false,mat3.create());
+        // Shader 1
+        gl.useProgram(basicShader.program);
+        gl.uniformMatrix3fv(basicShader.uniforms.projectionMatrix,false,camera.projectionMatrix);
+        gl.uniformMatrix3fv(basicShader.uniforms.viewMatrix,false,camera.viewMatrix);
+        gl.uniformMatrix3fv(basicShader.uniforms.modelMatrix,false,mat3.create());
+
+        // Shader 2
+        gl.useProgram(textureShader.program);
+        gl.uniformMatrix3fv(textureShader.uniforms.viewMatrix,false,camera.viewMatrix);
+        gl.uniformMatrix3fv(textureShader.uniforms.projectionMatrix,false,camera.projectionMatrix);
+        gl.uniformMatrix3fv(textureShader.uniforms.modelMatrix,false,mat3.create());
 
         // RENDER MESHES
         // Grid
@@ -529,10 +701,8 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // Square
-        square.draw(gl);
-
-        //---------------------------------------------------
+        // rocket
+        rocket.draw(gl);
     }
 };
 
@@ -639,8 +809,7 @@ const physicsInfo = {
     // Object connected
     mesh: null,
     // Velocity
-    velocityX: 1200,
-    velocityY: 800,
+    velocityY: 900,
     // Acceleration
     accelerationY: -980, // mimic gravity
 
@@ -648,11 +817,19 @@ const physicsInfo = {
         this.mesh = mesh;
     },
     update(deltaTime) {
-        // velocity
+        // velocity Y ( update with gravity )
         this.velocityY += deltaTime * this.accelerationY;
         // mesh transforms
-        this.mesh.translationX += deltaTime * this.velocityX;
         this.mesh.translationY += deltaTime * this.velocityY;
+        // mesh orientation
+        if(this.velocityY >= 0){
+            this.mesh.rotation = 0;
+        } else {
+            this.mesh.rotation = 180;
+        }
+    },
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
@@ -661,10 +838,13 @@ const physicsInfo = {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfo.init(square);
+        physicsInfo.init(rocket);
     },
     update() {
         physicsInfo.update(clock.deltaTime);
+    },
+    reset() {
+        physicsInfo.reset();
     }
 };
 
@@ -676,14 +856,18 @@ const gui = {
         const gui = new lil.GUI();
 
         const physicsFolder = gui.addFolder("Physics");
-        physicsFolder.add(physicsInfo, "velocityX", -2000, 2000).name("velocityX");
-        physicsFolder.add(physicsInfo, "velocityY", -2000, 2000).name("velocityY");
-        physicsFolder.add(physicsInfo, "accelerationY", -1000, 1000).name("gravity");
+        physicsFolder.add(physicsInfo, "velocityY", -500, 4000).name("velocityY");
+        physicsFolder.add(physicsInfo, "accelerationY", -1000, 1000).name("accelerationY");
 
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                physicsSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";
