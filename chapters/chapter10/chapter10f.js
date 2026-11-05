@@ -159,8 +159,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
 // =============================================================
 // TEXTURE OBJECTS
 // =============================================================
-const tankSideTexture = {
-    imagePath: "chapters/chapter10/assets/tankSide_Texture.png",
+const bikeTexture = {
+    imagePath: "chapters/chapter10/assets/bike_Texture.png",
 
     image: null,
     handle: null,
@@ -176,8 +176,8 @@ const tankSideTexture = {
     }
 };
 
-const tankWheelTexture = {
-    imagePath: "chapters/chapter10/assets/tankWheel_Texture.png",
+const bikeWheelTexture = {
+    imagePath: "chapters/chapter10/assets/bikeWheel_Texture.png",
 
     image: null,
     handle: null,
@@ -311,9 +311,9 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-let tankWheels = [];
+let bikeWheels = [];
 
-function createTankWheel(positionX, positionY) {
+function createbikeWheel(positionX, positionY) {
     return {
         //    v1--------v2
         //    | \        |
@@ -342,8 +342,8 @@ function createTankWheel(positionX, positionY) {
         translationX: positionX,
         translationY: positionY,
         rotation: 0,
-        scaleX: 0.15,
-        scaleY: 0.15,
+        scaleX: 0.4,
+        scaleY: 0.4,
         modelMatrix: mat3.create(),
 
         //GPU DATA
@@ -426,7 +426,7 @@ function createTankWheel(positionX, positionY) {
     }
 }
 
-const tank = {
+const bike = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -445,16 +445,18 @@ const tank = {
         100,  100,      1, 1
     ]),
 
-        initialTranslationX: 0,
+    initialTranslationX: 0,
     initialTranslationY: 100,
     initialRotation: 0,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
+
     translationX: 0,
     translationY: 100,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+    
     modelMatrix: mat3.create(),
 
     //GPU DATA
@@ -783,8 +785,8 @@ const renderSystem = {
         gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 
         //Textures
-        tankWheelTexture.init(gl);
-        tankSideTexture.init(gl);
+        bikeWheelTexture.init(gl);
+        bikeTexture.init(gl);
 
         //Shaders
         basicShader.init(gl);
@@ -794,29 +796,22 @@ const renderSystem = {
         grid.init(gl, basicShader);
         xAxis.init(gl, basicShader);
         yAxis.init(gl, basicShader);
-        tank.init(gl, textureShader, tankSideTexture);
+        bike.init(gl, textureShader, bikeTexture);
 
-        // Tank Wheels
-        tankWheels = [
-            createTankWheel(-80, 15),
-            createTankWheel(-45, 15),
-            createTankWheel(-10, 15),
-            createTankWheel(25, 15)
+        // bike Wheels
+        bikeWheels = [
+            createbikeWheel(-70, 45),
+            createbikeWheel(70, 45)
         ];
-        tankWheels.forEach(wheel => wheel.init(gl, textureShader, tankWheelTexture));
+        bikeWheels.forEach(wheel => wheel.init(gl, textureShader, bikeWheelTexture));
     },
     update() {
         const gl = this.gl;
-
         camera.updateProjectionMatrix(gl);
         camera.updateViewMatrix(gl);
-
     },
     render() {
         const gl = this.gl;
-
-        // -------------------------------------
-        // -------------------------------------
         // ---------------------------------------
         gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
@@ -844,10 +839,12 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // tank
-        tank.draw(gl);
-        // tankWheels
-        tankWheels.forEach(wheel => wheel.draw(gl));
+        
+        // First bike then wheels behind
+        // bikeWheels
+        bikeWheels.forEach(wheel => wheel.draw(gl));
+        // bike
+        bike.draw(gl);
     }
 };
 
@@ -950,7 +947,7 @@ const clock = {
 // =============================================================
 // PHYSICS INFOS
 // =============================================================
-const physicsInfoTank = {
+const physicsInfobike = {
     // Object connected
     mesh: null,
     // Linear velocity
@@ -966,9 +963,7 @@ const physicsInfoTank = {
     },
     reset() {
         this.mesh.resetTransform();
-
     }
-
 };
 
 const physicsInfoWheel = {
@@ -984,7 +979,7 @@ const physicsInfoWheel = {
         this.meshes = meshes;
     },
     update(deltaTime) {
-        this.velocityX = physicsInfoTank.velocityX;
+        this.velocityX = physicsInfobike.velocityX;
         // When pure rolling is needed
         this.angularVelocity = -((this.velocityX / this.radius) * (180.0/Math.PI));
         
@@ -997,9 +992,7 @@ const physicsInfoWheel = {
         for (const mesh of this.meshes) {
             if (mesh.resetTransform) mesh.resetTransform();
         }
-
     }
-
 };
 
 // =============================================================
@@ -1007,18 +1000,17 @@ const physicsInfoWheel = {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfoTank.init(tank);
-        physicsInfoWheel.init(tankWheels);
+        physicsInfobike.init(bike);
+        physicsInfoWheel.init(bikeWheels);
     },
     update() {
-        physicsInfoTank.update(clock.deltaTime);
+        physicsInfobike.update(clock.deltaTime);
         physicsInfoWheel.update(clock.deltaTime);
     },
     reset() {
-        physicsInfoTank.reset();
+        physicsInfobike.reset();
         physicsInfoWheel.reset();
     }
-
 };
 
 // =============================================================
@@ -1029,7 +1021,7 @@ const gui = {
         const gui = new lil.GUI();
 
         const physicsFolder = gui.addFolder("Physics");
-        physicsFolder.add(physicsInfoTank, "velocityX", -1000, 1000).name("velocityX");
+        physicsFolder.add(physicsInfobike, "velocityX", -1000, 1000).name("velocityX");
     
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
@@ -1079,7 +1071,7 @@ const keyEvent = {
                 default:
             }
         });
-        
+
         window.addEventListener("keyup", event => {
             switch(event.key) {
                 case "ArrowUp":

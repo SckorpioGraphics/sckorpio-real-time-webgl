@@ -2,7 +2,7 @@
    CHAPTER 10d: PhysicsInfo on multiple wheels
 
    Topics:
-   - Apply Rotational+Translation Motion on Multiple tankWheel Wheel
+   - Apply Rotational+Translation Motion on Multiple bikeWheel Wheel
    - Instead of animation.. use physicsInfo
    - PhysicsInfo has meshes[] instead of single mesh
    - Use clock for elapsed time
@@ -160,8 +160,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
 // =============================================================
 // TEXTURE OBJECTS
 // =============================================================
-const tankWheelTexture = {
-    imagePath: "chapters/chapter10/assets/tankWheel_Texture.png",
+const bikeWheelTexture = {
+    imagePath: "chapters/chapter10/assets/bikeWheel_Texture.png",
 
     image: null,
     handle: null,
@@ -295,9 +295,9 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-let tankWheels = [];
+let bikeWheels = [];
 
-function createTankWheel(positionX, positionY) {
+function createbikeWheel(positionX, positionY) {
     return {
         //    v1--------v2
         //    | \        |
@@ -657,7 +657,7 @@ const renderSystem = {
         gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 
         //Textures
-        tankWheelTexture.init(gl);
+        bikeWheelTexture.init(gl);
 
         //Shaders
         basicShader.init(gl);
@@ -669,13 +669,11 @@ const renderSystem = {
         yAxis.init(gl, basicShader);
 
         // Tank Wheels
-        tankWheels = [
-            createTankWheel(  0, 0),
-            createTankWheel(200, 0),
-            createTankWheel(400, 0),
-            createTankWheel(600, 0)
+        bikeWheels = [
+            createbikeWheel(150, 0),
+            createbikeWheel(-150, 0)
         ];
-        tankWheels.forEach(wheel => wheel.init(gl, textureShader, tankWheelTexture));
+        bikeWheels.forEach(wheel => wheel.init(gl, textureShader, bikeWheelTexture));
     },
     update() {
         const gl = this.gl;
@@ -716,8 +714,8 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // tankWheels
-        tankWheels.forEach(wheel => wheel.draw(gl));
+        // bikeWheels
+        bikeWheels.forEach(wheel => wheel.draw(gl));
 
         //---------------------------------------------------
     }
@@ -857,7 +855,7 @@ const physicsInfo = {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfo.init(tankWheels);
+        physicsInfo.init(bikeWheels);
     },
     update() {
         physicsInfo.update(clock.deltaTime);

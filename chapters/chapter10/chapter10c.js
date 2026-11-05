@@ -2,7 +2,7 @@
    CHAPTER 10c: Roational motion + Linear Motion
 
    Topics:
-   - Apply Rotational+ Linear Motion on tankWheel
+   - Apply Rotational+ Linear Motion on bikeWheel
    - Instead of animation.. use physicsInfo
    - Use clock for elapsed time
    #############################################################
@@ -159,8 +159,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
 // =============================================================
 // TEXTURE OBJECTS
 // =============================================================
-const tankWheelTexture = {
-    imagePath: "chapters/chapter10/assets/tankWheel_Texture.png",
+const bikeWheelTexture = {
+    imagePath: "chapters/chapter10/assets/bikeWheel_Texture.png",
 
     image: null,
     handle: null,
@@ -294,7 +294,7 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const tankWheel = {
+const bikeWheel = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -653,7 +653,7 @@ const renderSystem = {
         gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 
         //Textures
-        tankWheelTexture.init(gl);
+        bikeWheelTexture.init(gl);
 
         //Shaders
         basicShader.init(gl);
@@ -663,7 +663,7 @@ const renderSystem = {
         grid.init(gl, basicShader);
         xAxis.init(gl, basicShader);
         yAxis.init(gl, basicShader);
-        tankWheel.init(gl, textureShader, tankWheelTexture);
+        bikeWheel.init(gl, textureShader, bikeWheelTexture);
     },
     update() {
         const gl = this.gl;
@@ -704,8 +704,8 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // tankWheel
-        tankWheel.draw(gl);
+        // bikeWheel
+        bikeWheel.draw(gl);
 
         //---------------------------------------------------
     }
@@ -842,7 +842,7 @@ const physicsInfo = {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfo.init(tankWheel);
+        physicsInfo.init(bikeWheel);
     },
     update() {
         physicsInfo.update(clock.deltaTime);

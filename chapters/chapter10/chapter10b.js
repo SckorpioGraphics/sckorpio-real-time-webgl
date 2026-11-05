@@ -2,7 +2,7 @@
    CHAPTER 10b: Roational motion
 
    Topics:
-   - Apply Rotational Motion on tankWheel Wheel
+   - Apply Rotational Motion on bikeWheel Wheel
    - Instead of animation.. use physicsInfo
    - Use clock for elapsed time
    #############################################################
@@ -159,8 +159,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
 // =============================================================
 // TEXTURE OBJECTS
 // =============================================================
-const tankWheelTexture = {
-    imagePath: "chapters/chapter10/assets/tankWheel_Texture.png",
+const bikeWheelTexture = {
+    imagePath: "chapters/chapter10/assets/bikeWheel_Texture.png",
 
     image: null,
     handle: null,
@@ -294,7 +294,7 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const tankWheel = {
+const bikeWheel = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -313,16 +313,18 @@ const tankWheel = {
         100,  100,      1, 1
     ]),
 
-        initialTranslationX: 0,
+    initialTranslationX: 0,
     initialTranslationY: 0,
     initialRotation: 0,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
+
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
     modelMatrix: mat3.create(),
 
     //GPU DATA
@@ -651,7 +653,7 @@ const renderSystem = {
         gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 
         //Textures
-        tankWheelTexture.init(gl);
+        bikeWheelTexture.init(gl);
 
         //Shaders
         basicShader.init(gl);
@@ -661,7 +663,7 @@ const renderSystem = {
         grid.init(gl, basicShader);
         xAxis.init(gl, basicShader);
         yAxis.init(gl, basicShader);
-        tankWheel.init(gl, textureShader, tankWheelTexture);
+        bikeWheel.init(gl, textureShader, bikeWheelTexture);
     },
     update() {
         const gl = this.gl;
@@ -702,8 +704,8 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // tankWheel
-        tankWheel.draw(gl);
+        // bikeWheel
+        bikeWheel.draw(gl);
 
         //---------------------------------------------------
     }
@@ -830,7 +832,7 @@ const physicsInfo = {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfo.init(tankWheel);
+        physicsInfo.init(bikeWheel);
     },
     update() {
         physicsInfo.update(clock.deltaTime);
