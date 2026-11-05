@@ -1,13 +1,15 @@
 /* #############################################################
-   CHAPTER 9f: Apply Multiple Wheels with Tank Body(+ follow camera)
+   CHAPTER 9f: Full Tank + barrel + Missile + camera follow
 
    Topics:
-   - Apply Rotational Motion on Multiple tankWheel Wheel
-   - Instead of animation.. use physicsInfo
-   - Use clock for elapsed time
+   - Using speed and Unit vector instead of velocity
+   - Apply 2D Projectile Motion on Arrow head
+   - Adding Gravity as Y acceleration
+   - Use Speed and unit vector
+   - Use clock for delta time
+   - Also rotate missile head according to X-Y velocity
    #############################################################
 */
-
 
 // =============================================================
 // SHADER OBJECTS
@@ -159,8 +161,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
 // =============================================================
 // TEXTURE OBJECTS
 // =============================================================
-const tankSideTexture = {
-    imagePath: "chapters/chapter09/assets/tankSide_Texture.png",
+const missileTexture = {
+    imagePath: "chapters/chapter09/assets/tankMissile_Texture.png",
 
     image: null,
     handle: null,
@@ -176,8 +178,25 @@ const tankSideTexture = {
     }
 };
 
-const tankWheelTexture = {
-    imagePath: "chapters/chapter09/assets/tankWheel_Texture.png",
+const barrelTexture = {
+    imagePath: "chapters/chapter09/assets/tankBarrel_Texture.png",
+
+    image: null,
+    handle: null,
+    loaded: false,
+
+    init(gl) {
+        createTexture(gl, this);
+    },
+
+    bind(gl, textureUnit = 0) {
+        gl.activeTexture(gl.TEXTURE0 + textureUnit);
+        gl.bindTexture(gl.TEXTURE_2D, this.handle);
+    }
+};
+
+const tankTexture = {
+    imagePath: "chapters/chapter09/assets/tankBody_Texture.png",
 
     image: null,
     handle: null,
@@ -311,107 +330,213 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-let tankWheels = [];
+const missile = {
+    //    v1--------v2
+    //    | \        |
+    //    |    \     |
+    //    |       \  |
+    //    v0--------v1
 
-function createTankWheel(positionX, positionY) {
-    return {
-        //    v1--------v2
-        //    | \        |
-        //    |    \     |
-        //    |       \  |
-        //    v0--------v1
+    // CPU DATA
+    vertexData: new Float32Array([
+        // Position     // UV
+        -100, -100,     0, 0,
+        100, -100,      1, 0,
+        -100,  100,     0, 1,
 
-        // CPU DATA
-        vertexData: new Float32Array([
-            // Position     // UV
-            -100, -100,     0, 0,
-            100, -100,      1, 0,
-            -100,  100,     0, 1,
+        -100,  100,     0, 1,
+        100, -100,      1, 0,
+        100,  100,      1, 1
+    ]),
 
-            -100,  100,     0, 1,
-            100, -100,      1, 0,
-            100,  100,      1, 1
-        ]),
+        initialTranslationX: 0,
+    initialTranslationY: 0,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+    translationX: 0,
+    translationY: 0,
+    rotation: 0,
+    scaleX: 1.0,
+    scaleY: 1.0,
+    modelMatrix: mat3.create(),
 
-        translationX: positionX,
-        translationY: positionY,
-        rotation: 0,
-        scaleX: 0.15,
-        scaleY: 0.15,
-        modelMatrix: mat3.create(),
+    //GPU DATA
+    shader: null,
+    texture: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
 
-        //GPU DATA
-        shader: null,
-        texture: null,
-        vao: null,
-        vbo: null,
-        drawMode: null,
-        drawOffset: 0,
-        drawCount: 0,
+    //FUNCTIONS
+    init(gl, shader, texture) {
+        // Connect shader to mesh
+        this.shader = shader;
+        this.texture = texture;
 
-        //FUNCTIONS
-        init(gl, shader, texture) {
-            // Connect shader to mesh
-            this.shader = shader;
-            this.texture = texture;
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
 
-            // Vertex Buffer
-            this.vbo = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-            gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
 
-            // Vertex Array
-            this.vao = gl.createVertexArray();
-            gl.bindVertexArray(this.vao);
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
 
-            // Enable position attribute
-            gl.enableVertexAttribArray(this.shader.attributes.position);
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
 
-            // Bind Vertex Buffer
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,          // size: 2 components (X, Y)
+            gl.FLOAT,   // type: 32-bit float
+            false,      // normalize
+            4 * Float32Array.BYTES_PER_ELEMENT, // stride: 4(tightly packed)
+            0           // offset: start of buffer
+        );
 
-            // Vertex data format
-            gl.vertexAttribPointer(
-                this.shader.attributes.position,
-                2,          // size: 2 components (X, Y)
-                gl.FLOAT,   // type: 32-bit float
-                false,      // normalize
-                4 * Float32Array.BYTES_PER_ELEMENT, // stride: 4(tightly packed)
-                0           // offset: start of buffer
-            );
+        // Texture coordinates: u, v
+        gl.enableVertexAttribArray(this.shader.attributes.texCoord);
+        gl.vertexAttribPointer(
+            this.shader.attributes.texCoord,
+            2,
+            gl.FLOAT,
+            false,
+            4 * Float32Array.BYTES_PER_ELEMENT,
+            2 * Float32Array.BYTES_PER_ELEMENT
+        );
 
-            // Texture coordinates: u, v
-            gl.enableVertexAttribArray(this.shader.attributes.texCoord);
-            gl.vertexAttribPointer(
-                this.shader.attributes.texCoord,
-                2,
-                gl.FLOAT,
-                false,
-                4 * Float32Array.BYTES_PER_ELEMENT,
-                2 * Float32Array.BYTES_PER_ELEMENT
-            );
-
-            // Draw data
-            this.drawMode = gl.TRIANGLES;
-            this.drawOffset = 0;
-            this.drawCount = 6;
-        },
-        draw(gl) {
-            // Shader
-            gl.useProgram(this.shader.program);
-            // Modle Matrix
-            setupModelMatrix(this);
-            gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-            // Texture
-            this.texture.bind(gl, 0);
-            gl.uniform1i(this.shader.uniforms.texture, 0);
-            // vao
-            gl.bindVertexArray(this.vao);
-            // draw call
-            gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
-        }
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = 6;
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
+    },
+    draw(gl) {
+        // Shader
+        gl.useProgram(this.shader.program);
+        // Modle Matrix
+        setupModelMatrix(this);
+        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
+        // Texture
+        this.texture.bind(gl, 0);
+        gl.uniform1i(this.shader.uniforms.texture, 0);
+        // vao
+        gl.bindVertexArray(this.vao);
+        // draw call
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
-}
+};
+
+const barrel = {
+    //    v1--------v2
+    //    | \        |
+    //    |    \     |
+    //    |       \  |
+    //    v0--------v1
+
+    // CPU DATA
+    vertexData: new Float32Array([
+        // Position     // UV
+        -100, -100,     0, 0,
+        100, -100,      1, 0,
+        -100,  100,     0, 1,
+
+        -100,  100,     0, 1,
+        100, -100,      1, 0,
+        100,  100,      1, 1
+    ]),
+
+    translationX: 0,
+    translationY: 0,
+    rotation: 45,
+    scaleX: 4.0,
+    scaleY: 4.0,
+    modelMatrix: mat3.create(),
+
+    //GPU DATA
+    shader: null,
+    texture: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader, texture) {
+        // Connect shader to mesh
+        this.shader = shader;
+        this.texture = texture;
+
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,          // size: 2 components (X, Y)
+            gl.FLOAT,   // type: 32-bit float
+            false,      // normalize
+            4 * Float32Array.BYTES_PER_ELEMENT, // stride: 4(tightly packed)
+            0           // offset: start of buffer
+        );
+
+        // Texture coordinates: u, v
+        gl.enableVertexAttribArray(this.shader.attributes.texCoord);
+        gl.vertexAttribPointer(
+            this.shader.attributes.texCoord,
+            2,
+            gl.FLOAT,
+            false,
+            4 * Float32Array.BYTES_PER_ELEMENT,
+            2 * Float32Array.BYTES_PER_ELEMENT
+        );
+
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = 6;
+    },
+    draw(gl) {
+        // Shader
+        gl.useProgram(this.shader.program);
+        // Modle Matrix
+        setupModelMatrix(this);
+        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
+        // Texture
+        this.texture.bind(gl, 0);
+        gl.uniform1i(this.shader.uniforms.texture, 0);
+        // vao
+        gl.bindVertexArray(this.vao);
+        // draw call
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
+    }
+};
 
 const tank = {
     //    v1--------v2
@@ -433,10 +558,10 @@ const tank = {
     ]),
 
     translationX: 0,
-    translationY: 100,
+    translationY: 150,
     rotation: 0,
-    scaleX: 1.0,
-    scaleY: 1.0,
+    scaleX: 4.0,
+    scaleY: 4.0,
     modelMatrix: mat3.create(),
 
     //GPU DATA
@@ -756,29 +881,23 @@ const renderSystem = {
         gl.enable(gl.BLEND);
         // Set Blend Function
         gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
-
-        //Textures
-        tankWheelTexture.init(gl);
-        tankSideTexture.init(gl);
-
+        
         //Shaders
         basicShader.init(gl);
         textureShader.init(gl);
+
+        //Textures
+        tankTexture.init(gl);
+        barrelTexture.init(gl);
+        missileTexture.init(gl);
 
         //Objects
         grid.init(gl, basicShader);
         xAxis.init(gl, basicShader);
         yAxis.init(gl, basicShader);
-        tank.init(gl, textureShader, tankSideTexture);
-
-        // Tank Wheels
-        tankWheels = [
-            createTankWheel(-80, 15),
-            createTankWheel(-45, 15),
-            createTankWheel(-10, 15),
-            createTankWheel(25, 15)
-        ];
-        tankWheels.forEach(wheel => wheel.init(gl, textureShader, tankWheelTexture));
+        missile.init(gl, textureShader, missileTexture);
+        barrel.init(gl, textureShader, barrelTexture);
+        tank.init(gl, textureShader, tankTexture);
     },
     update() {
         const gl = this.gl;
@@ -790,9 +909,6 @@ const renderSystem = {
     render() {
         const gl = this.gl;
 
-        // -------------------------------------
-        // -------------------------------------
-        // ---------------------------------------
         gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
         // Background
@@ -819,10 +935,12 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
+        // missile
+        missile.draw(gl);
+        // barrel
+        barrel.draw(gl);
         // tank
         tank.draw(gl);
-        // tankWheels
-        tankWheels.forEach(wheel => wheel.draw(gl));
     }
 };
 
@@ -925,44 +1043,55 @@ const clock = {
 // =============================================================
 // PHYSICS INFOS
 // =============================================================
-const physicsInfoTank = {
+const physicsInfo = {
     // Object connected
     mesh: null,
-    // Linear velocity
+    // Speed
+    speed: 1200,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 45,
+    // Velocity
     velocityX: 0,
+    velocityY: 0,
+    // Acceleration
+    accelerationX: 0,
+    accelerationY: -980, // mimic gravity
 
     init(mesh) {
         this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+    },
+    updateVelocity() {
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        this.mesh.rotation = this.directionAngle;
     },
     update(deltaTime) {
+        // velocity
+        this.velocityX += deltaTime * this.accelerationX;
+        this.velocityY += deltaTime * this.accelerationY;
+
+        // direction Angle
+        this.directionAngle = Math.atan(this.velocityY/this.velocityX) * 180 / Math.PI;
+
+        // mesh transforms
         this.mesh.translationX += deltaTime * this.velocityX;
-        camera.positionX = (this.mesh.translationX - 300) * camera.zoom;
-        camera.positionY = (this.mesh.translationY - 400);
-    }
-};
+        this.mesh.translationY += deltaTime * this.velocityY;
+        this.mesh.rotation = this.directionAngle;
 
-const physicsInfoWheel = {
-    // Object connected
-    meshes: null,
-    // Linear velocity
-    velocityX: 0,
-    // Angular Velocity
-    angularVelocity: 0,
-    // radius
-    radius: 100,
-
-    init(meshes) {
-        this.meshes = meshes;
+        // camera follow
+        camera.positionX = this.mesh.translationX * camera.zoom - 500;
+        camera.positionY = this.mesh.translationY * camera.zoom - 400;
     },
-    update(deltaTime) {
-        this.velocityX = physicsInfoTank.velocityX;
-        // When pure rolling is needed
-        this.angularVelocity = -((this.velocityX / this.radius) * (180.0/Math.PI));
-        
-        this.meshes.forEach((mesh)=>{
-            mesh.translationX += deltaTime * this.velocityX;
-            mesh.rotation += deltaTime * this.angularVelocity;
-        });
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
@@ -971,12 +1100,13 @@ const physicsInfoWheel = {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfoTank.init(tank);
-        physicsInfoWheel.init(tankWheels);
+        physicsInfo.init(missile);
     },
     update() {
-        physicsInfoTank.update(clock.deltaTime);
-        physicsInfoWheel.update(clock.deltaTime);
+        physicsInfo.update(clock.deltaTime);
+    },
+    reset() {
+        physicsInfo.reset();
     }
 };
 
@@ -988,12 +1118,21 @@ const gui = {
         const gui = new lil.GUI();
 
         const physicsFolder = gui.addFolder("Physics");
-        physicsFolder.add(physicsInfoTank, "velocityX", -1000, 1000).name("velocityX");
-    
+        physicsFolder.add(physicsInfo, "speed", 0, 3000).name("Speed").onChange(() => physicsInfo.updateVelocity());
+        physicsFolder.add(physicsInfo, "directionAngle", 0, 90).name("Angle").onChange(() => { 
+            physicsInfo.updateVelocity();
+            barrel.rotation = missile.rotation;
+        }); 
+        
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                physicsSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";
@@ -1033,7 +1172,7 @@ const keyEvent = {
                 default:
             }
         });
-        
+
         window.addEventListener("keyup", event => {
             switch(event.key) {
                 case "ArrowUp":

@@ -1,10 +1,11 @@
 /* #############################################################
-   CHAPTER 9a: Roational motion
+   CHAPTER 9a: Gravity and velocity in XY
 
    Topics:
-   - Apply Rotational Motion on Square
-   - Instead of animation.. use physicsInfo
-   - Use clock for elapsed time
+   - Apply 2D Linear Motion on Square
+   - Adding Gravity as Y acceleration
+   - Use velocityY
+   - Use clock for delta time
    - apply on the square
    #############################################################
 */
@@ -180,11 +181,18 @@ const square = {
         100, 100       // Right Top
     ]),
 
+    initialTranslationX: 0,
+    initialTranslationY: 0,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
     modelMatrix: mat3.create(),
     color: [0.39, 0.33, 0.58, 1.0],     // Sckorpio Purple
 
@@ -230,6 +238,13 @@ const square = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         setupModelMatrix(this);
@@ -635,14 +650,26 @@ const clock = {
 const physicsInfo = {
     // Object connected
     mesh: null,
-    // Angular Velocity
-    angularVelocity: 90,
+    // Velocity
+    velocityX: 0,
+    velocityY: 1200,
+    // Acceleration
+    accelerationX: 1000,
+    accelerationY: -980, // mimic gravity
 
     init(mesh) {
         this.mesh = mesh;
     },
     update(deltaTime) {
-        this.mesh.rotation += deltaTime * this.angularVelocity;
+        // Velocity
+        this.velocityX += deltaTime * this.accelerationX;
+        this.velocityY += deltaTime * this.accelerationY;
+        // mesh transforms
+        this.mesh.translationX += deltaTime * this.velocityX;
+        this.mesh.translationY += deltaTime * this.velocityY;
+    },
+    reset() {
+        this.mesh.resetTransform();
     }
 };
 
@@ -655,6 +682,9 @@ const physicsSystem = {
     },
     update() {
         physicsInfo.update(clock.deltaTime);
+    },
+    reset() {
+        physicsInfo.reset();
     }
 };
 
@@ -666,12 +696,20 @@ const gui = {
         const gui = new lil.GUI();
 
         const physicsFolder = gui.addFolder("Physics");
-        physicsFolder.add(physicsInfo, "angularVelocity", -1000, 1000).name("angularVelocity");
-    
+        physicsFolder.add(physicsInfo, "velocityX", -2000, 2000).name("velocityX");
+        physicsFolder.add(physicsInfo, "velocityY", -2000, 2000).name("velocityY");
+        physicsFolder.add(physicsInfo, "accelerationX", -1000, 1000).name("accelerationX");
+        physicsFolder.add(physicsInfo, "accelerationY", -1000, 1000).name("accelerationY");
+
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                physicsSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";
