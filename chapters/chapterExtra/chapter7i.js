@@ -332,6 +332,11 @@ const tankUpper = {
         100,  100,      1, 1
     ]),
 
+        initialTranslationX: 0,
+    initialTranslationY: 0,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
     translationX: 0,
     translationY: 0,
     rotation: 0,
@@ -395,6 +400,13 @@ const tankUpper = {
         this.drawOffset = 0;
         this.drawCount = 6;
     },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
+    },
     draw(gl) {
         // Shader
         gl.useProgram(this.shader.program);
@@ -430,6 +442,11 @@ const tankBottom = {
         100,  100,      1, 1
     ]),
 
+        initialTranslationX: 0,
+    initialTranslationY: 0,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
     translationX: 0,
     translationY: 0,
     rotation: 0,
@@ -492,6 +509,13 @@ const tankBottom = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         // Shader
@@ -963,7 +987,14 @@ const physicsInfo1 = {
         //camera.positionX = this.mesh.translationX - 500;
         //camera.positionY = this.mesh.translationY - 400;
 
+    },
+    reset() {
+        for (const mesh of this.meshes) {
+            if (mesh.resetTransform) mesh.resetTransform();
+        }
+
     }
+
 };
 
 const physicsInfo2 = {
@@ -977,7 +1008,12 @@ const physicsInfo2 = {
     },
     update(deltaTime) {
         this.mesh.rotation += deltaTime * this.angularVelocity;
+    },
+    reset() {
+        this.mesh.resetTransform();
+
     }
+
 };
 
 // =============================================================
@@ -991,7 +1027,12 @@ const physicsSystem = {
     update() {
         physicsInfo1.update(clock.deltaTime);
         physicsInfo2.update(clock.deltaTime);
+    },
+    reset() {
+        physicsInfo1.reset();
+        physicsInfo2.reset();
     }
+
 };
 
 // =============================================================
@@ -1012,7 +1053,12 @@ const gui = {
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                physicsSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";

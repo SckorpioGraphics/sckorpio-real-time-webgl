@@ -669,17 +669,13 @@ const renderSystem = {
     },
     update() {
         const gl = this.gl;
-
         camera.updateProjectionMatrix(gl);
         camera.updateViewMatrix(gl);
-
     },
     render() {
         const gl = this.gl;
 
         // -------------------------------------
-        // -------------------------------------
-        // ---------------------------------------
         gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
         // Background
