@@ -1,199 +1,157 @@
 REAL-TIME WEBGL — EPISODE GUIDE
 ===============================
 
-This guide covers Chapters 1–7. For the introductory and foundation lessons
-through Chapter 20, see:
-https://github.com/SckorpioGraphics/sckorpio-graphics-webgl
+Directory and file names are canonical. Some lesson headers contain legacy
+chapter labels; the entries below follow the files in this repository.
 
+CHAPTER 00 — CLOCKS AND TIME
+----------------------------
+0a - Understand requestAnimationFrame().
+0b - Observe requestAnimationFrame() frame time.
+0c - Create a basic clock object.
+0d - Refine the clock object.
+0e - Add FPS reporting.
+0f - Continue clock-object setup.
+0g - Connect clock timing to a scene.
+0h - Animate a rectangle with the clock.
 
-CHAPTER 01 — RENDER LOOP AND TIME
----------------------------------
-1a - Understand requestAnimationFrame() and render-loop frequency.
-1b - Measure elapsed time and frame delta.
-1c - Build a clock object to track frame timing.
-1d - Refine the clock object and centralize timing logic.
-1e - Add FPS reporting to the clock object.
-1f - Create a reusable frame-update clock.
-1g - Refine the clock object for animation.
-1h - Connect the clock object with a rectangle animation.
+CHAPTER 01 — VERTEX ANIMATION
+-------------------------
+1d - Animate vertex color.
 
 CHAPTER 02 — TRANSFORM ANIMATION
 --------------------------------
-2a - Animate translation over time.
-2b - Animate rotation with a time-driven angle.
-2c - Animate scale with a time-driven value.
-2d - Combine translation, rotation, and scale.
-2e - Keep a base transform while animating.
-2f - Combine multiple transform motions.
+2a - Animate translation.
+2b - Animate rotation.
+2c - Animate scale.
+2d - Mix translation, rotation, and scale.
+2e - Animate on top of base transforms.
+2f - Combine translation, rotation, and scale.
 
-CHAPTER 03 — COLOR AND VERTEX ANIMATION
----------------------------------------
-3a - Animate color values over time.
+CHAPTER 03 — COLOR AND ALPHA ANIMATION
+--------------------------------------
+3a - Animate color.
 3b - Animate color and alpha.
-3c - Continue the color and alpha animation experiment.
-3d - Animate vertex colors in shader data.
-3e - Build a per-vertex color animation.
-3f - Combine color, alpha, and transform animation.
+3c - Continue color-and-alpha animation.
+3d - Apply a uniform color animation.
+3e - Mix colors across an object.
 
-CHAPTER 04 — TEXTURE SCROLLING AND MAPS
----------------------------------------
-4a - Create a long texture and map it to an object.
-4b - Offset texture UVs to study scrolling.
-4c - Animate a scrolling texture.
-4d - Apply scrolling to an Sckorpio banner.
-4e - Animate a wrapped texture on a square.
-4f - Map a scaled and zoomed rectangular texture.
+CHAPTER 04 — TEXTURE SCROLLING
+------------------------------
+4a - Render an elongated textured rectangle.
+4b - Apply texture offset.
+4c - Animate texture scrolling.
+4d - Scroll an Sckorpio banner texture.
+4e - Scale and scroll a square texture.
+4f - Combine scale, zoom, and scroll for a rectangular map.
 
-CHAPTER 05 — SPRITE SHEET ANIMATION
+CHAPTER 05 — SPRITE-SHEET ANIMATION
 -----------------------------------
-5a - Render a basic sprite sheet on a rectangle.
-5b - Advance sprite-sheet frames with GUI controls.
-5c - Select playback frames using clock animation.
-5d - Animate a running horse sprite sheet with a white background.
-5e - Animate a running horse sprite sheet with transparency.
-5f - Animate the Sckorpio mascot sprite sheet with a white background.
-5g - Animate the Sckorpio mascot sprite sheet with transparency.
+5a - Render a basic sprite sheet.
+5b - Continue sprite-sheet playback.
+5c - Advance through sprite frames.
+5d - Animate a running horse with a white background.
+5e - Animate a running horse with transparency.
+5f - Animate the Sckorpio mascot with a white background.
+5g - Animate the Sckorpio mascot with transparency.
 
-CHAPTER 06 — MOVEMENT AND BASIC PHYSICS
----------------------------------------
-6a - Animate an object's translation.
-6b - Organize motion state in a PhysicsInfo object.
-6c - Apply X and Y velocity.
-6d - Add X-axis acceleration.
-6e - Add gravity as vertical acceleration.
-6f - Simulate projectile motion.
-6g - Represent launch direction and speed, then apply gravity.
-6h - Build a bow-and-arrow projectile simulation.
-6i - Apply the simulation to the textured Sckorpio mascot.
+CHAPTER 06 — LINEAR MOTION
+-------------------------------------------
+6a - Animate translation.
+6b - Introduce PhysicsInfo.
+6c - Apply 2D velocity in X and Y.
+6d - Apply unit-vector direction and speed.
+6e - Add an arrow-head shape to 2D motion.
+6f - Add keyboard controls to arrow-head motion.
+6g - Refine arrow-head controls.
+6h - Drive an Sckorpio airplane from a top-down view.
+6i - Add chase-camera behavior to the airplane lesson.
 
-CHAPTER 07 — COLLISION DETECTION AND RESPONSE
----------------------------------------------
-7a - Observe moving objects that do not collide.
-7b - Introduce object bounding boxes.
-7c - Calculate bounds from an object's geometry.
-7d - Find bounds for complex geometry such as a letter F.
-7e - Calculate an axis-aligned bounding box using a model matrix.
-7f - Calculate bounds for multiple objects.
-7g - Detect collisions using axis-aligned bounding boxes.
-7h - Stop objects when a collision is detected.
-7i - Exchange object velocities after a collision.
-7j - Use a single collision check while exchanging velocities.
+CHAPTER 07 — ACCELERATED MOTION
+------------------------------------------
+7a - Start with linear motion.
+7b - Add acceleration in the X direction.
+7c - Revisit arrow-head linear motion.
+7d - Apply acceleration to an arrow head.
+7e - Add keyboard controls to accelerated arrow-head motion.
+7f - Revisit an Sckorpio tank from a top-down view.
+7g - Accelerate an Sckorpio car from a top-down view.
+7h - Add friction to accelerated car motion.
+7i - Continue the tank/car acceleration and friction experiment.
 
+CHAPTER 08 — MOTION UNDER GRAVITY
+-------------------------------------
+8a - Revisit acceleration in X.
+8b - Apply gravity.
+8c - Move a rocket under gravity.
+8d - Orient a rocket during gravity-driven motion.
+8e - Add a chase camera for the rocket.
+8f - Add rocket thrust.
+8g - Add thrust with cutoff time.
 
+CHAPTER 09 — PROJECTILE MOTION
+----------------------------------
+9a - Combine gravity with velocity in X and Y.
+9b - Build projectile motion.
+9c - Add an arrow head to projectile motion.
+9d - Apply a missile texture.
+9e - Combine a full tank, barrel, and missile.
+9f - Add camera follow to the tank and missile simulation.
 
+CHAPTER 10 — ROTATIONAL MOTION
+----------------------------------------
+10a - Demonstrate rotational motion.
+10b - Continue rotational-motion experiments.
+10c - Combine rotational and linear motion.
+10d - Apply PhysicsInfo to multiple wheels.
+10e - Add multiple wheels to a bike body.
+10f - Add camera follow to multiple wheels bike simulation.
 
-Chapter 0 — Clock & Time
-The foundation for every time-dependent system.
+CHAPTER 11 — AABB COLLISION
+---------------------------
+11a - Show meshes without collision.
+11b - Introduce an AABB bounding box.
+11c - Create function to calculate bounding boxes.
+11d - Find bounds for a complex letter-F mesh.
+11e - Introduce local bounding-box values.
+11f - Introduce local and world bounding-box values.
+11g - Find AABB bounds for multiple objects.
+11h - Log AABB collision detection.
+11i - Stop meshes after collision.
+11j - Return meshes to their previous position to resolve penetration.
+11k - Add mesh controls and collision observation.
+11l - Store previous rotations during collision correction.
+11m - Add a car texture and observe collisions
+11n - Showcase a player and two parked cars (Axis-Aligned)
+11o - Showcase a player and two parked cars (Not- Axis aligned : Rotated)
 
-Phase 1 — Animation
-1	Vertex Animation
-2	Transform Animation
-3	Color & Alpha Animation
-4	Texture Scrolling Animation
-5	Texture Sprite-Sheet Animation
+CHAPTER 12 — OBB COLLISION & SAT
+---------------------------
 
-Phase 2 — Kinematics
-6	Linear Motion
-7	Accelerated Motion
-8	Gravity & Other Acceleration Sources
-9	Projectile Motion
-10	Rotational Motion
+CHAPTER 13 — CIRCULAR COLLISION
+-------------------------------
+13a - Start with a circle.
+13b - Place two circles in a non-collision setup.
+13c - Introduce a circular bounding box.
+13d - Update circular bounding boxes.
+13e - Add collision checking and collision handling.
+13f - Continue circular collision checks.
+13g - Apply collision behavior to circular objects.
+13h - Update circular bounds and collision state.
 
-Phase 3 — Mechanics
-11	Circular BBox & Collision 
-12	Axis-Aligned BBox & Collision 
-13	Oriented BBox & Collision (SAT)
-14	Forces, Mass & Newton's Laws
-15	Momentum, Impulse & Collision Response
+CHAPTER 14 — COLLISION RESPONSE
+-------------------------------
+14a - Exchange velocities after collision.
+14b - Exchange velocities using a single collision check.
+14c - Continue the single-check collision-response demonstration.
 
-Phase 4 — Game Systems & Integration
-16	Physics + Animation
-17	Physics + Sprite-Sheet Animation
-18	Multiple Objects & Interactions
-19	Combining Rendering, Animation & Physics
-20	Building the Complete Game Framework
+These lessons retain older Chapter 12 labels in their file headers.
 
-
-Phase 3 — Mechanics
-Proposed final structure
-Chapter 11 — Axis-Aligned Bounding Boxes (AABB)
-Understanding rectangular bounds and basic collision detection.
-Subchapter	Topic	Crisp detail
-11.1	Bounding Volumes	What are bounding volumes and why do we need them?
-11.2	AABB Geometry	Min/max coordinates, center, width and height.
-11.3	Local AABB	Calculate bounding boxes from mesh vertices.
-11.4	World AABB	Transform local bounds into world-space bounds.
-11.5	AABB Transformations	Update bounds under translation, scaling and rotation.
-11.6	AABB Collision Detection	Detect overlap between two AABBs.
-11.7	Collision Visualization	Render debug bounding boxes and demonstrate collisions.
-
-Practical demo: Two moving rectangles with visible AABBs and collision highlighting.
-Chapter 12 — Circular Bounding Volumes
-Circle geometry, bounding circles and circle collision detection.
-Subchapter	Topic	Crisp detail
-12.1	Circle Geometry	Center, radius and circumference.
-12.2	Bounding Circles	Represent objects using circular bounds.
-12.3	Local Bounding Circle	Define local center and radius from geometry or known sprite dimensions.
-12.4	World Bounding Circle	Transform the center and update the radius using object scale.
-12.5	Circle Transformations	Translation, uniform/non-uniform scaling and rotation.
-12.6	Circle Collision Detection	Circle-circle intersection using center distance and radii.
-12.7	Collision Visualization	Render debug circles and demonstrate false-positive collisions.
-
-Practical demo: Moving circular sprites (balls) colliding with each other.
-
-A useful additional demonstration: put a circular bounding volume around a rectangle and show how it can report a collision even when the actual rectangles don't touch.
-
-Important implementation decision: For non-uniform scaling, use the maximum absolute scale factor to maintain a conservative circular bound. No ellipse collision system needed.
-Chapter 13 — Oriented Bounding Boxes (OBB) & SAT
-Handling rotated objects and more advanced collision detection.
-Subchapter	Topic	Crisp detail
-13.1	OBB Geometry	Center, half-extents and orientation axes.
-13.2	Local OBB	Define an oriented bounding box in object-local space.
-13.3	World OBB	Transform its center, axes and half-extents into world space.
-13.4	OBB Transformations	Translation, rotation and scaling.
-13.5	Separating Axis Theorem	Understand separating axes and the SAT principle.
-13.6	Projection onto Axes	Project OBB corners onto candidate axes and compare intervals.
-13.7	OBB Collision Detection	Implement OBB vs OBB collision detection using SAT.
-13.8	Collision Visualization	Show projections, separating axes and collision states.
-
-Practical demo: Two rotating rectangles with OBB collision detection.
-
-This chapter introduces a genuinely new idea: two objects can overlap in their AABBs without actually colliding, and SAT helps us determine whether their OBBs intersect.
-Chapter 14 — Forces, Mass & Newton's Laws
-Understanding why objects accelerate and how forces affect motion.
-Subchapter	Topic	Crisp detail
-14.1	Introduction to Forces	What is a force? Magnitude and direction.
-14.2	Mass & Inertia	How mass affects an object's resistance to changes in motion.
-14.3	Newton's First Law	Inertia and the law of motion.
-14.4	Newton's Second Law	Relationship between force, mass and acceleration: \(F=ma\).
-14.5	Newton's Third Law	Action and reaction forces.
-14.6	Applying Forces	Convert forces into acceleration and update velocity.
-14.7	Multiple Forces	Combine gravity, thrust, friction and other forces.
-14.8	Force-Based Simulation	Build a simple simulation using mass and applied forces.
-
-Practical demo: A box pushed by different forces and masses, followed by a simple rocket propulsion demonstration.
-
-One important distinction: here we move beyond prescribing acceleration directly. We calculate acceleration from the forces acting on an object.
-Chapter 15 — Momentum, Impulse & Collision Response
-Moving from detecting collisions to physically responding to them.
-Subchapter	Topic	Crisp detail
-15.1	Linear Momentum	Momentum as mass multiplied by velocity.
-15.2	Conservation of Momentum	Understand momentum conservation during collisions.
-15.3	Collision Normal	Determine the direction of impact between objects.
-15.4	Impulse	Understand how an impact changes momentum and velocity.
-15.5	Coefficient of Restitution	Model elastic and inelastic collisions.
-15.6	Collision Response	Calculate post-collision velocities for two objects.
-15.7	Penetration Correction	Separate overlapping objects to prevent them from sticking together.
-15.8	Friction in Collisions	Introduce tangential impulses and collision friction.
-15.9	2D Collision Simulation	Combine collision detection and physical response.
-
-Practical demo: Carrom-style collisions between multiple discs, including different masses, impact angles and bounce behaviour.
-
-RUNNING
--------
-Serve the repository root over HTTP and open http://localhost:8000:
-
-    python3 -m http.server 8000
-
-The default lesson is Chapter 6i. Change its module path in index.html to
-select another lesson.
+EXTRA LESSONS
+-------------
+chapterExtra/chapter7g.js - Rotational motion extension.
+chapterExtra/chapter7h.js - Additional rotational-motion extension.
+chapterExtra/chapter7i.js - Sckorpio tank top-down motion with camera follow.
+chapterExtra/chapter8e.js - Unit-vector and speed experiment.
+chapterExtra/chapter8g.js - Sckorpio mascot bow-and-arrow demonstration.
+chapterExtra/chapter12n.js - Parking challenge with AABB collision.

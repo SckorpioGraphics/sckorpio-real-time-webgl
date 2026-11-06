@@ -1,21 +1,42 @@
 SCKORPIO GRAPHICS — REAL-TIME WEBGL
 ===================================
 
-This repository continues the WebGL Fundamentals curriculum with Chapters 1–7. The foundation chapters 0–20 are maintained separately at:
+This repository currently contains Chapters 0–11 plus the later circular and
+collision-response lesson directories Chapters 13 and 14. The introductory
+foundation curriculum through Chapter 20 is maintained separately at:
 https://github.com/SckorpioGraphics/sckorpio-graphics-webgl
 
-PHASE 1 — ANIMATION AND SPRITE SHEETS
-Chapters 1–5: The render loop, delta time, clock objects, transform
-animation, animated color and alpha, texture scrolling, and sprite-sheet
-playback.
+PHASE 1 — TIME AND ANIMATION
+Chapter 0: requestAnimationFrame(), elapsed time, delta time, FPS, and clocks.
+Chapter 1: animated vertex color.
+Chapters 2–5: transform animation, animated color and alpha, texture scrolling,
+and sprite-sheet playback.
 
-PHASE 2 — MOVEMENT AND BASIC PHYSICS
-Chapter 6: Two-dimensional velocity, acceleration, gravity, projectile
-motion, and a bow-and-arrow simulation.
+PHASE 2 — LINEAR AND GRAVITY MOTION
+Chapters 6–9: velocity, acceleration, unit-vector movement, friction, gravity,
+projectiles, tanks, missiles, airplane-style motion, chase cameras, and
+bow-and-arrow demonstrations.
 
-PHASE 3 — COLLISION DETECTION AND RESPONSE
-Chapter 7: Object bounds, AABB collision detection, and collision responses
-including stopping and exchanging velocities.
+PHASE 3 — ROTATIONAL AND COMBINED MOTION
+Chapter 10: angular velocity and coupled linear/rotational motion for wheels,
+bikes, and tanks.
+
+PHASE 4 — AXIS-ALIGNED COLLISION DETECTION
+Chapter 11: object bounds, local and world AABBs, complex-mesh bounds, multiple
+objects, collision visualization, penetration correction, textures, vehicle
+controls, and parking-car collision scenes.
+
+PHASE 5 — CIRCULAR COLLISION EXPERIMENTS
+Chapter 13: circular meshes, circular bounding boxes, circle-circle collision
+detection, freeze-on-collision, velocity exchange, and sticking behavior.
+
+PHASE 6 — COLLISION RESPONSE
+Chapter 14: exchanging velocities after collisions with both regular and
+single-check response strategies.
+
+EXPERIMENTAL EXAMPLES
+chapterExtra contains additional tank, projectile, thrust, bow-and-arrow, and
+parking-challenge experiments that extend the main chapter sequence.
 
 RUNNING A LESSON
 ----------------
@@ -23,6 +44,6 @@ Serve the repository root over HTTP:
 
     python3 -m http.server 8000
 
-Open http://localhost:8000. index.html loads Chapter 6i by default; change
+Open http://localhost:8000. index.html loads Chapter 11o by default; change
 its module path to run another lesson. Lil GUI and gl-matrix are loaded from
 CDNs declared in index.html.

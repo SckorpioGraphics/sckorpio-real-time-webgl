@@ -1,8 +1,20 @@
 # Sckorpio Graphics: Real-Time WebGL
 
-This repository continues the WebGL 2 curriculum with Chapters 1–7:
-render loops and time, animation, sprite sheets, movement, basic physics,
-and collision detection.
+This repository is the real-time WebGL curriculum, progressing from Chapter 0
+through Chapter 14:
+
+- Chapter 0: `requestAnimationFrame`, elapsed time, delta time, FPS, and clocks
+- Chapter 1: animated vertex colors
+- Chapter 2: translation, rotation, scale, and combined transform animation
+- Chapter 3: animated color and alpha, including per-vertex color effects
+- Chapter 4: texture scrolling, offsets, maps, and zoomed/animated textures
+- Chapter 5: sprite-sheet animation and frame playback
+- Chapter 6–10: velocity, acceleration, gravity, projectiles, rotational motion,
+  multiple-wheel motion, friction, and tank/vehicle simulations
+- Chapter 11: local, world, and model-space axis-aligned bounding boxes and AABB
+  collision handling
+- Chapter 13: circular bounding volumes and circle-circle collision experiments
+- Chapter 14: velocity exchange and collision-response demonstrations
 
 For the introductory and foundation lessons through Chapter 20, see the
 [Sckorpio Graphics WebGL Fundamentals repository](https://github.com/SckorpioGraphics/sckorpio-graphics-webgl).
@@ -39,7 +51,7 @@ python3 -m http.server 8000
 ```
 
 Open <http://localhost:8000>. The page loads
-`chapters/chapter6/chapter6i.js` by default. Change the module path in
+`chapters/chapter11/chapter11o.js` by default. Change the module path in
 `index.html` to select another lesson. Lil GUI and gl-matrix are loaded from
 CDNs in `index.html`. Texture assets for the lessons are included under their
 chapter directories.
