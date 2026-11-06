@@ -125,27 +125,106 @@ CHAPTER 11 — AABB COLLISION
 11n - Showcase a player and two parked cars (Axis-Aligned)
 11o - Showcase a player and two parked cars (Not- Axis aligned : Rotated)
 
-CHAPTER 12 — OBB COLLISION & SAT
+>>>>>>>>>>>>>>>>>>>>>
+PLAN AHEAD >>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>
+
+Chapter 12 — OBB Collision Detection & SAT
 ---------------------------
+12a — Introduction to Oriented Bounding Boxes
+12b — Creating OBBs from Mesh Geometry
+12c — Transforming OBB Corners into World Space
+12d — Understanding OBB Local Axes
+12e — Introduction to the Separating Axis Theorem
+12f — Projecting OBBs onto Candidate Axes
+12g — Finding Separating Axes
+12h — Implementing SAT Collision Detection
+12i — Visualizing Projection Intervals and Collision Axes
+12j — Comparing AABB and OBB Collision Detection
+12k — Integrating OBB + SAT into the Physics Framework
 
-CHAPTER 13 — CIRCULAR COLLISION
--------------------------------
-13a - Start with a circle.
-13b - Place two circles in a non-collision setup.
-13c - Introduce a circular bounding box.
-13d - Update circular bounding boxes.
-13e - Add collision checking and collision handling.
-13f - Continue circular collision checks.
-13g - Apply collision behavior to circular objects.
-13h - Update circular bounds and collision state.
+Chapter 13 — Circular Collision Detection
+---------------------------
+13a — Introduction to Circular Bounding Volumes
+13b — Creating a Circle
+13c — Placing Two Circles in a Non-Collision Setup
+13d — Calculating Circular Bounding Volumes
+13e — Implementing Circle-Circle Collision Detection
+13f — Adding Collision Checking and Handling
+13g — Applying Collision Behavior to Circular Objects
+13h — Updating Circular Bounds and Collision State
 
-CHAPTER 14 — COLLISION RESPONSE
--------------------------------
-14a - Exchange velocities after collision.
-14b - Exchange velocities using a single collision check.
-14c - Continue the single-check collision-response demonstration.
+Chapter 14 — Collision Response
+---------------------------
+14a — Exchanging Velocities After Collision
+14b — Exchanging Velocities Using a Single Collision Check
+14c — Continuous Collision-Response Demonstration
 
-These lessons retain older Chapter 12 labels in their file headers.
+Chapter 15 — Momentum & Impulse
+---------------------------
+15a — Introduction to Momentum
+15b — Understanding Mass and Velocity
+15c — Calculating Momentum
+15d — Introduction to Impulse
+15e — Applying Impulse During Collision
+15f — Collision Response with Different Masses
+15g — Understanding Elastic and Inelastic Collisions
+15h — Demonstrating Momentum Conservation
+
+Chapter 16 — Physics & Animation
+---------------------------
+16a — Integrating Physics with the Animation Loop
+16b — Updating Position Using Velocity
+16c — Updating Velocity Using Acceleration
+16d — Applying Gravity to Multiple Objects
+16e — Combining Rotation and Physics
+16f — Applying Collision Detection During Animation
+16g — Building a Reusable Physics-Driven Animation
+
+Chapter 17 — Physics & Sprite Animation
+---------------------------
+17a — Introducing Physics-Driven Sprite Objects
+17b — Integrating Sprite Animation with Movement
+17c — Controlling Sprite Animation States
+17d — Switching Between Idle and Moving Animations
+17e — Integrating Jumping and Falling Animations
+17f — Handling Sprite Collisions
+17g — Building an Animated Physics-Based Character
+
+Chapter 18 — Multiple Objects & Interactions
+---------------------------
+18a — Creating Multiple Physics Objects
+18b — Managing Objects Using a Collection
+18c — Updating Multiple Objects in the Animation Loop
+18d — Detecting Collisions Between Multiple Objects
+18e — Handling Multiple Simultaneous Collisions
+18f — Adding Object-Object Interactions
+18g — Managing Object Creation and Removal
+18h — Building a Multi-Object Physics Scene
+
+Chapter 19 — Rendering, Animation & Physics
+---------------------------
+19a — Combining the Rendering and Physics Systems
+19b — Organizing the Game Update Loop
+19c — Integrating Sprites, Transforms and Physics
+19d — Adding Interactive Game Objects
+19e — Handling Player and Environment Collisions
+19f — Managing Game States
+19g — Building a Complete Interactive Scene
+
+Chapter 20 — Complete Game Framework
+---------------------------
+- 20a — Designing the Game Architecture
+- 20b — Setting Up the Game Scene
+- 20c — Creating the Player Character
+- 20d — Implementing Player Movement and Controls
+- 20e — Adding Enemies and Interactive Objects
+- 20f — Implementing Collision and Physics
+- 20g — Adding Sprite Animation
+- 20h — Implementing Game Rules and Objectives
+- 20i — Adding Score and Game UI
+- 20j — Game Over and Restart System
+- 20k — Bringing Everything Together: Complete WebGL Game
 
 EXTRA LESSONS
 -------------
