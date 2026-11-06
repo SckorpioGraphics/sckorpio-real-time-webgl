@@ -1249,7 +1249,6 @@ const physicsInfoSckorpioCar = {
         this.velocityY = this.speed * this.directionY;
         calculateBoundingBox(this);
         updateBoundingBox(this);
-        console.log(this.boundingBox);
     },
     update(deltaTime) {
         // save prev
@@ -1331,7 +1330,6 @@ const physicsInfoCar1 = {
         this.mesh = mesh;
         calculateBoundingBox(this);
         updateBoundingBox(this);
-        console.log("car1:",this.boundingBox);
     },
     update(deltaTime) {
         // save prev
@@ -1381,7 +1379,6 @@ const physicsInfoCar2 = {
         this.mesh = mesh;
         calculateBoundingBox(this);
         updateBoundingBox(this);
-        console.log("car2:",this.boundingBox);
     },
     update(deltaTime) {
         // save prev
