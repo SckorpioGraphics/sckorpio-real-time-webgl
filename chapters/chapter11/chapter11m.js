@@ -159,7 +159,7 @@ function createProgram(gl, vertexShader, fragmentShader) {
 // TEXTURE OBJECTS
 // =============================================================
 const carTexture = {
-    imagePath: "chapters/chapter12/assets/sckorpioCar_Texture.png",
+    imagePath: "chapters/chapter11/assets/sckorpioCar_Texture.png",
 
     image: null,
     handle: null,
