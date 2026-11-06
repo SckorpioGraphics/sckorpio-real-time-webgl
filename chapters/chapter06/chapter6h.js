@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 6h: Sckorpio driving airplane (top view)+Camera Follow
+   CHAPTER 6h: Sckorpio driving airplane (top view)
 
    Topics:
    - Apply 2D Linear Motion on airplane
@@ -7,7 +7,6 @@
    - Use clock for delta time
    - create animation object
    - apply on the Square Textured with airplane 
-   - Camera follow airplane too
    #############################################################
 */
 
@@ -841,23 +840,16 @@ const physicsInfo = {
         // key controls
         if(this.state.angleUp) this.directionAngle += 1.0;
         if(this.state.angleDown) this.directionAngle -= 1.0;
-
         // direction unit vector
         this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
         this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
-        
         // velocity
         this.velocityX = this.speed * this.directionX;
         this.velocityY = this.speed * this.directionY;
-        
         // mesh transforms
         this.mesh.translationX += deltaTime * this.velocityX;
         this.mesh.translationY += deltaTime * this.velocityY;
         this.mesh.rotation = this.directionAngle;
-        
-        // camera follow
-        camera.positionX = this.mesh.translationX * camera.zoom - 500;
-        camera.positionY = this.mesh.translationY * camera.zoom - 400;
     },
     reset() {
         this.mesh.resetTransform();

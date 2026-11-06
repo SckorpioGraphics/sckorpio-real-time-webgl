@@ -4,6 +4,7 @@
    Topics:
    - Apply 2D Linear Motion on Arrow head Traingle
    - Use unitVector & Speed for velocityX, velocityY
+   - Key controls for changing Direction only (unit vector)
    - Use clock for delta time
    - create animation object
    - apply on the Arrow head
