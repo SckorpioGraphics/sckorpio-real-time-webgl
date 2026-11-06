@@ -1,9 +1,10 @@
 /* #############################################################
-   CHAPTER 12e: Use model matrix to calculating AABB BBox
+   CHAPTER 11a: Starting with a Circle
+
    Topics:
-   - Use model matrix in updateBoundingBox() for calculating BBox 
-   - Apply 1-D Linear Motion on Rectangle & square
-   - Observe it doesnt get collided with the square
+   - Just render a circle
+   - Add basic Physic to it
+   - Linear velocity in X
    #############################################################
 */
 
@@ -160,60 +161,32 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const letterF = {
+const circle = {
     /*
-        v2-------v3--------v4
-        |\       |\         |
-        |\       |   \      |
-        | \      |      \   |
-        |  \     v6________v5
-        |   \    |
-        |    \   v7_____v8
-        |     \  |  \    |
-        |      \ |    \  |
-        |       \v10____v9
-        |        |
-        |        |
-        v0_______v1
+             v6---v5
+           /   \ /   \
+         v1     v0    v4
+           \         /
+             v2---v3
     */
 
-    // CPU DATA
-    vertexData: new Float32Array([
-        -100, -100,
-        -60 , -100,
-        -100,  100,
-        -60 ,  100,
-
-        // Top bar
-        40  ,  100,
-        40  ,   60,
-        -60,   60,
-
-        // Middle bar
-        -60,  20,
-        0   ,  20,
-        0   , -20,
-        -60, -20
-    ]),
-    indices: new Uint16Array([
-        // LEFT COLUMN
-        0, 1, 2,
-        2, 1, 3,
-
-        // TOP BAR
-        3, 6, 5,
-        3, 5, 4,
-
-        // MIDDLE BAR
-        7, 10, 9,
-        7, 9, 8
-    ]),
+    points: 100,
+    radius: 100,
+    positions: null,
+    indices: null,
+    
+    initialTranslationX: 0,
+    initialTranslationY: 0,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
 
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
     modelMatrix: mat3.create(),
     color: [1.0, 0.0, 0.0, 0.3],
 
@@ -221,8 +194,6 @@ const letterF = {
     shader: null,
     vao: null,
     vbo: null,
-    positionOffset: 0,
-    stride: 0,
     drawMode: null,
     drawOffset: 0,
     drawCount: 0,
@@ -232,10 +203,37 @@ const letterF = {
         // Connect shader to mesh
         this.shader = shader;
 
+        // Allocate CPU vertex data
+        // 1 center + points perimeter vertices
+        this.positions = new Float32Array((this.points + 1) * 2);
+        this.indices = new Uint16Array(this.points + 2);
+
+        // Center vertex
+        this.positions[0] = 0.0;
+        this.positions[1] = 0.0;
+        this.indices[0] = 0;
+
+        // Perimeter vertices
+        for (let i = 0; i < this.points; i++) {
+            const angle = (i / this.points) * (2 * Math.PI);
+
+            const pX = this.radius * Math.cos(angle);
+            const pY = this.radius * Math.sin(angle);
+
+            const vertex = i + 1;
+
+            this.positions[vertex * 2] = pX;
+            this.positions[vertex * 2 + 1] = pY;
+            this.indices[vertex] = vertex;
+        }
+
+        // Repeat First one again
+        this.indices[this.points + 1] = 1;
+
         // Vertex Buffer
         this.vbo = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, this.positions, gl.STATIC_DRAW);
 
         // Index Buffer
         this.ibo = gl.createBuffer();
@@ -262,196 +260,37 @@ const letterF = {
             0                                       // offset: start of buffer
         );
 
+        // Index buffer
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo);
 
-        // Important for retrieving position data
-        this.positionOffset = 0;
-        this.stride = 2;
-
-        // Draw Data
-        this.drawMode = gl.TRIANGLES;
+        // Draw data
+        this.drawMode = gl.TRIANGLE_FAN;
         this.drawOffset = 0;
         this.drawCount = this.indices.length;
         this.drawType = gl.UNSIGNED_SHORT;
+
+        // Unbind VAO
+        gl.bindVertexArray(null);
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
     },
     draw(gl) {
         setupModelMatrix(this);
+        gl.useProgram(this.shader.program);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
         gl.uniform4fv(this.shader.uniforms.color,this.color);
         gl.bindVertexArray(this.vao);
-        gl.drawElements(this.drawMode,this.drawCount,this.drawType,this.drawOffset);
-    }
-};
-
-const square = {
-    //    v1--------v2
-    //    | \        |
-    //    |    \     |
-    //    |       \  |
-    //    v0--------v1
-
-    // CPU DATA
-    vertexData: new Float32Array([
-        -100, -100,      // Left Bottom
-        100, -100,      // Right Bottom
-        -100, 100,      // Left Top
-
-        -100, 100,      // Left Top
-        100, -100,      // Right Bottom
-        100, 100       // Right Top
-    ]),
-
-    translationX: 800,
-    translationY: 0,
-    rotation: 0,
-    scaleX: 1.0,
-    scaleY: 1.0,
-    modelMatrix: mat3.create(),
-    color: [0.0, 1.0, 0.0, 0.3],
-
-    //GPU DATA
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0,
-
-    //FUNCTIONS
-    init(gl, shader) {
-        // Connect shader to mesh
-        this.shader = shader;
-
-        // Vertex Buffer
-        this.vbo = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
-
-        // Vertex Array
-        this.vao = gl.createVertexArray();
-        gl.bindVertexArray(this.vao);
-
-        // Enable position attribute
-        gl.enableVertexAttribArray(this.shader.attributes.position);
-
-        // Bind Vertex Buffer
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-
-        // Vertex data format
-        gl.vertexAttribPointer(
-            this.shader.attributes.position,
-            2,                                      // size: 2 components (X, Y)
-            gl.FLOAT,                               // type: 32-bit float
-            false,                                  // normalize
-            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
-            0                                       // offset: start of buffer
+        gl.drawElements(
+            this.drawMode,
+            this.drawCount,
+            this.drawType,
+            this.drawOffset
         );
-
-        // Draw data
-        this.drawMode = gl.TRIANGLES;
-        this.drawOffset = 0;
-        this.drawCount = 6;
-    },
-    draw(gl) {
-        setupModelMatrix(this);
-        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-        gl.uniform4fv(this.shader.uniforms.color,this.color);
-        gl.bindVertexArray(this.vao);
-        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
-    }
-};
-
-const boundingBoxes = {
-    //    v1--------v2
-    //    |          |
-    //    |          |
-    //    |          |
-    //    v0--------v1
-
-    // CPU DATA
-    vertexData: null,
-
-    translationX: 0,
-    translationY: 0,
-    rotation: 0,
-    scaleX: 1.0,
-    scaleY: 1.0,
-    modelMatrix: mat3.create(),
-    color: [0.0, 0.0, 0.0, 1.0],     // BLACK
-
-    //GPU DATA
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0,
-
-    //FUNCTIONS
-    init(gl, shader) {
-        // Connect shader to mesh
-        this.shader = shader;
-
-        // Vertex Buffer
-        this.vbo = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        // NOTE: Vertex data will be updated from the UI during rendering.
-
-        // Vertex Array
-        this.vao = gl.createVertexArray();
-        gl.bindVertexArray(this.vao);
-
-        // Enable position attribute
-        gl.enableVertexAttribArray(this.shader.attributes.position);
-
-        // Bind Vertex Buffer
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-
-        // Vertex data format
-        gl.vertexAttribPointer(
-            this.shader.attributes.position,
-            2,                                      // size: 2 components (X, Y)
-            gl.FLOAT,                               // type: 32-bit float
-            false,                                  // normalize
-            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
-            0                                       // offset: start of buffer
-        );
-
-        // Draw data
-        this.drawMode = gl.LINES;
-        this.drawOffset = 0;
-        this.drawCount = 8;
-    },
-    draw(gl) {
-        setupModelMatrix(this);
-        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-        gl.uniform4fv(this.shader.uniforms.color,this.color);
-        gl.bindVertexArray(this.vao);
-        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
-    },
-    updateData(gl) {
-        gl.bindVertexArray(this.vao);
-
-        const bbox1 = physicsInfoLetterF.boundingBox;
-
-        // Vertex data CPU side
-        this.vertexData = new Float32Array([
-            bbox1.minX, bbox1.minY,      // Left Bottom
-            bbox1.maxX, bbox1.minY,      // Right Bottom
-
-            bbox1.maxX, bbox1.minY,      // Right Bottom
-            bbox1.maxX, bbox1.maxY,      // Right Top
-
-            bbox1.maxX, bbox1.maxY,      // Right Top
-            bbox1.minX, bbox1.maxY,      // Left Top
-
-            bbox1.minX, bbox1.maxY,      // Left Top
-            bbox1.minX, bbox1.minY,      // Left Bottom
-        ]);
-
-        // Update vertex data on the GPU
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.DYNAMIC_DRAW);
     }
 };
 
@@ -707,17 +546,13 @@ const renderSystem = {
         grid.init(gl, shader);
         xAxis.init(gl, shader);
         yAxis.init(gl, shader);
-        letterF.init(gl, shader);
-        square.init(gl, shader);
-        boundingBoxes.init(gl, shader);
-
+        circle.init(gl, shader);
     },
     update() {
         const gl = this.gl;
 
         camera.updateProjectionMatrix(gl);
         camera.updateViewMatrix(gl);
-        boundingBoxes.updateData(gl);
 
     },
     render() {
@@ -740,6 +575,7 @@ const renderSystem = {
         gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
         // Pass Model Matrix (Identity as default)
         gl.uniformMatrix3fv(shader.uniforms.modelMatrix,false,mat3.create());
+
         // RENDER MESHES
         // Grid
         grid.draw(gl);
@@ -747,15 +583,8 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // LetterF
-        letterF.draw(gl);
-        // Square
-        square.draw(gl);
-
-        // LetterF BBox
-        boundingBoxes.draw(gl);
-
-        //---------------------------------------------------
+        // circle
+        circle.draw(gl);
     }
 };
 
@@ -858,102 +687,35 @@ const clock = {
 // =============================================================
 // PHYSICS INFOS
 // =============================================================
-const physicsInfoLetterF = {
+const physicsInfoCircle = {
     // Object
     mesh: null,
     // Velocity
-    velocityX: 100,
-    // Bounding Box
-    boundingBox: {
-        minX: 0,
-        minY: 0,
-        maxX: 0,
-        maxY: 0
-    },
-
-    init(mesh) {
-        this.mesh = mesh;
-        updateBoundingBox(this);
-    },
-    update(deltaTime) {
-        this.mesh.translationX += deltaTime * this.velocityX;
-        updateBoundingBox(this);
-    }
-};
-
-const physicsInfoSquare = {
-    // Object
-    mesh: null,
-    // Velocity
-    velocityX: -70,
-    // Bounding Box
-    boundingBox: {
-        minX: -100,
-        minY: -100,
-        maxX: 100,
-        maxY: 100
-    },
+    velocityX: 200,
 
     init(mesh) {
         this.mesh = mesh;
     },
     update(deltaTime) {
         this.mesh.translationX += deltaTime * this.velocityX;
+    },
+    reset() {
+        this.mesh.resetTransform();
     }
 };
-
-function updateBoundingBox(physicsInfo) {
-    const mesh = physicsInfo.mesh;
-    const vertexData = mesh.vertexData;
-
-    const stride = mesh.stride;
-    const positionOffset = mesh.positionOffset;
-
-    const modelMatrix = mesh.modelMatrix;
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    for (let i = positionOffset; i < vertexData.length; i += stride) {
-        const x = vertexData[i];
-        const y = vertexData[i + 1];
-
-        // Local-space vertex
-        const vertex = vec3.fromValues(x, y, 1);
-
-        // Transform using the 3x3 model matrix
-        const transformedVertex = vec3.create();
-        vec3.transformMat3(transformedVertex, vertex, modelMatrix);
-
-        // Extract world-space coordinates
-        const worldX = transformedVertex[0];
-        const worldY = transformedVertex[1];
-
-        minX = Math.min(minX, worldX);
-        minY = Math.min(minY, worldY);
-        maxX = Math.max(maxX, worldX);
-        maxY = Math.max(maxY, worldY);
-    }
-
-    physicsInfo.boundingBox.minX = minX;
-    physicsInfo.boundingBox.minY = minY;
-    physicsInfo.boundingBox.maxX = maxX;
-    physicsInfo.boundingBox.maxY = maxY;
-}
 
 // =============================================================
 // PHYSICS SYSTEM
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfoLetterF.init(letterF);
-        physicsInfoSquare.init(square);
+        physicsInfoCircle.init(circle);
     },
     update() {
-        physicsInfoLetterF.update(clock.deltaTime);
-        physicsInfoSquare.update(clock.deltaTime);
+        physicsInfoCircle.update(clock.deltaTime);
+    },
+    reset() {
+        physicsInfoCircle.reset();
     }
 };
 
@@ -964,32 +726,18 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        // Rectangle
-        const letterFFolder = gui.addFolder("LetterF");
-        letterFFolder.add(letterF, "translationX", -1000, 1000).name("translationX");
-        letterFFolder.add(letterF, "translationY", -1000, 1000).name("translationY");
-        letterFFolder.add(letterF, "rotation", 0, 360).name("rotation");
-        letterFFolder.add(letterF, "scaleX", 0.1, 3.0).name("scaleX");
-        letterFFolder.add(letterF, "scaleY", 0.1, 3.0).name("scaleY");
+        const physicsFolder1 = gui.addFolder("Physics circle");
+        physicsFolder1.add(physicsInfoCircle, "velocityX", -1000, 1000).name("velocityX");
 
-        // Square
-        const squareFolder = gui.addFolder("Square");
-        squareFolder.add(square, "translationX", -1000, 1000).name("translationX");
-        squareFolder.add(square, "translationY", -1000, 1000).name("translationY");
-        squareFolder.add(square, "rotation", 0, 360).name("rotation");
-        squareFolder.add(square, "scaleX", 0.1, 3.0).name("scaleX");
-        squareFolder.add(square, "scaleY", 0.1, 3.0).name("scaleY");
-
-        const physicsFolder1 = gui.addFolder("Physics Rectangle");
-        physicsFolder1.add(physicsInfoLetterF, "velocityX", -1000, 1000).name("velocityX");
-
-        const physicsFolder2 = gui.addFolder("Physics Square");
-        physicsFolder2.add(physicsInfoSquare, "velocityX", -1000, 1000).name("velocityX");
-    
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
-        animationFolder.add(clock, "reset");
+        animationFolder.add({
+            reset: () => {
+                clock.reset();
+                physicsSystem.reset();
+            }
+        }, "reset");
 
         // Elapsed time display
         clock.timerDisplay = "0.00 s";
