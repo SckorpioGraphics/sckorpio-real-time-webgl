@@ -879,7 +879,7 @@ const physicsInfoRectangle = {
             maxX: 0,
             maxY: 0
         },
-        aabb{
+        aabb: {
             minX: 0,
             minY: 0,
             maxX: 0,
@@ -899,10 +899,12 @@ const physicsInfoRectangle = {
     checkCollision(other) {
         // Detect collision
         const isCollision = checkAABBCollision(this,other);
-
         if (isCollision) {
-            console.log("Collision detected!");
+            this.onCollision();
         }
+    },
+    onCollision() {
+        console.log("Collision detected!");
     },
     reset() {
         this.mesh.resetTransform();
@@ -922,7 +924,7 @@ const physicsInfoSquare = {
             maxX: 0,
             maxY: 0
         },
-        aabb{
+        aabb: {
             minX: 0,
             minY: 0,
             maxX: 0,

@@ -1,8 +1,8 @@
 /* #############################################################
-   CHAPTER 11b: introducing AABB Bounding Box
+   CHAPTER 11b: introducing Bounding Info
 
    Topics:
-   - Harcoded bounding box values
+   - Harcoded bounding Info Local values
    - Apply 1-D Linear Motion on Rectangle & square
    - Observe it doesnt get collided with the square
    #############################################################

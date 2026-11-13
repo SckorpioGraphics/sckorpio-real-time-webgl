@@ -880,7 +880,7 @@ const physicsInfoRectangle = {
             maxX: 0,
             maxY: 0
         },
-        aabb{
+        aabb: {
             minX: 0,
             minY: 0,
             maxX: 0,
@@ -917,7 +917,7 @@ const physicsInfoSquare = {
             maxX: 0,
             maxY: 0
         },
-        aabb{
+        aabb: {
             minX: 0,
             minY: 0,
             maxX: 0,

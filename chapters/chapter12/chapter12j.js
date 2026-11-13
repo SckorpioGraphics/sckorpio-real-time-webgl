@@ -194,7 +194,7 @@ const car1Texture = {
 };
 
 const car2Texture = {
-    imagePath: "chapters/chapter11/assets/car2_Texture.png",
+    imagePath: "chapters/chapter12/assets/car2_Texture.png",
 
     image: null,
     handle: null,
@@ -1231,7 +1231,7 @@ const physicsInfoSckorpioCar = {
             maxX: 0,
             maxY: 0
         },
-        aabb{
+        aabb: {
             minX: 0,
             minY: 0,
             maxX: 0,
@@ -1320,7 +1320,7 @@ const physicsInfoCar1 = {
             maxX: 0,
             maxY: 0
         },
-        aabb{
+        aabb: {
             minX: 0,
             minY: 0,
             maxX: 0,
@@ -1372,7 +1372,7 @@ const physicsInfoCar2 = {
             maxX: 0,
             maxY: 0
         },
-        aabb{
+        aabb: {
             minX: 0,
             minY: 0,
             maxX: 0,
