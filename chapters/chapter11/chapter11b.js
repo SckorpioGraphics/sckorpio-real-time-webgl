@@ -348,7 +348,7 @@ const square = {
     }
 };
 
-const boundingBoxes = {
+const boundingInfos = {
     //    v1--------v2
     //    |          |
     //    |          |
@@ -419,21 +419,21 @@ const boundingBoxes = {
     updateData(gl) {
         gl.bindVertexArray(this.vao);
 
-        const bbox1 = physicsInfoRectangle.boundingBox;
+        const boundingInfo1 = physicsInfoRectangle.boundingInfo;
 
         // Vertex data CPU side
         this.vertexData = new Float32Array([
-            bbox1.minX, bbox1.minY,      // Left Bottom
-            bbox1.maxX, bbox1.minY,      // Right Bottom
+            boundingInfo1.local.minX, boundingInfo1.local.minY,      // Left Bottom
+            boundingInfo1.local.maxX, boundingInfo1.local.minY,      // Right Bottom
 
-            bbox1.maxX, bbox1.minY,      // Right Bottom
-            bbox1.maxX, bbox1.maxY,      // Right Top
+            boundingInfo1.local.maxX, boundingInfo1.local.minY,      // Right Bottom
+            boundingInfo1.local.maxX, boundingInfo1.local.maxY,      // Right Top
 
-            bbox1.maxX, bbox1.maxY,      // Right Top
-            bbox1.minX, bbox1.maxY,      // Left Top
+            boundingInfo1.local.maxX, boundingInfo1.local.maxY,      // Right Top
+            boundingInfo1.local.minX, boundingInfo1.local.maxY,      // Left Top
 
-            bbox1.minX, bbox1.maxY,      // Left Top
-            bbox1.minX, bbox1.minY,      // Left Bottom
+            boundingInfo1.local.minX, boundingInfo1.local.maxY,      // Left Top
+            boundingInfo1.local.minX, boundingInfo1.local.minY,      // Left Bottom
         ]);
 
         // Update vertex data on the GPU
@@ -696,7 +696,7 @@ const renderSystem = {
         yAxis.init(gl, shader);
         rectangle.init(gl, shader);
         square.init(gl, shader);
-        boundingBoxes.init(gl, shader);
+        boundingInfos.init(gl, shader);
 
     },
     update() {
@@ -704,7 +704,7 @@ const renderSystem = {
 
         camera.updateProjectionMatrix(gl);
         camera.updateViewMatrix(gl);
-        boundingBoxes.updateData(gl);
+        boundingInfos.updateData(gl);
 
     },
     render() {
@@ -737,7 +737,7 @@ const renderSystem = {
         square.draw(gl);
 
         // Rectangle BBox
-        boundingBoxes.draw(gl);
+        boundingInfos.draw(gl);
 
         //---------------------------------------------------
     }
@@ -848,11 +848,13 @@ const physicsInfoRectangle = {
     // Velocity
     velocityX: 100,
     // Bounding Box
-    boundingBox: {
-        minX: -200,
-        minY: -100,
-        maxX: 200,
-        maxY: 100
+    boundingInfo: {
+        local: {
+            minX: -200,
+            minY: -100,
+            maxX: 200,
+            maxY: 100
+        }
     },
 
     init(mesh) {
@@ -872,11 +874,13 @@ const physicsInfoSquare = {
     // Velocity
     velocityX: -70,
     // Bounding Box
-    boundingBox: {
-        minX: -100,
-        minY: -100,
-        maxX: 100,
-        maxY: 100
+    boundingInfo: {
+        local: {
+            minX: -100,
+            minY: -100,
+            maxX: 100,
+            maxY: 100
+        }
     },
 
     init(mesh) {
