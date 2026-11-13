@@ -1140,14 +1140,6 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        // Rectangle
-        const rectangleFolder = gui.addFolder("Rectangle");
-        rectangleFolder.add(rectangle, "translationX", -1000, 1000).name("translationX");
-        rectangleFolder.add(rectangle, "translationY", -1000, 1000).name("translationY");
-        rectangleFolder.add(rectangle, "rotation", 0, 360).name("rotation");
-        rectangleFolder.add(rectangle, "scaleX", 0.1, 3.0).name("scaleX");
-        rectangleFolder.add(rectangle, "scaleY", 0.1, 3.0).name("scaleY");
-
         // Square
         const squareFolder = gui.addFolder("Square");
         squareFolder.add(square, "translationX", -1000, 1000).name("translationX");

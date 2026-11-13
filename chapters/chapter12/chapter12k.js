@@ -1283,9 +1283,9 @@ const physicsInfoSckorpioCar = {
         setupModelMatrix(this.mesh);
         updateBoundingInfoAABB(this);
     },
-    checkCollision(other) {
+    checkAABBCollision(other) {
         // Detect collision
-        const isCollision = checkCollision(this,other);
+        const isCollision = checkAABBCollision(this,other);
 
         if (isCollision) {
             console.log("Collision detected!");
@@ -1483,7 +1483,7 @@ function updateBoundingInfoAABB(physicsInfo) {
     physicsInfo.boundingInfo.aabb.maxY = worldMaxY;
 }
 
-function checkCollision(physicsInfoA, physicsInfoB) {
+function checkAABBCollision(physicsInfoA, physicsInfoB) {
     const a = physicsInfoA.boundingInfo;
     const b = physicsInfoB.boundingInfo;
 
@@ -1512,8 +1512,8 @@ const physicsSystem = {
         physicsInfoCar2.update(clock.deltaTime);
 
         // check collision
-        physicsInfoSckorpioCar.checkCollision(physicsInfoCar1);
-        physicsInfoSckorpioCar.checkCollision(physicsInfoCar2);
+        physicsInfoSckorpioCar.checkAABBCollision(physicsInfoCar1);
+        physicsInfoSckorpioCar.checkAABBCollision(physicsInfoCar2);
     },
     reset() {
         physicsInfoSckorpioCar.reset();
