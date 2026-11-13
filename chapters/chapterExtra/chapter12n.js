@@ -518,7 +518,7 @@ function createParkedCar(gl, shader, texture, options = {}) {
         positionOffset: 0,
         stride: 4,
 
-        boundingBox: {
+        boundingInfo: {
             localMinX: 0,
             localMinY: 0,
             localMaxX: 0,
@@ -565,8 +565,8 @@ function createParkedCar(gl, shader, texture, options = {}) {
             gl.bindVertexArray(null);
 
             setupModelMatrix(this);
-            calculateBoundingBox(this);
-            updateBoundingBox(this);
+            calculateBoundingInfoLocal(this);
+            updateBoundingInfoAABB(this);
         },
 
         draw(gl) {
@@ -666,7 +666,7 @@ function drawParkedCars(gl) {
 // BOUNDING BOXES DEBUG RENDERER
 // =============================================================
 
-const boundingBoxes = {
+const boundingInfos = {
     vertexData: null,
 
     translationX: 0,
@@ -731,25 +731,25 @@ const boundingBoxes = {
 
         // Player AABB plus the static AABBs of every parked car.
         const boxes = [
-            physicsInfoSckorpioCar.boundingBox,
-            ...parkedCars.map(car => car.boundingBox)
+            physicsInfoSckorpioCar.boundingInfo,
+            ...parkedCars.map(car => car.boundingInfo)
         ];
 
         const vertices = [];
 
-        for (const bbox of boxes) {
+        for (const boundingInfo of boxes) {
             vertices.push(
-                bbox.worldMinX, bbox.worldMinY,
-                bbox.worldMaxX, bbox.worldMinY,
+                boundingInfo.aabb.minX, boundingInfo.aabb.minY,
+                boundingInfo.aabb.maxX, boundingInfo.aabb.minY,
 
-                bbox.worldMaxX, bbox.worldMinY,
-                bbox.worldMaxX, bbox.worldMaxY,
+                boundingInfo.aabb.maxX, boundingInfo.aabb.minY,
+                boundingInfo.aabb.maxX, boundingInfo.aabb.maxY,
 
-                bbox.worldMaxX, bbox.worldMaxY,
-                bbox.worldMinX, bbox.worldMaxY,
+                boundingInfo.aabb.maxX, boundingInfo.aabb.maxY,
+                boundingInfo.aabb.minX, boundingInfo.aabb.maxY,
 
-                bbox.worldMinX, bbox.worldMaxY,
-                bbox.worldMinX, bbox.worldMinY
+                boundingInfo.aabb.minX, boundingInfo.aabb.maxY,
+                boundingInfo.aabb.minX, boundingInfo.aabb.minY
             );
         }
 
@@ -1020,7 +1020,7 @@ const renderSystem = {
         createParkingCars(gl, textureShader, carTexture);
 
         // Debug bounding boxes
-        boundingBoxes.init(gl, basicShader);
+        boundingInfos.init(gl, basicShader);
     },
 
     update() {
@@ -1029,7 +1029,7 @@ const renderSystem = {
         camera.updateProjectionMatrix(gl);
         camera.updateViewMatrix(gl);
 
-        boundingBoxes.updateData(gl);
+        boundingInfos.updateData(gl);
     },
 
     render() {
@@ -1093,7 +1093,7 @@ const renderSystem = {
         sckorpioCar.draw(gl);
 
         // Render debug AABBs
-        boundingBoxes.draw(gl);
+        boundingInfos.draw(gl);
     }
 };
 
@@ -1211,7 +1211,7 @@ const physicsInfoSckorpioCar = {
         backward: false
     },
 
-    boundingBox: {
+    boundingInfo: {
         localMinX: 0,
         localMinY: 0,
         localMaxX: 0,
@@ -1237,10 +1237,10 @@ const physicsInfoSckorpioCar = {
         this.velocityX = this.speed * this.directionX;
         this.velocityY = this.speed * this.directionY;
 
-        calculateBoundingBox(this);
-        updateBoundingBox(this);
+        calculateBoundingInfoLocal(this);
+        updateBoundingInfoAABB(this);
 
-        console.log(this.boundingBox);
+        console.log(this.boundingInfo);
     },
 
     update(deltaTime) {
@@ -1276,7 +1276,7 @@ const physicsInfoSckorpioCar = {
 
         // Update matrix for collision calculations.
         setupModelMatrix(this.mesh);
-        updateBoundingBox(this);
+        updateBoundingInfoAABB(this);
     },
 
     onCollision() {
@@ -1288,7 +1288,7 @@ const physicsInfoSckorpioCar = {
         this.mesh.rotation = this.previousDirectionAngle;
 
         setupModelMatrix(this.mesh);
-        updateBoundingBox(this);
+        updateBoundingInfoAABB(this);
 
         this.collision = false;
     },
@@ -1302,9 +1302,9 @@ const physicsInfoSckorpioCar = {
 // BOUNDING BOX CALCULATION
 // =============================================================
 
-function calculateBoundingBox(object) {
+function calculateBoundingInfoLocal(object) {
     const mesh = object.mesh || object;
-    const bbox = object.boundingBox;
+    const boundingInfo = object.boundingInfo;
     const vertexData = mesh.vertexData;
 
     const stride = mesh.stride;
@@ -1326,10 +1326,10 @@ function calculateBoundingBox(object) {
         maxY = Math.max(maxY, y);
     }
 
-    bbox.localMinX = minX;
-    bbox.localMinY = minY;
-    bbox.localMaxX = maxX;
-    bbox.localMaxY = maxY;
+    boundingInfo.local.minX = minX;
+    boundingInfo.local.minY = minY;
+    boundingInfo.local.maxX = maxX;
+    boundingInfo.local.maxY = maxY;
 }
 
 
@@ -1337,15 +1337,15 @@ function calculateBoundingBox(object) {
 // UPDATE WORLD-SPACE BOUNDING BOX
 // =============================================================
 
-function updateBoundingBox(object) {
+function updateBoundingInfoAABB(object) {
     const mesh = object.mesh || object;
     const modelMatrix = mesh.modelMatrix;
-    const bbox = object.boundingBox;
+    const boundingInfo = object.boundingInfo;
 
-    const minX = bbox.localMinX;
-    const minY = bbox.localMinY;
-    const maxX = bbox.localMaxX;
-    const maxY = bbox.localMaxY;
+    const minX = boundingInfo.local.minX;
+    const minY = boundingInfo.local.minY;
+    const maxX = boundingInfo.local.maxX;
+    const maxY = boundingInfo.local.maxY;
 
     // Four local-space corners.
     const corners = [
@@ -1374,10 +1374,10 @@ function updateBoundingBox(object) {
         worldMaxY = Math.max(worldMaxY, worldVertex[1]);
     }
 
-    bbox.worldMinX = worldMinX;
-    bbox.worldMinY = worldMinY;
-    bbox.worldMaxX = worldMaxX;
-    bbox.worldMaxY = worldMaxY;
+        physicsInfo.boundingInfo.aabb.minX = worldMinX;
+    physicsInfo.boundingInfo.aabb.minY = worldMinY;
+    physicsInfo.boundingInfo.aabb.maxX = worldMaxX;
+    physicsInfo.boundingInfo.aabb.maxY = worldMaxY;
 }
 
 
@@ -1386,14 +1386,14 @@ function updateBoundingBox(object) {
 // =============================================================
 
 function checkCollision(physicsInfoA, physicsInfoB) {
-    const a = physicsInfoA.boundingBox;
-    const b = physicsInfoB.boundingBox;
+    const a = physicsInfoA.boundingInfo;
+    const b = physicsInfoB.boundingInfo;
 
     const isCollision =
-        a.worldMinX < b.worldMaxX &&
-        a.worldMaxX > b.worldMinX &&
-        a.worldMinY < b.worldMaxY &&
-        a.worldMaxY > b.worldMinY;
+        a.aabb.minX < b.aabb.maxX &&
+        a.aabb.maxX > b.aabb.minX &&
+        a.aabb.minY < b.aabb.maxY &&
+        a.aabb.maxY > b.aabb.minY;
 
     return isCollision;
 }
@@ -1449,7 +1449,7 @@ const physicsSystem = {
         this.wasColliding = false;
 
         setupModelMatrix(sckorpioCar);
-        updateBoundingBox(physicsInfoSckorpioCar);
+        updateBoundingInfoAABB(physicsInfoSckorpioCar);
     }
 };
 
