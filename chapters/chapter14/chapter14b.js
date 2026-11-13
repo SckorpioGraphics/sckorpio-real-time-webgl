@@ -1,12 +1,11 @@
 /* #############################################################
-   CHAPTER 12j: Excahnge velocity of meshes after collisons
+   CHAPTER 11b: 2 Circles Showing No Collision
 
    Topics:
-   - Simulate Square and Rectangle and log collisons
-   - Excahnge their velocities as they collided
-   - Single collison check
-   - Apply 1-D Linear Motion on Rectangle & square
-   - Observe it they collided 
+   - Apply 1-D Linear Motion on circle1 & circle2
+   - circle1: moving towards +ve x-axis
+   - circle2: moving towards -ve x axis
+   - Observe they doesn't get collided with each other
    #############################################################
 */
 
@@ -163,34 +162,32 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const rectangle = {
-    //    v1--------v2
-    //    | \        |
-    //    |    \     |
-    //    |       \  |
-    //    v0--------v1
+const circle1 = {
+    /*
+             v6---v5
+           /   \ /   \
+         v1     v0    v4
+           \         /
+             v2---v3
+    */
 
-    // CPU DATA
-    vertexData: new Float32Array([
-        -200, -100,      // Left Bottom
-        200, -100,      // Right Bottom
-        -200, 100,      // Left Top
-
-        -200, 100,      // Left Top
-        200, -100,      // Right Bottom
-        200, 100       // Right Top
-    ]),
+    points: 100,
+    radius: 100,
+    positions: null,
+    indices: null,
 
     initialTranslationX: 0,
     initialTranslationY: 0,
     initialRotation: 0,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
+
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
     modelMatrix: mat3.create(),
     color: [1.0, 0.0, 0.0, 0.3],
 
@@ -198,7 +195,6 @@ const rectangle = {
     shader: null,
     vao: null,
     vbo: null,
-    stride: 0,
     drawMode: null,
     drawOffset: 0,
     drawCount: 0,
@@ -208,10 +204,42 @@ const rectangle = {
         // Connect shader to mesh
         this.shader = shader;
 
+        // Allocate CPU vertex data
+        // 1 center + points perimeter vertices
+        this.positions = new Float32Array((this.points + 1) * 2);
+        this.indices = new Uint16Array(this.points + 2);
+
+        // Center vertex
+        this.positions[0] = 0.0;
+        this.positions[1] = 0.0;
+        this.indices[0] = 0;
+
+        // Perimeter vertices
+        for (let i = 0; i < this.points; i++) {
+            const angle = (i / this.points) * (2 * Math.PI);
+
+            const pX = this.radius * Math.cos(angle);
+            const pY = this.radius * Math.sin(angle);
+
+            const vertex = i + 1;
+
+            this.positions[vertex * 2] = pX;
+            this.positions[vertex * 2 + 1] = pY;
+            this.indices[vertex] = vertex;
+        }
+
+        // Repeat First one again
+        this.indices[this.points + 1] = 1;
+
         // Vertex Buffer
         this.vbo = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, this.positions, gl.STATIC_DRAW);
+
+        // Index Buffer
+        this.ibo = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
 
         // Vertex Array
         this.vao = gl.createVertexArray();
@@ -233,17 +261,17 @@ const rectangle = {
             0                                       // offset: start of buffer
         );
 
-        // Important for retrieving position data
-        this.positionOffset = 0;
-        this.stride = 2;
+        // Index buffer
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo);
 
         // Draw data
-        this.drawMode = gl.TRIANGLES;
+        this.drawMode = gl.TRIANGLE_FAN;
         this.drawOffset = 0;
-        this.drawCount = 6;
+        this.drawCount = this.indices.length;
+        this.drawType = gl.UNSIGNED_SHORT;
 
-        // first model matrix update
-        setupModelMatrix(this);
+        // Unbind VAO
+        gl.bindVertexArray(null);
     },
     resetTransform() {
         this.translationX = this.initialTranslationX;
@@ -254,37 +282,40 @@ const rectangle = {
     },
     draw(gl) {
         setupModelMatrix(this);
+        gl.useProgram(this.shader.program);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
         gl.uniform4fv(this.shader.uniforms.color,this.color);
         gl.bindVertexArray(this.vao);
-        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
+        gl.drawElements(
+            this.drawMode,
+            this.drawCount,
+            this.drawType,
+            this.drawOffset
+        );
     }
 };
 
-const square = {
-    //    v1--------v2
-    //    | \        |
-    //    |    \     |
-    //    |       \  |
-    //    v0--------v1
+const circle2 = {
+    /*
+             v6---v5
+           /   \ /   \
+         v1     v0    v4
+           \         /
+             v2---v3
+    */
 
-    // CPU DATA
-    vertexData: new Float32Array([
-        -100, -100,      // Left Bottom
-        100, -100,      // Right Bottom
-        -100, 100,      // Left Top
+    points: 100,
+    radius: 100,
+    positions: null,
+    indices: null,
 
-        -100, 100,      // Left Top
-        100, -100,      // Right Bottom
-        100, 100       // Right Top
-    ]),
-
-    initialTranslationX: 800,
+    initialTranslationX: 1000,
     initialTranslationY: 0,
     initialRotation: 0,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
-    translationX: 800,
+
+    translationX: 1000,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
@@ -305,10 +336,42 @@ const square = {
         // Connect shader to mesh
         this.shader = shader;
 
+        // Allocate CPU vertex data
+        // 1 center + points perimeter vertices
+        this.positions = new Float32Array((this.points + 1) * 2);
+        this.indices = new Uint16Array(this.points + 2);
+
+        // Center vertex
+        this.positions[0] = 0.0;
+        this.positions[1] = 0.0;
+        this.indices[0] = 0;
+
+        // Perimeter vertices
+        for (let i = 0; i < this.points; i++) {
+            const angle = (i / this.points) * (2 * Math.PI);
+
+            const pX = this.radius * Math.cos(angle);
+            const pY = this.radius * Math.sin(angle);
+
+            const vertex = i + 1;
+
+            this.positions[vertex * 2] = pX;
+            this.positions[vertex * 2 + 1] = pY;
+            this.indices[vertex] = vertex;
+        }
+
+        // Repeat First one again
+        this.indices[this.points + 1] = 1;
+
         // Vertex Buffer
         this.vbo = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, this.positions, gl.STATIC_DRAW);
+
+        // Index Buffer
+        this.ibo = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
 
         // Vertex Array
         this.vao = gl.createVertexArray();
@@ -330,17 +393,17 @@ const square = {
             0                                       // offset: start of buffer
         );
 
-        // Important for retrieving position data
-        this.positionOffset = 0;
-        this.stride = 2;
+        // Index buffer
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo);
 
         // Draw data
-        this.drawMode = gl.TRIANGLES;
+        this.drawMode = gl.TRIANGLE_FAN;
         this.drawOffset = 0;
-        this.drawCount = 6;
+        this.drawCount = this.indices.length;
+        this.drawType = gl.UNSIGNED_SHORT;
 
-        // first model matrix update
-        setupModelMatrix(this);
+        // Unbind VAO
+        gl.bindVertexArray(null);
     },
     resetTransform() {
         this.translationX = this.initialTranslationX;
@@ -351,116 +414,16 @@ const square = {
     },
     draw(gl) {
         setupModelMatrix(this);
+        gl.useProgram(this.shader.program);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
         gl.uniform4fv(this.shader.uniforms.color,this.color);
         gl.bindVertexArray(this.vao);
-        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
-    }
-};
-
-const boundingBoxes = {
-    //    v1--------v2
-    //    |          |
-    //    |          |
-    //    |          |
-    //    v0--------v1
-
-    // CPU DATA
-    vertexData: null,
-
-    translationX: 0,
-    translationY: 0,
-    rotation: 0,
-    scaleX: 1.0,
-    scaleY: 1.0,
-    modelMatrix: mat3.create(),
-    color: [0.0, 0.0, 0.0, 1.0],     // BLACK
-
-    //GPU DATA
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0,
-
-    //FUNCTIONS
-    init(gl, shader) {
-        // Connect shader to mesh
-        this.shader = shader;
-
-        // Vertex Buffer
-        this.vbo = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        // NOTE: Vertex data will be updated from the UI during rendering.
-
-        // Vertex Array
-        this.vao = gl.createVertexArray();
-        gl.bindVertexArray(this.vao);
-
-        // Enable position attribute
-        gl.enableVertexAttribArray(this.shader.attributes.position);
-
-        // Bind Vertex Buffer
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-
-        // Vertex data format
-        gl.vertexAttribPointer(
-            this.shader.attributes.position,
-            2,                                      // size: 2 components (X, Y)
-            gl.FLOAT,                               // type: 32-bit float
-            false,                                  // normalize
-            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
-            0                                       // offset: start of buffer
+        gl.drawElements(
+            this.drawMode,
+            this.drawCount,
+            this.drawType,
+            this.drawOffset
         );
-
-        // Draw data
-        this.drawMode = gl.LINES;
-        this.drawOffset = 0;
-        this.drawCount = 2 * 8;
-    },
-    draw(gl) {
-        setupModelMatrix(this);
-        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-        gl.uniform4fv(this.shader.uniforms.color,this.color);
-        gl.bindVertexArray(this.vao);
-        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
-    },
-    updateData(gl) {
-        gl.bindVertexArray(this.vao);
-
-        // bboxes
-        const bbox1 = physicsInfoRectangle.boundingBox;
-        const bbox2 = physicsInfoSquare.boundingBox;
-        const boundingBoxes = [
-            bbox1,
-            bbox2
-        ];
-
-        // Vertex data CPU side
-        const vertices = [];
-
-        for (const bbox of boundingBoxes) {
-            vertices.push(
-                bbox.worldMinX, bbox.worldMinY,  // Left Bottom
-                bbox.worldMaxX, bbox.worldMinY,  // Right Bottom
-
-                bbox.worldMaxX, bbox.worldMinY,  // Right Bottom
-                bbox.worldMaxX, bbox.worldMaxY,  // Right Top
-
-                bbox.worldMaxX, bbox.worldMaxY,  // Right Top
-                bbox.worldMinX, bbox.worldMaxY,  // Left Top
-
-                bbox.worldMinX, bbox.worldMaxY,  // Left Top
-                bbox.worldMinX, bbox.worldMinY   // Left Bottom
-            );
-        }
-
-        this.vertexData = new Float32Array(vertices);
-
-        // Update vertex data on the GPU
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.DYNAMIC_DRAW);
     }
 };
 
@@ -716,9 +679,8 @@ const renderSystem = {
         grid.init(gl, shader);
         xAxis.init(gl, shader);
         yAxis.init(gl, shader);
-        rectangle.init(gl, shader);
-        square.init(gl, shader);
-        boundingBoxes.init(gl, shader);
+        circle1.init(gl, shader);
+        circle2.init(gl, shader);
 
     },
     update() {
@@ -726,7 +688,6 @@ const renderSystem = {
 
         camera.updateProjectionMatrix(gl);
         camera.updateViewMatrix(gl);
-        boundingBoxes.updateData(gl);
 
     },
     render() {
@@ -749,6 +710,7 @@ const renderSystem = {
         gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
         // Pass Model Matrix (Identity as default)
         gl.uniformMatrix3fv(shader.uniforms.modelMatrix,false,mat3.create());
+
         // RENDER MESHES
         // Grid
         grid.draw(gl);
@@ -756,13 +718,10 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // Rectangle
-        rectangle.draw(gl);
-        // Square
-        square.draw(gl);
-
-        // Rectangle BBox
-        boundingBoxes.draw(gl);
+        // circle
+        circle1.draw(gl);
+        // circle2
+        circle2.draw(gl);
 
         //---------------------------------------------------
     }
@@ -843,7 +802,7 @@ const clock = {
 
         // Log only once every second
         if (this.currentTime - this.lastLogTime >= 100) {
-            //this.log();
+            this.log();
             this.lastLogTime = this.currentTime;
         }
 
@@ -867,192 +826,59 @@ const clock = {
 // =============================================================
 // PHYSICS INFOS
 // =============================================================
-const physicsInfoRectangle = {
+const physicsInfoCircle1 = {
     // Object
     mesh: null,
     // Velocity
-    velocityX: 100,
-    // Bounding Box
-    boundingBox: {
-        localMinX: 0,
-        localMinY: 0,
-        localMaxX: 0,
-        localMaxY: 0,
-
-        worldMinX: 0,
-        worldMinY: 0,
-        worldMaxX: 0,
-        worldMaxY: 0,
-    },
-    // collision
-    isCollision: false,
+    velocityX: 200,
 
     init(mesh) {
         this.mesh = mesh;
-        calculateBoundingBox(this);
-        updateBoundingBox(this);
     },
     update(deltaTime) {
         this.mesh.translationX += deltaTime * this.velocityX;
-        updateBoundingBox(this);
     },
     reset() {
         this.mesh.resetTransform();
+
     }
+
 };
 
-const physicsInfoSquare = {
+const physicsInfoCircle2 = {
     // Object
     mesh: null,
     // Velocity
-    velocityX: -70,
-    // Bounding Box
-    boundingBox: {
-        localMinX: 0,
-        localMinY: 0,
-        localMaxX: 0,
-        localMaxY: 0,
-
-        worldMinX: 0,
-        worldMinY: 0,
-        worldMaxX: 0,
-        worldMaxY: 0,
-    },
-    // collision
-    isCollision: false,
+    velocityX: -100,
 
     init(mesh) {
         this.mesh = mesh;
-        calculateBoundingBox(this);
-        updateBoundingBox(this);
     },
     update(deltaTime) {
         this.mesh.translationX += deltaTime * this.velocityX;
-        updateBoundingBox(this);
     },
     reset() {
         this.mesh.resetTransform();
+
     }
+
 };
-
-function calculateBoundingBox(physicsInfo) {
-    const mesh = physicsInfo.mesh;
-    const vertexData = mesh.vertexData;
-
-    // For retrieving pos values from vertex data
-    const stride = mesh.stride;
-    const positionOffset = mesh.positionOffset;
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    for (let i = positionOffset; i < vertexData.length; i += stride) {
-        const x = vertexData[i];
-        const y = vertexData[i + 1];
-
-        minX = Math.min(minX, x);
-        minY = Math.min(minY, y);
-        maxX = Math.max(maxX, x);
-        maxY = Math.max(maxY, y);
-    }
-
-    physicsInfo.boundingBox.localMinX = minX;
-    physicsInfo.boundingBox.localMinY = minY;
-    physicsInfo.boundingBox.localMaxX = maxX;
-    physicsInfo.boundingBox.localMaxY = maxY;
-}
-
-function updateBoundingBox(physicsInfo) {
-    const mesh = physicsInfo.mesh;
-    const modelMatrix = mesh.modelMatrix;
-    const bbox = physicsInfo.boundingBox;
-
-    const minX = bbox.localMinX;
-    const minY = bbox.localMinY;
-    const maxX = bbox.localMaxX;
-    const maxY = bbox.localMaxY;
-
-    // Four local-space corners
-    const corners = [
-        [minX, minY, 1],
-        [maxX, minY, 1],
-        [maxX, maxY, 1],
-        [minX, maxY, 1]
-    ];
-
-    let worldMinX = Infinity;
-    let worldMinY = Infinity;
-    let worldMaxX = -Infinity;
-    let worldMaxY = -Infinity;
-
-    for (const corner of corners) {
-        const worldVertex = vec3.transformMat3(
-            vec3.create(),
-            corner,
-            modelMatrix
-        );
-
-        worldMinX = Math.min(worldMinX, worldVertex[0]);
-        worldMinY = Math.min(worldMinY, worldVertex[1]);
-
-        worldMaxX = Math.max(worldMaxX, worldVertex[0]);
-        worldMaxY = Math.max(worldMaxY, worldVertex[1]);
-    }
-
-    bbox.worldMinX = worldMinX;
-    bbox.worldMinY = worldMinY;
-    bbox.worldMaxX = worldMaxX;
-    bbox.worldMaxY = worldMaxY;
-}
-
-function checkCollision(physicsInfoA, physicsInfoB) {
-    const a = physicsInfoA.boundingBox;
-    const b = physicsInfoB.boundingBox;
-
-    // Check whether the bounding boxes overlap
-    const isCollision =
-        a.worldMinX < b.worldMaxX &&
-        a.worldMaxX > b.worldMinX &&
-        a.worldMinY < b.worldMaxY &&
-        a.worldMaxY > b.worldMinY;
-
-    return isCollision;
-}
 
 // =============================================================
 // PHYSICS SYSTEM
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfoRectangle.init(rectangle);
-        physicsInfoSquare.init(square);
+        physicsInfoCircle1.init(circle1);
+        physicsInfoCircle2.init(circle2);
     },
     update() {
-        physicsInfoRectangle.update(clock.deltaTime);
-        physicsInfoSquare.update(clock.deltaTime);
-        
-        // Detect collision
-        const isCollision = checkCollision(
-            physicsInfoRectangle,
-            physicsInfoSquare
-        );
-
-        if (isCollision && !physicsInfoRectangle.isCollision) {
-            console.log("Collision detected!");
-            const temp = physicsInfoRectangle.velocityX
-            physicsInfoRectangle.velocityX = physicsInfoSquare.velocityX;
-            physicsInfoSquare.velocityX = temp;
-        }
-
-        // Remember the current collision state
-        physicsInfoRectangle.isCollision = isCollision;
-        physicsInfoSquare.isCollision = isCollision;
+        physicsInfoCircle1.update(clock.deltaTime);
+        physicsInfoCircle2.update(clock.deltaTime);
     },
     reset() {
-        physicsInfoRectangle.reset();
-        physicsInfoSquare.reset();
+        physicsInfoCircle1.reset();
+        physicsInfoCircle2.reset();
     }
 };
 
@@ -1063,27 +889,11 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        // Rectangle
-        const rectangleFolder = gui.addFolder("Rectangle");
-        rectangleFolder.add(rectangle, "translationX", -1000, 1000).name("translationX");
-        rectangleFolder.add(rectangle, "translationY", -1000, 1000).name("translationY");
-        rectangleFolder.add(rectangle, "rotation", 0, 360).name("rotation");
-        rectangleFolder.add(rectangle, "scaleX", 0.1, 3.0).name("scaleX");
-        rectangleFolder.add(rectangle, "scaleY", 0.1, 3.0).name("scaleY");
+        const physicsFolder1 = gui.addFolder("Physics circle");
+        physicsFolder1.add(physicsInfoCircle1, "velocityX", -1000, 1000).name("velocityX");
 
-        // Square
-        const squareFolder = gui.addFolder("Square");
-        squareFolder.add(square, "translationX", -1000, 1000).name("translationX");
-        squareFolder.add(square, "translationY", -1000, 1000).name("translationY");
-        squareFolder.add(square, "rotation", 0, 360).name("rotation");
-        squareFolder.add(square, "scaleX", 0.1, 3.0).name("scaleX");
-        squareFolder.add(square, "scaleY", 0.1, 3.0).name("scaleY");
-
-        const physicsFolder1 = gui.addFolder("Physics Rectangle");
-        physicsFolder1.add(physicsInfoRectangle, "velocityX", -1000, 1000).name("velocityX");
-
-        const physicsFolder2 = gui.addFolder("Physics Square");
-        physicsFolder2.add(physicsInfoSquare, "velocityX", -1000, 1000).name("velocityX");
+        const physicsFolder2 = gui.addFolder("Physics circle2");
+        physicsFolder2.add(physicsInfoCircle2, "velocityX", -1000, 1000).name("velocityX");
     
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
