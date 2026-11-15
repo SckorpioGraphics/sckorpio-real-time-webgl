@@ -1351,7 +1351,7 @@ const physicsInfoSckorpio = {
     previousY: 0,
     previousDirectionAngle: 0,
     isCollision: false,
-    speedTransferFraction: 0.7,
+    speedTransferFraction: 0.5,
 
     init(mesh) {
         this.mesh = mesh;
