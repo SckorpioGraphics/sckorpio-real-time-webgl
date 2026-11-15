@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 3e: Animation ALL MIXED
+   Chapter3e: Animation ALL MIXED
 
    Topics:
    - Multiple animations

@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 7a: Roational motion
+   Chapter7a: Roational motion
 
    Topics:
    - Apply Rotational Motion on Square

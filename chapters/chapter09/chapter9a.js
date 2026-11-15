@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 9a: Gravity and velocity in XY
+   Chapter9a: Gravity and velocity in XY
 
    Topics:
    - Apply 2D Linear Motion on Square

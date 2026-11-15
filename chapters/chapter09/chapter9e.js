@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 9e: Full Tank + barrel + Missile
+   Chapter9e: Full Tank + barrel + Missile
 
    Topics:
    - Using speed and Unit vector instead of velocity

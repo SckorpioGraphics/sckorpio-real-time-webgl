@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12l: Add sckorpio, dice, domino textures
+   Chapter12l: Add sckorpio, dice, domino textures
 
    Topics:
    - On collison transfer speed and direction angle

@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 0d: Create clock object
+   Chapter0d: Create clock object
 
    Topics:
    - save timer related variable in clock object

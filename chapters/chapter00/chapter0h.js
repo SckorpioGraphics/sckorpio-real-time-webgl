@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 0h: Connect clock object with Animating the rectangle
+   Chapter0h: Connect clock object with Animating the rectangle
 
    Topics:
    - Create full Play > Pause > Reset

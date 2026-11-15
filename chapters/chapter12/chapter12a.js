@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12a: Introducing AABB Bounding box values
+   Chapter12a: Introducing AABB Bounding box values
 
    Topics:
    - Use calculateBoundingInfoLocal() for calculating BBox Local Values

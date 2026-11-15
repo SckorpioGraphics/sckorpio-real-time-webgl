@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 6g: Arrow Head with key controls - 2
+   Chapter6g: Arrow Head with key controls - 2
 
    Topics:
    - Apply 2D Linear Motion on Arrow head Traingle

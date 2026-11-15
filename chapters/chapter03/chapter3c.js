@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 3c: Animation Color and Alpha
+   Chapter3c: Animation Color and Alpha
 
    Topics:
    - Animate color of rectangle and Square

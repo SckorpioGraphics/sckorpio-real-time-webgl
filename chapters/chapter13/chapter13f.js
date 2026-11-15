@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 13f: multiple rectangles collision experiment with OBB
+   Chapter13f: multiple rectangles collision experiment with OBB
 
    Topics:
    - On collison transfer speed and direction angle

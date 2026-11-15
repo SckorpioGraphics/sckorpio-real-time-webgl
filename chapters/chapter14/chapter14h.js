@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 11g: Update Circular Bonding boxes
+   Chapter11g: Update Circular Bonding boxes
 
    Topics:
    - Let circles move by Physics

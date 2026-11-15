@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 11: SCKORPIO PARKING CHALLENGE — AABB COLLISION
+   Chapter11: SCKORPIO PARKING CHALLENGE — AABB COLLISION
    - One controllable Sckorpio car
    - Multiple static parked-car meshes sharing one texture
    - Static parked cars have AABBs, but no PhysicsInfo objects

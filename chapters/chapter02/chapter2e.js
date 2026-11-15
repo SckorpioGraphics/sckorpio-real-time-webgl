@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 2e: Animation with Base Transforms
+   Chapter2e: Animation with Base Transforms
 
    Topics:
    - Explain all TRS animations

@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 8g: Sckorpio Mascot Bow and Arrow
+   Chapter8g: Sckorpio Mascot Bow and Arrow
 
    Topics:
    - Bow and Arrow mini simulation

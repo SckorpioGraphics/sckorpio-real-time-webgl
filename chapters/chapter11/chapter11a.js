@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 11a: Showing No Collision
+   Chapter11a: Showing No Collision
 
    Topics:
    - Apply 1-D Linear Motion on Rectangle & square

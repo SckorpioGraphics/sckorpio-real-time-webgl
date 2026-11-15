@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 4b: Long Rectangle Texture with Offset
+   Chapter4b: Long Rectangle Texture with Offset
    Topics:
    - Creating a long rectangle
    - With digits texture on it

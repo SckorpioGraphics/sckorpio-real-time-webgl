@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 13d: OBB to all Meshes
+   Chapter13d: OBB to all Meshes
 
    Topics:
    - Apply OBB to all Meshes

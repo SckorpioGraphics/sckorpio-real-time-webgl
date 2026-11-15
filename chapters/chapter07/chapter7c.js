@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 7c: Revisiting ArrowHead Linear motion
+   Chapter7c: Revisiting ArrowHead Linear motion
 
    Topics:
    - Apply Linear Motion on ArrowHead

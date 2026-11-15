@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 6e: Arrow Head 2D motion
+   Chapter6e: Arrow Head 2D motion
 
    Topics:
    - Apply 2D Linear Motion on Arrow head Traingle

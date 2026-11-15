@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 5c: Sprite Sheet Animation
+   Chapter5c: Sprite Sheet Animation
    Topics:
    - Start with a basic sprite sheet animation
    - Play the digits sprite sheet animation

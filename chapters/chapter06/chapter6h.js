@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 6h: Sckorpio driving airplane (top view)
+   Chapter6h: Sckorpio driving airplane (top view)
 
    Topics:
    - Apply 2D Linear Motion on airplane

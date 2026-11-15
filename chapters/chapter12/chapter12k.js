@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12k: Add multiple sqaures and rectangle0s
+   Chapter12k: Add multiple sqaures and rectangle0s
 
    Topics:
    - On collison transfer speed and direction angle

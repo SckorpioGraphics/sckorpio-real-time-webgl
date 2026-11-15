@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 13a: Revisit AABB collsions
+   Chapter13a: Revisit AABB collsions
    Topics:
    - Use model matrix in calculateBoundingInfoLocal() for calculating BBox
    - Update Bounding boxes depending on the transforms

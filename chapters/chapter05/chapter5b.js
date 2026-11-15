@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 5b: Sprite Sheet Animation
+   Chapter5b: Sprite Sheet Animation
    Topics:
    - Start with a basic sprite sheet 
    - Render the rectangular Sprite texture on Square

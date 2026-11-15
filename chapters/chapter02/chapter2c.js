@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 2c: Animation Scale
+   Chapter2c: Animation Scale
 
    Topics:
    - Explain all scale animations

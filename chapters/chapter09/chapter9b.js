@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 9b: Projectile Motion
+   Chapter9b: Projectile Motion
 
    Topics:
    - Apply 2D Projectile Motion on Square

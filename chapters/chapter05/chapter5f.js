@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 5f: Sprite Sheet Animation
+   Chapter5f: Sprite Sheet Animation
    Topics:
    - Sckorpio Sprite Sheet Animation
    - Start with a basic sprite sheet animation

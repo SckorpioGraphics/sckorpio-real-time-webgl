@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 13c: Introducing OBB
+   Chapter13c: Introducing OBB
    Topics:
    - Introducing updateBoundingInfoOBB() for OBB
    #############################################################

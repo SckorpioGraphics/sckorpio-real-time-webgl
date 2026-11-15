@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12e: Stop meshes after collisons
+   Chapter12e: Stop meshes after collisons
 
    Topics:
    - Simulate Rectangle1 and Rectangle0 and log collisons

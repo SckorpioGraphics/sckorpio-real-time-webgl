@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 2f: Animation TRS Mixed
+   Chapter2f: Animation TRS Mixed
 
    Topics:
    - Multiple animations

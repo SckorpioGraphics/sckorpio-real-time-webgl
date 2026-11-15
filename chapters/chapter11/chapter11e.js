@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 11e: Using Sckorpio, Dominos and Dice 
+   Chapter11e: Using Sckorpio, Dominos and Dice 
 
    Topics:
    - Domio & Dice textures on domino and dice

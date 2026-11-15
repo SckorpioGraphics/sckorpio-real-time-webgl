@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 5g: Sprite Sheet Animation
+   Chapter5g: Sprite Sheet Animation
    Topics:
    - Sckorpio Sprite Sheet Animation
    - Make the sprite sheet as transparent

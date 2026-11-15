@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12g: Add Controls to rectangle0
+   Chapter12g: Add Controls to rectangle0
 
    Topics:
    - Add control to Rectangle1 and Rectangle0 

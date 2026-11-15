@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12i: Excahnge velocity of meshes after collisons
+   Chapter12i: Excahnge velocity of meshes after collisons
 
    Topics:
    - Simulate Square and Rectangle and log collisons

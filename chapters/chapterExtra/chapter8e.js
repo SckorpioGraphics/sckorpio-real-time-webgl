@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 8e: Unit Vector and Speed
+   Chapter8e: Unit Vector and Speed
 
    Topics:
    - Using speed and Unit vector instead of velocity

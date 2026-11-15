@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 10b: Roational motion
+   Chapter10b: Roational motion
 
    Topics:
    - Apply Rotational Motion on bikeWheel Wheel

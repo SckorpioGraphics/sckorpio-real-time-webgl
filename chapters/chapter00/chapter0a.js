@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 0a: Understand requestAnimationFrame()
+   Chapter0a: Understand requestAnimationFrame()
 
    Topics:
    - Check by looking at logs how often render() gets called

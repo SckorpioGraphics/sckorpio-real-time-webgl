@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12i: Push with transferring speed
+   Chapter12i: Push with transferring speed
 
    Topics:
    - On collison transfer speed and direction angle

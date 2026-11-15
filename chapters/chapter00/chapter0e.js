@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 0e: Add FPS in clock object 
+   Chapter0e: Add FPS in clock object 
 
    Topics:
    - Add FPS data in clock object

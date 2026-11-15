@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 7d: Acceleration on ArrowHead
+   Chapter7d: Acceleration on ArrowHead
 
    Topics:
    - Apply Linear Motion on ArrowHead

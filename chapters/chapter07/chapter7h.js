@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 7h: Sckorpio driving car Accelerated + Friction(top view)
+   Chapter7h: Sckorpio driving car Accelerated + Friction(top view)
 
    Topics:
    - Apply 2D Accelerated Motion on car

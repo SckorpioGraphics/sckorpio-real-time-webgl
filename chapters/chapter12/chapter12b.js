@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12b: Introduce local and AABB Bbox values
+   Chapter12b: Introduce local and AABB Bbox values
    Topics:
    - Use calculateBoundingInfoLocal() for calculating local values BBox 
    - use updateBoundingInfoAABB() for updating world values of boundingInfo

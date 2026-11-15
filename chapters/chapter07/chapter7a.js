@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 7a: Statring with Linear motion
+   Chapter7a: Statring with Linear motion
 
    Topics:
    - Apply 1-D Linear Motion on Square

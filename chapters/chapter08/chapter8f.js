@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 8f: Add thrust for rocket
+   Chapter8f: Add thrust for rocket
 
    Topics:
    - Initial velocity for rocket

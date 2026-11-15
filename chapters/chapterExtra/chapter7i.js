@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 6h: Sckorpio driving Tank (top view)+Camera Follow
+   Chapter6h: Sckorpio driving Tank (top view)+Camera Follow
 
    Topics:
    - Apply 2D Linear Motion on Tank

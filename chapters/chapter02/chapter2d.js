@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 2d: Animation TRS Mixed
+   Chapter2d: Animation TRS Mixed
 
    Topics:
    - Explain all TRS animations

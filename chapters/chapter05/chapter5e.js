@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 5e: Sprite Sheet Animation
+   Chapter5e: Sprite Sheet Animation
    Topics:
    - Instead of numbers using running horse
    - Making horse sprite sheet as transparent

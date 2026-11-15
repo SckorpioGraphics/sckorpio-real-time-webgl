@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 0b: Understand requestAnimationFrame() time
+   Chapter0b: Understand requestAnimationFrame() time
 
    Topics:
    - Pass time in render

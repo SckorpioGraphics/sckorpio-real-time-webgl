@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 13g: Rotate the rectangles in experiment with OBB
+   Chapter13g: Rotate the rectangles in experiment with OBB
 
    Topics:
    - On collison transfer speed and direction angle

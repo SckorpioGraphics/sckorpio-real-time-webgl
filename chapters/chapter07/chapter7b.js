@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 7b: Acceleration in X-Axis
+   Chapter7b: Acceleration in X-Axis
 
    Topics:
    - Apply Linear Motion on Square Use velocityX

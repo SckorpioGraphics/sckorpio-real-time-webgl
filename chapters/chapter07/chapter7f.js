@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 7f: Sckorpio driving car Accelerated (top view)
+   Chapter7f: Sckorpio driving car Accelerated (top view)
 
    Topics:
    - Apply 2D Accelerated Motion on car

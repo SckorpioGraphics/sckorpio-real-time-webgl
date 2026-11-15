@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 2a: Animation Translate
+   Chapter2a: Animation Translate
 
    Topics:
    - Explain all translation animations

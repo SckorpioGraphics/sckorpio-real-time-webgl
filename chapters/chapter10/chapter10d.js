@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 10d: PhysicsInfo on multiple wheels
+   Chapter10d: PhysicsInfo on multiple wheels
 
    Topics:
    - Apply Rotational+Translation Motion on Multiple bikeWheel Wheel

@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 9c: Projectile with Arrow head
+   Chapter9c: Projectile with Arrow head
 
    Topics:
    - Using speed and Unit vector instead of velocity

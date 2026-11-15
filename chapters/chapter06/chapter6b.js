@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 6b: Introducing PhysicsInfo
+   Chapter6b: Introducing PhysicsInfo
 
    Topics:
    - Apply 1-D Linear Motion on Square

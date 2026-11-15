@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12d: Starting "AABB Collision Detection" (logging)
+   Chapter12d: Starting "AABB Collision Detection" (logging)
 
    Topics:
    - Simulate Rectangle1 and Rectangle0 and log collisons

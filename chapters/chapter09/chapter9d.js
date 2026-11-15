@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 9d: Projectile with Missile Texture missile
+   Chapter9d: Projectile with Missile Texture missile
 
    Topics:
    - Using speed and Unit vector instead of velocity

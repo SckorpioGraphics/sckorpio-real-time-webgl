@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 5d: Sprite Sheet Animation
+   Chapter5d: Sprite Sheet Animation
    Topics:
    - Instead of numbers using running horse
    - Start with a basic sprite sheet animation

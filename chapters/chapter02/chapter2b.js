@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 2b: Animation Rotation
+   Chapter2b: Animation Rotation
 
    Topics:
    - Explain all rotation animations

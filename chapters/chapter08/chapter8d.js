@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 8d: orientation or Rocket during gravity
+   Chapter8d: orientation or Rocket during gravity
 
    Topics:
    - Initial velocity for rocket

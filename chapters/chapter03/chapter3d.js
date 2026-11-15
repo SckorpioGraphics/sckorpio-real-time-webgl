@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 3d: Animation Uniform Color
+   Chapter3d: Animation Uniform Color
 
    Topics:
    - Animate color of rectangle

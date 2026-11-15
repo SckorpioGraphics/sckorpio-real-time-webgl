@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 8a: Revisit Acceleration in X-Axis
+   Chapter8a: Revisit Acceleration in X-Axis
 
    Topics:
    - Apply Linear Motion on Square Use velocityX

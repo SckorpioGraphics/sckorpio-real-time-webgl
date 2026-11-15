@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 4e: Scaled Scroll Animation on Square
+   Chapter4e: Scaled Scroll Animation on Square
    Topics:
    - Creating a square
    - With digits texture on it

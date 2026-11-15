@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 11a: Starting with a Circle
+   Chapter11a: Starting with a Circle
 
    Topics:
    - Just render a circle

@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 6c: 2D-Motion, velocity X and Y
+   Chapter6c: 2D-Motion, velocity X and Y
 
    Topics:
    - Apply 2D Linear Motion on Square

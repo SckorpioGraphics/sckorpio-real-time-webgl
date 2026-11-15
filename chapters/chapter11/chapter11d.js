@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 11d: Find Bounding Info of complex mesh(LetterF)
+   Chapter11d: Find Bounding Info of complex mesh(LetterF)
 
    Topics:
    - Use calculateBoundingInfoLocal() for calculating BBox 

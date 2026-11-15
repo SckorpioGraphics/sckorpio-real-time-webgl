@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 11b: introducing Bounding Info
+   Chapter11b: introducing Bounding Info
 
    Topics:
    - Harcoded bounding Info Local values

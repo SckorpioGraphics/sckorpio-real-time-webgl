@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 0f: Create clock object
+   Chapter0f: Create clock object
 
    Topics:
    - Create full Play > Pause > Reset

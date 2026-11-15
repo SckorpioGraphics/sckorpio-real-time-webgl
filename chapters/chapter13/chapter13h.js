@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 13h: OBB Experiment Rotated Dominos
+   Chapter13h: OBB Experiment Rotated Dominos
 
    Topics:
    - Rotate the dominos

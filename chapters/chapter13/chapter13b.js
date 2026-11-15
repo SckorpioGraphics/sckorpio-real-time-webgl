@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 13b: Find AABB Bbox for multiple objects
+   Chapter13b: Find AABB Bbox for multiple objects
    Topics:
    - Use model matrix in calculateBoundingInfoLocal() for calculating BBox
    - Update Bounding boxes depending on the transforms

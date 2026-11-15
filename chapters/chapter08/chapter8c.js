@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 8c: Motion under gravity using Rocket
+   Chapter8c: Motion under gravity using Rocket
 
    Topics:
    - Initial velocity for rocket

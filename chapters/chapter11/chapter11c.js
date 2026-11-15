@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 11c: Function for calculating Local Bounding Info
+   Chapter11c: Function for calculating Local Bounding Info
 
    Topics:
    - Use calculateBoundingInfoLocal() for calculating BBox 

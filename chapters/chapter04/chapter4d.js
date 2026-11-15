@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 4d: Scroll Animation on Sckorpio Banner
+   Chapter4d: Scroll Animation on Sckorpio Banner
    Topics:
    - Use Sckorpio Banner Texture
    - Creating a long rectangle

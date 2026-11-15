@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 10e: Apply Multiple Wheels with bike Body
+   Chapter10e: Apply Multiple Wheels with bike Body
 
    Topics:
    - Apply Rotational Motion on Multiple bikeWheel Wheel

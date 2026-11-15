@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 7e: Acceleration on ArrowHead + Key Controls
+   Chapter7e: Acceleration on ArrowHead + Key Controls
 
    Topics:
    - Apply Linear Motion on ArrowHead

@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 8g: Add thrust for rocket and cutoff time
+   Chapter8g: Add thrust for rocket and cutoff time
 
    Topics:
    - Initial velocity for rocket

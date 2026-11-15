@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12k: Showcase player and 2 parked cars, collsion 
+   Chapter12k: Showcase player and 2 parked cars, collsion 
    Topics:
    - All cars Axis aligned, player car can move from between parked cars
    - Add control to Car 

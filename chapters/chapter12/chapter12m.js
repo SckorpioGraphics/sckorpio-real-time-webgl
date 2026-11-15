@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12m: Limitation of AABB(Rotated Dominos)
+   Chapter12m: Limitation of AABB(Rotated Dominos)
 
    Topics:
    - Rotate the dominos

@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12l: Showcase player and 2 parked cars(rotated at angle)
+   Chapter12l: Showcase player and 2 parked cars(rotated at angle)
    Topics:
    - Rotate parked cars (Not Axis aligned)
    - Cars no more Axis aligned

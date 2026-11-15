@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 6d: 2D-Motion, Unit vector & Speed 
+   Chapter6d: 2D-Motion, Unit vector & Speed 
 
    Topics:
    - Apply 2D Linear Motion on Square

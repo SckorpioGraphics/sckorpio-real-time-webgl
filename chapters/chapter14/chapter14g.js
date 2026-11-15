@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 11g: Add Collison checking function
+   Chapter11g: Add Collison checking function
 
    Topics:
    - Let circles move by Physics

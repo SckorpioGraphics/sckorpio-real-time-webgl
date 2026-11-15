@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 9f: Full Tank + barrel + Missile + camera follow
+   Chapter9f: Full Tank + barrel + Missile + camera follow
 
    Topics:
    - Using speed and Unit vector instead of velocity

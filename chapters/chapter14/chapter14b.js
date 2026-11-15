@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 11b: 2 Circles Showing No Collision
+   Chapter11b: 2 Circles Showing No Collision
 
    Topics:
    - Apply 1-D Linear Motion on circle1 & circle2

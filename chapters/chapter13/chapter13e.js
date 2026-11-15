@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 13e: Introducing OBB Collisions
+   Chapter13e: Introducing OBB Collisions
 
    Topics:
    - Introducing SAT(Separation Axis Theorem)

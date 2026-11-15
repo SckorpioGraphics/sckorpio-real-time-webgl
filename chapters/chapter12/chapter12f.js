@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12f: Resolve penetration by returning to prev position
+   Chapter12f: Resolve penetration by returning to prev position
 
    Topics:
    - Simulate Rectangle1 and Rectangle0 and log collisons

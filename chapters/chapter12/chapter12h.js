@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12h: Resolve Collision while rotating objects
+   Chapter12h: Resolve Collision while rotating objects
 
    Topics:
    - Add control to Rectangle1 and Rectangle0 

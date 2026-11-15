@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 10c: Roational motion + Linear Motion
+   Chapter10c: Roational motion + Linear Motion
 
    Topics:
    - Apply Rotational+ Linear Motion on bikeWheel

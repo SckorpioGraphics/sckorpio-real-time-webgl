@@ -4,7 +4,7 @@ REAL-TIME WEBGL — EPISODE GUIDE
 Directory and file names are canonical. Some lesson headers contain legacy
 chapter labels; the entries below follow the files in this repository.
 
-CHAPTER 00 — CLOCKS AND TIME
+Chapter00 — CLOCKS AND TIME
 ----------------------------
 0a - Understand requestAnimationFrame().
 0b - Observe requestAnimationFrame() frame time.
@@ -15,11 +15,11 @@ CHAPTER 00 — CLOCKS AND TIME
 0g - Connect clock timing to a scene.
 0h - Animate a rectangle with the clock.
 
-CHAPTER 01 — VERTEX ANIMATION
+Chapter01 — VERTEX ANIMATION
 -------------------------
 1d - Animate vertex color.
 
-CHAPTER 02 — TRANSFORM ANIMATION
+Chapter02 — TRANSFORM ANIMATION
 --------------------------------
 2a - Animate translation.
 2b - Animate rotation.
@@ -28,7 +28,7 @@ CHAPTER 02 — TRANSFORM ANIMATION
 2e - Animate on top of base transforms.
 2f - Combine translation, rotation, and scale.
 
-CHAPTER 03 — COLOR AND ALPHA ANIMATION
+Chapter03 — COLOR AND ALPHA ANIMATION
 --------------------------------------
 3a - Animate color.
 3b - Animate color and alpha.
@@ -36,7 +36,7 @@ CHAPTER 03 — COLOR AND ALPHA ANIMATION
 3d - Apply a uniform color animation.
 3e - Mix colors across an object.
 
-CHAPTER 04 — TEXTURE SCROLLING
+Chapter04 — TEXTURE SCROLLING
 ------------------------------
 4a - Render an elongated textured rectangle.
 4b - Apply texture offset.
@@ -45,7 +45,7 @@ CHAPTER 04 — TEXTURE SCROLLING
 4e - Scale and scroll a square texture.
 4f - Combine scale, zoom, and scroll for a rectangular map.
 
-CHAPTER 05 — SPRITE-SHEET ANIMATION
+Chapter05 — SPRITE-SHEET ANIMATION
 -----------------------------------
 5a - Render a basic sprite sheet.
 5b - Continue sprite-sheet playback.
@@ -55,7 +55,7 @@ CHAPTER 05 — SPRITE-SHEET ANIMATION
 5f - Animate the Sckorpio mascot with a white background.
 5g - Animate the Sckorpio mascot with transparency.
 
-CHAPTER 06 — LINEAR MOTION
+Chapter06 — LINEAR MOTION
 -------------------------------------------
 6a - Animate translation.
 6b - Introduce PhysicsInfo.
@@ -67,7 +67,7 @@ CHAPTER 06 — LINEAR MOTION
 6h - Drive an Sckorpio airplane from a top-down view.
 6i - Add chase-camera behavior to the airplane lesson.
 
-CHAPTER 07 — ACCELERATED MOTION
+Chapter07 — ACCELERATED MOTION
 ------------------------------------------
 7a - Start with linear motion.
 7b - Add acceleration in the X direction.
@@ -79,7 +79,7 @@ CHAPTER 07 — ACCELERATED MOTION
 7h - Add friction to accelerated car motion.
 7i - Continue the tank/car acceleration and friction experiment.
 
-CHAPTER 08 — MOTION UNDER GRAVITY
+Chapter08 — MOTION UNDER GRAVITY
 -------------------------------------
 8a - Revisit acceleration in X.
 8b - Apply gravity.
@@ -89,7 +89,7 @@ CHAPTER 08 — MOTION UNDER GRAVITY
 8f - Add rocket thrust.
 8g - Add thrust with cutoff time.
 
-CHAPTER 09 — PROJECTILE MOTION
+Chapter09 — PROJECTILE MOTION
 ----------------------------------
 9a - Combine gravity with velocity in X and Y.
 9b - Build projectile motion.
@@ -98,7 +98,7 @@ CHAPTER 09 — PROJECTILE MOTION
 9e - Combine a full tank, barrel, and missile.
 9f - Add camera follow to the tank and missile simulation.
 
-CHAPTER 10 — ROTATIONAL MOTION
+Chapter10 — ROTATIONAL MOTION
 ----------------------------------------
 10a - Demonstrate rotational motion.
 10b - Continue rotational-motion experiments.
@@ -107,7 +107,7 @@ CHAPTER 10 — ROTATIONAL MOTION
 10e - Add multiple wheels to a bike body.
 10f - Add camera follow to multiple wheels bike simulation.
 
-CHAPTER 11 — AABB COLLISION
+Chapter11 — AABB COLLISION
 ---------------------------
 11a - Show meshes without collision.
 11b - Introduce an AABB bounding box.

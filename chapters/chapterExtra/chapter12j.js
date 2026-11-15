@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12j: Use Car Texture for the rectangle
+   Chapter12j: Use Car Texture for the rectangle
    Topics:
    - Add control to Car 
    - Freeze their velocities = 0 as they collided

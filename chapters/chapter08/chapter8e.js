@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 8e: chase camera for rocket
+   Chapter8e: chase camera for rocket
 
    Topics:
    - Initial velocity for rocket

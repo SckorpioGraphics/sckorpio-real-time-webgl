@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 1d: Animation Vertex Color
+   Chapter1d: Animation Vertex Color
 
    Topics:
    - Animate color of rectangle

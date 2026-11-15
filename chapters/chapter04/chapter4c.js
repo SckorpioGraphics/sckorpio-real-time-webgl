@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 4c: Long Rectangle Texture with Scroll Animation
+   Chapter4c: Long Rectangle Texture with Scroll Animation
    Topics:
    - Creating a long rectangle
    - With digits texture on it

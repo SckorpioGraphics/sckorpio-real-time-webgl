@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 4a: Long Rectangle Texture
+   Chapter4a: Long Rectangle Texture
    Topics:
    - Creating a long rectangle
    - With digits texture on it

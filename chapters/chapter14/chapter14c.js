@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 11c: Introducing Circlular Bounding Box
+   Chapter11c: Introducing Circlular Bounding Box
 
    Topics:
    - Add circular bounding box to the circles

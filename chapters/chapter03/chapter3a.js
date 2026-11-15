@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 3a: Animation Color
+   Chapter3a: Animation Color
 
    Topics:
    - Animate color of rectangle

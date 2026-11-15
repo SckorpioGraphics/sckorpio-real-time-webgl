@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 12j: Push with transferFractor and Add friction
+   Chapter12j: Push with transferFractor and Add friction
 
    Topics:
    - On collison transfer speed and direction angle

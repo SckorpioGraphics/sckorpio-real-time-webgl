@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 4f: Scaled/Zoom/Scroll Animation Rectangular Map
+   Chapter4f: Scaled/Zoom/Scroll Animation Rectangular Map
    Topics:
    - Creating a Rectangle
    - With digits texture on it

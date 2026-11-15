@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 8b: Gravity
+   Chapter8b: Gravity
 
    Topics:
    - Apply 2D Linear Motion on Square
