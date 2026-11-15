@@ -3,7 +3,7 @@
 
    Topics:
    - Simulate Square and Rectangle and log collisons
-   - Freeze their velocities = 0 as they collided
+   - Freeze their velocityX = 0 as they collided
    - Apply 1-D Linear Motion on Rectangle & square
    - Observe it they collided 
    - Also Observe they get penetrated
