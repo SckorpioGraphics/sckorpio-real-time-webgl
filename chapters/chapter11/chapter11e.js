@@ -747,6 +747,7 @@ const boundingInfos = {
         this.drawCount = 24;
     },
     draw(gl) {
+        gl.useProgram(this.shader.program);
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
         gl.uniform4fv(this.shader.uniforms.color,this.color);
@@ -1096,14 +1097,15 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // Rectangle BBox
-        boundingInfos.draw(gl);
+        
         // Sckorpio
         sckorpio.draw(gl);
         // Domino
         domino.draw(gl);
         // Dice
         dice.draw(gl);
+        // Rectangle BBox
+        boundingInfos.draw(gl);
     }
 };
 

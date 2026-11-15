@@ -844,6 +844,7 @@ const boundingInfos = {
         this.drawCount = 4 * 8;
     },
     draw(gl) {
+        gl.useProgram(this.shader.program);
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
         gl.uniform4fv(this.shader.uniforms.color,this.color);
@@ -1197,8 +1198,6 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // Sckorpio BBox
-        boundingInfos.draw(gl);
 
         // Sckorpio
         sckorpio.draw(gl);
@@ -1206,7 +1205,9 @@ const renderSystem = {
         domino1.draw(gl);
         domino2.draw(gl);
         domino3.draw(gl);
-        //---------------------------------------------------
+
+        // Sckorpio BBox
+        boundingInfos.draw(gl);
     }
 };
 

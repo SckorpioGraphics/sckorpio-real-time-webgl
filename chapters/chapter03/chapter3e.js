@@ -243,6 +243,7 @@ const triangle = {
         this.scaleY = this.initialScaleY;
     },
     draw(gl) {
+        gl.useProgram(this.shader.program);
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
         gl.uniform4fv(this.shader.uniforms.color,this.color);
@@ -335,6 +336,7 @@ const square = {
         this.scaleY = this.initialScaleY;
     },
     draw(gl) {
+        gl.useProgram(this.shader.program);
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
         gl.uniform4fv(this.shader.uniforms.color,this.color);
@@ -427,6 +429,7 @@ const rectangle = {
         this.scaleY = this.initialScaleY;
     },
     draw(gl) {
+        gl.useProgram(this.shader.program);
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
         gl.uniform4fv(this.shader.uniforms.color,this.color);

@@ -253,6 +253,7 @@ const rectangle0 = {
         this.scaleY = this.initialScaleY;
     },
     draw(gl) {
+        gl.useProgram(this.shader.program);
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
         gl.uniform4fv(this.shader.uniforms.color,this.color);
@@ -350,6 +351,7 @@ const rectangle1 = {
         this.scaleY = this.initialScaleY;
     },
     draw(gl) {
+        gl.useProgram(this.shader.program);
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
         gl.uniform4fv(this.shader.uniforms.color,this.color);
@@ -420,6 +422,7 @@ const boundingInfos = {
         this.drawCount = 2 * 8;
     },
     draw(gl) {
+        gl.useProgram(this.shader.program);
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
         gl.uniform4fv(this.shader.uniforms.color,this.color);
@@ -761,7 +764,7 @@ const renderSystem = {
         // Rectangle1
         rectangle1.draw(gl);
 
-        // Rectangle0 BBox
+        // Bounding Boxes
         boundingInfos.draw(gl);
 
         //---------------------------------------------------
