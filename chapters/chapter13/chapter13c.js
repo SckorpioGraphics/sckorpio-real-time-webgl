@@ -158,7 +158,7 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const rectangle = {
+const rectangle0 = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -176,7 +176,7 @@ const rectangle = {
         200, 100       // Right Top
     ]),
 
-        initialTranslationX: 0,
+    initialTranslationX: 0,
     initialTranslationY: 0,
     initialRotation: 0,
     initialScaleX: 1.0,
@@ -236,6 +236,9 @@ const rectangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+
+        // first model matrix update
+        setupModelMatrix(this);
     },
     resetTransform() {
         this.translationX = this.initialTranslationX;
@@ -253,7 +256,7 @@ const rectangle = {
     }
 };
 
-const square = {
+const rectangle1 = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -262,18 +265,18 @@ const square = {
 
     // CPU DATA
     vertexData: new Float32Array([
-        -100, -100,      // Left Bottom
-        100, -100,      // Right Bottom
-        -100, 100,      // Left Top
+        -200, -100,      // Left Bottom
+        200, -100,      // Right Bottom
+        -200, 100,      // Left Top
 
-        -100, 100,      // Left Top
-        100, -100,      // Right Bottom
-        100, 100       // Right Top
+        -200, 100,      // Left Top
+        200, -100,      // Right Bottom
+        200, 100       // Right Top
     ]),
 
-        initialTranslationX: 800,
+    initialTranslationX: 800,
     initialTranslationY: 0,
-    initialRotation: 0,
+    initialRotation: 30,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
     translationX: 800,
@@ -330,6 +333,108 @@ const square = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+
+        // first model matrix update
+        setupModelMatrix(this);
+        this.resetTransform();
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
+    },
+    draw(gl) {
+        setupModelMatrix(this);
+        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
+        gl.uniform4fv(this.shader.uniforms.color,this.color);
+        gl.bindVertexArray(this.vao);
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
+    }
+};
+
+const rectangle2 = {
+    //    v1--------v2
+    //    | \        |
+    //    |    \     |
+    //    |       \  |
+    //    v0--------v1
+
+    // CPU DATA
+    vertexData: new Float32Array([
+        -200, -100,      // Left Bottom
+        200, -100,      // Right Bottom
+        -200, 100,      // Left Top
+
+        -200, 100,      // Left Top
+        200, -100,      // Right Bottom
+        200, 100       // Right Top
+    ]),
+
+    initialTranslationX: 400,
+    initialTranslationY: 500,
+    initialRotation: 45,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+    translationX: 800,
+    translationY: 0,
+    rotation: 0,
+    scaleX: 1.0,
+    scaleY: 1.0,
+    modelMatrix: mat3.create(),
+    color: [0.0, 0.0, 1.0, 0.3],
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        // Connect shader to mesh
+        this.shader = shader;
+
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,                                      // size: 2 components (X, Y)
+            gl.FLOAT,                               // type: 32-bit float
+            false,                                  // normalize
+            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
+            0                                       // offset: start of buffer
+        );
+
+        // Important for retrieving position data
+        this.positionOffset = 0;
+        this.stride = 2;
+
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = 6;
+
+        // first model matrix update
+        setupModelMatrix(this);
+        this.resetTransform();
     },
     resetTransform() {
         this.translationX = this.initialTranslationX;
@@ -406,7 +511,7 @@ const boundingInfos = {
         // Draw data
         this.drawMode = gl.LINES;
         this.drawOffset = 0;
-        this.drawCount = 2 * 8;
+        this.drawCount = 3 * 8;
     },
     draw(gl) {
         setupModelMatrix(this);
@@ -419,33 +524,50 @@ const boundingInfos = {
         gl.bindVertexArray(this.vao);
 
         // bboxes
-        const boundingInfo1 = physicsInfoRectangle.boundingInfo;
-        const boundingInfo2 = physicsInfoSquare.boundingInfo;
+        const boundingInfo0 = physicsInfoRectangle0.boundingInfo;
+        const boundingInfo1 = physicsInfoRectangle1.boundingInfo;
+        const boundingInfo2 = physicsInfoRectangle2.boundingInfo;
+        
         const boundingInfos = [
-            boundingInfo1,
-            boundingInfo2
+            boundingInfo0,
+            boundingInfo1
         ];
 
         // Vertex data CPU side
         const vertices = [];
 
+        // AABBs BBoxes
         for (const boundingInfo of boundingInfos) {
-            const corners = boundingInfo.obb.corners;
-
             vertices.push(
-                corners[0][0], corners[0][1], // Bottom Left
-                corners[1][0], corners[1][1], // Bottom Right
+                boundingInfo.aabb.minX, boundingInfo.aabb.minY,  // Left Bottom
+                boundingInfo.aabb.maxX, boundingInfo.aabb.minY,  // Right Bottom
 
-                corners[1][0], corners[1][1], // Bottom Right
-                corners[2][0], corners[2][1], // Top Right
+                boundingInfo.aabb.maxX, boundingInfo.aabb.minY,  // Right Bottom
+                boundingInfo.aabb.maxX, boundingInfo.aabb.maxY,  // Right Top
 
-                corners[2][0], corners[2][1], // Top Right
-                corners[3][0], corners[3][1], // Top Left
+                boundingInfo.aabb.maxX, boundingInfo.aabb.maxY,  // Right Top
+                boundingInfo.aabb.minX, boundingInfo.aabb.maxY,  // Left Top
 
-                corners[3][0], corners[3][1], // Top Left
-                corners[0][0], corners[0][1]  // Bottom Left
+                boundingInfo.aabb.minX, boundingInfo.aabb.maxY,  // Left Top
+                boundingInfo.aabb.minX, boundingInfo.aabb.minY   // Left Bottom
             );
         }
+
+        //OBB Bboxes
+        const corners = boundingInfo2.obb.corners;
+        vertices.push(
+            corners[0][0], corners[0][1], // Bottom Left
+            corners[1][0], corners[1][1], // Bottom Right
+
+            corners[1][0], corners[1][1], // Bottom Right
+            corners[2][0], corners[2][1], // Top Right
+
+            corners[2][0], corners[2][1], // Top Right
+            corners[3][0], corners[3][1], // Top Left
+
+            corners[3][0], corners[3][1], // Top Left
+            corners[0][0], corners[0][1]  // Bottom Left
+        );
 
         this.vertexData = new Float32Array(vertices);
 
@@ -707,8 +829,9 @@ const renderSystem = {
         grid.init(gl, shader);
         xAxis.init(gl, shader);
         yAxis.init(gl, shader);
-        rectangle.init(gl, shader);
-        square.init(gl, shader);
+        rectangle0.init(gl, shader);
+        rectangle1.init(gl, shader);
+        rectangle2.init(gl, shader);
         boundingInfos.init(gl, shader);
 
     },
@@ -747,12 +870,14 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // Rectangle
-        rectangle.draw(gl);
-        // Square
-        square.draw(gl);
+        // Rectangle0
+        rectangle0.draw(gl);
+        // Rectangle1
+        rectangle1.draw(gl);
+        // Rectangle2
+        rectangle2.draw(gl);
 
-        // Rectangle BBox
+        // Rectangle0 BBox
         boundingInfos.draw(gl);
 
         //---------------------------------------------------
@@ -834,7 +959,7 @@ const clock = {
 
         // Log only once every second
         if (this.currentTime - this.lastLogTime >= 100) {
-            this.log();
+            //this.log();
             this.lastLogTime = this.currentTime;
         }
 
@@ -858,11 +983,25 @@ const clock = {
 // =============================================================
 // PHYSICS INFOS
 // =============================================================
-const physicsInfoRectangle = {
-    // Object
+const physicsInfoRectangle0 = {
+    // Object connected
     mesh: null,
+    // Speed
+    speed: 500,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 0,
     // Velocity
     velocityX: 100,
+    velocityY: 50,
+    // Control booleans
+    state: {
+        angleUp: false,
+        angleDown: false,
+        forward: false,
+        backward: false,
+    },
     // Bounding Box
     boundingInfo: {
         local: {
@@ -876,30 +1015,167 @@ const physicsInfoRectangle = {
             minY: 0,
             maxX: 0,
             maxY: 0,
-        },
-        obb: {
-            corners: []
         }
     },
+    // Previous position
+    previousX: 0,
+    previousY: 0,
+    previousDirectionAngle: 0,
+    isCollision: false,
 
     init(mesh) {
         this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
         calculateBoundingInfoLocal(this);
+        updateBoundingInfoAABB(this);
     },
     update(deltaTime) {
+        // save prev
+        this.previousX = this.mesh.translationX;
+        this.previousY = this.mesh.translationY;
+        this.previousDirectionAngle = this.mesh.rotation;
+        // key controls
+        if(this.state.angleUp) this.directionAngle += 1.0;
+        if(this.state.angleDown) this.directionAngle -= 1.0;
+        // direction unit vector
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        // velocity
+        if(this.state.forward){
+            this.velocityX = this.speed * this.directionX;
+            this.velocityY = this.speed * this.directionY;
+        } else if(this.state.backward){
+            this.velocityX = -this.speed * this.directionX;
+            this.velocityY = -this.speed * this.directionY;
+        } else {
+            this.velocityX = 0;
+            this.velocityY = 0;
+        }
+        // mesh transforms
         this.mesh.translationX += deltaTime * this.velocityX;
-        updateBoundingInfoOBB(this);
+        this.mesh.translationY += deltaTime * this.velocityY;
+        this.mesh.rotation = this.directionAngle;
+        // Update matrix for collision calculations
+        setupModelMatrix(this.mesh);
+        updateBoundingInfoAABB(this);
+    },
+    checkCollision(other) {
+        // Detect collision
+        const isCollision = checkAABBCollision(this,other);
+
+        if (isCollision) {
+            console.log("Collision detected!");
+            this.onCollision();
+            other.onCollision();
+        }
+
+        // save collison state
+        this.isCollision = isCollision;
+        other.isCollision = isCollision;
+    },
+    onCollision(){
+        this.velocityX = 0;
+        this.mesh.translationX = this.previousX;
+        this.mesh.translationY = this.previousY;
+        this.mesh.rotation = this.previousDirectionAngle;
+        setupModelMatrix(this.mesh);
+        updateBoundingInfoAABB(this);
+        this.collision = false;
     },
     reset() {
         this.mesh.resetTransform();
     }
 };
 
-const physicsInfoSquare = {
-    // Object
+const physicsInfoRectangle1 = {
+    // mesh
     mesh: null,
+    // Speed
+    speed: 0,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 0,
     // Velocity
-    velocityX: -70,
+    velocityX: 100,
+    velocityY: 50,
+    // Bounding Box
+    boundingInfo: {
+        local: {
+            minX: 0,
+            minY: 0,
+            maxX: 0,
+            maxY: 0
+        },
+        aabb: {
+            minX: 0,
+            minY: 0,
+            maxX: 0,
+            maxY: 0,
+        }
+    },
+    // Previous position
+    previousX: 0,
+    previousY: 0,
+    isCollision: false,
+
+    init(mesh) {
+        this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        calculateBoundingInfoLocal(this);
+        updateBoundingInfoAABB(this);
+    },
+    update(deltaTime) {
+        // save prev
+        this.previousX = this.mesh.translationX;
+        this.previousY = this.mesh.translationY;
+        // direction unit vector
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        // friction
+        if(this.speed > 0) this.speed -= deltaTime * this.friction;
+        if(this.speed < 0) this.speed += deltaTime * this.friction;
+        // velocity
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        // mesh transforms
+        this.mesh.translationX += deltaTime * this.velocityX;
+        this.mesh.translationY += deltaTime * this.velocityY;
+        // Update matrix for collision calculations
+        setupModelMatrix(this.mesh);
+        updateBoundingInfoAABB(this);
+    },
+    onCollision(){
+        this.speed = 0;
+        this.mesh.translationX = this.previousX;
+        this.mesh.translationY = this.previousY;
+        setupModelMatrix(this.mesh);
+        updateBoundingInfoAABB(this);
+        this.collision = false;
+    },
+    reset() {
+        this.mesh.resetTransform();
+    }
+};
+
+const physicsInfoRectangle2 = {
+    // mesh
+    mesh: null,
+    // Speed
+    speed: 0,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 0,
+    // Velocity
+    velocityX: 100,
+    velocityY: 50,
     // Bounding Box
     boundingInfo: {
         local: {
@@ -915,17 +1191,50 @@ const physicsInfoSquare = {
             maxY: 0,
         },
         obb: {
-            corners: []
+            corners:[]
         }
     },
+    // Previous position
+    previousX: 0,
+    previousY: 0,
+    isCollision: false,
 
     init(mesh) {
         this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
         calculateBoundingInfoLocal(this);
+        updateBoundingInfoOBB(this);
     },
     update(deltaTime) {
+        // save prev
+        this.previousX = this.mesh.translationX;
+        this.previousY = this.mesh.translationY;
+        // direction unit vector
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        // friction
+        if(this.speed > 0) this.speed -= deltaTime * this.friction;
+        if(this.speed < 0) this.speed += deltaTime * this.friction;
+        // velocity
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        // mesh transforms
         this.mesh.translationX += deltaTime * this.velocityX;
+        this.mesh.translationY += deltaTime * this.velocityY;
+        // Update matrix for collision calculations
+        setupModelMatrix(this.mesh);
         updateBoundingInfoOBB(this);
+    },
+    onCollision(){
+        this.speed = 0;
+        this.mesh.translationX = this.previousX;
+        this.mesh.translationY = this.previousY;
+        setupModelMatrix(this.mesh);
+        updateBoundingInfoOBB(this);
+        this.collision = false;
     },
     reset() {
         this.mesh.resetTransform();
@@ -1035,21 +1344,42 @@ function updateBoundingInfoOBB(physicsInfo) {
     }
 }
 
+function checkAABBCollision(physicsInfoA, physicsInfoB) {
+    const a = physicsInfoA.boundingInfo;
+    const b = physicsInfoB.boundingInfo;
+
+    // Check whether the bounding boxes overlap
+    const isCollision =
+        a.aabb.minX < b.aabb.maxX &&
+        a.aabb.maxX > b.aabb.minX &&
+        a.aabb.minY < b.aabb.maxY &&
+        a.aabb.maxY > b.aabb.minY;
+
+    return isCollision;
+}
+
 // =============================================================
 // PHYSICS SYSTEM
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfoRectangle.init(rectangle);
-        physicsInfoSquare.init(square);
+        physicsInfoRectangle0.init(rectangle0);
+        physicsInfoRectangle1.init(rectangle1);
+        physicsInfoRectangle2.init(rectangle2);
     },
     update() {
-        physicsInfoRectangle.update(clock.deltaTime);
-        physicsInfoSquare.update(clock.deltaTime);
+        physicsInfoRectangle0.update(clock.deltaTime);
+        physicsInfoRectangle1.update(clock.deltaTime);
+        physicsInfoRectangle2.update(clock.deltaTime);
+        
+        // check collision
+        physicsInfoRectangle0.checkCollision(physicsInfoRectangle1);
+        //physicsInfoRectangle0.checkCollision(physicsInfoRectangle2);
     },
     reset() {
-        physicsInfoRectangle.reset();
-        physicsInfoSquare.reset();
+        physicsInfoRectangle0.reset();
+        physicsInfoRectangle1.reset();
+        physicsInfoRectangle2.reset();
     }
 };
 
@@ -1060,28 +1390,25 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        // Rectangle
-        const rectangleFolder = gui.addFolder("Rectangle");
-        rectangleFolder.add(rectangle, "translationX", -1000, 1000).name("translationX");
-        rectangleFolder.add(rectangle, "translationY", -1000, 1000).name("translationY");
-        rectangleFolder.add(rectangle, "rotation", 0, 360).name("rotation");
-        rectangleFolder.add(rectangle, "scaleX", 0.1, 3.0).name("scaleX");
-        rectangleFolder.add(rectangle, "scaleY", 0.1, 3.0).name("scaleY");
+        // Rectangle1
+        const rectangle1Folder = gui.addFolder("Rectangle1");
+        rectangle1Folder.add(rectangle1, "translationX", -1000, 1000).name("translationX");
+        rectangle1Folder.add(rectangle1, "translationY", -1000, 1000).name("translationY");
+        rectangle1Folder.add(rectangle1, "rotation", 0, 360).name("rotation");
+        rectangle1Folder.add(rectangle1, "scaleX", 0.1, 3.0).name("scaleX");
+        rectangle1Folder.add(rectangle1, "scaleY", 0.1, 3.0).name("scaleY");
 
-        // Square
-        const squareFolder = gui.addFolder("Square");
-        squareFolder.add(square, "translationX", -1000, 1000).name("translationX");
-        squareFolder.add(square, "translationY", -1000, 1000).name("translationY");
-        squareFolder.add(square, "rotation", 0, 360).name("rotation");
-        squareFolder.add(square, "scaleX", 0.1, 3.0).name("scaleX");
-        squareFolder.add(square, "scaleY", 0.1, 3.0).name("scaleY");
+        // Rectangle1
+        const rectangle2Folder = gui.addFolder("Rectangle1");
+        rectangle2Folder.add(rectangle2, "translationX", -1000, 1000).name("translationX");
+        rectangle2Folder.add(rectangle2, "translationY", -1000, 1000).name("translationY");
+        rectangle2Folder.add(rectangle2, "rotation", 0, 360).name("rotation");
+        rectangle2Folder.add(rectangle2, "scaleX", 0.1, 3.0).name("scaleX");
+        rectangle2Folder.add(rectangle2, "scaleY", 0.1, 3.0).name("scaleY");
 
-        const physicsFolder1 = gui.addFolder("Physics Rectangle");
-        physicsFolder1.add(physicsInfoRectangle, "velocityX", -1000, 1000).name("velocityX");
+        const physicsFolder1 = gui.addFolder("Physics Rectangle0");
+        physicsFolder1.add(physicsInfoRectangle0, "speed", 0, 1000).name("Speed");
 
-        const physicsFolder2 = gui.addFolder("Physics Square");
-        physicsFolder2.add(physicsInfoSquare, "velocityX", -1000, 1000).name("velocityX");
-    
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
@@ -1127,6 +1454,23 @@ const keyEvent = {
                 case "_":
                     camera.state.zoomOut = true;
                     break;
+                
+                case "A":
+                case "a":
+                    physicsInfoRectangle0.state.angleUp = true;
+                    break;
+                case "D":
+                case "d":
+                    physicsInfoRectangle0.state.angleDown = true;
+                    break;
+                case "W":
+                case "w":
+                    physicsInfoRectangle0.state.forward = true;
+                    break;
+                case "S":
+                case "s":
+                    physicsInfoRectangle0.state.backward = true;
+                    break;
                 default:
             }
         });
@@ -1152,6 +1496,22 @@ const keyEvent = {
                 case "-":
                 case "_":
                     camera.state.zoomOut = false;
+                    break;
+                case "A":
+                case "a":
+                    physicsInfoRectangle0.state.angleUp = false;
+                    break;
+                case "D":
+                case "d":
+                    physicsInfoRectangle0.state.angleDown = false;
+                    break;
+                case "W":
+                case "w":
+                    physicsInfoRectangle0.state.forward = false;
+                    break;
+                case "S":
+                case "s":
+                    physicsInfoRectangle0.state.backward = false;
                     break;
                 default:
             }
