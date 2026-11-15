@@ -1,12 +1,13 @@
 /* #############################################################
-   CHAPTER 7f: Revisiting Sckorpio driving Tank (top view)
+   CHAPTER 7f: Sckorpio driving car Accelerated (top view)
 
    Topics:
-   - Apply 2D Linear Motion on Tank
+   - Apply 2D Accelerated Motion on car
    - Use unitVector & Speed for velocityX, velocityY
+   - Adding acceleration in direction of motion only
+   - Use A,W,S,D as controls
    - Use clock for delta time
-   - create animation object
-   - apply on the Square Textured with Tank 
+   - apply on the Square Textured with car 
    #############################################################
 */
 
@@ -160,8 +161,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
 // =============================================================
 // TEXTURE OBJECTS
 // =============================================================
-const tankTexture = {
-    imagePath: "chapters/chapter07/assets/tank_Texture.png",
+const carTexture = {
+    imagePath: "chapters/chapter07/assets/car_Texture.png",
 
     image: null,
     handle: null,
@@ -295,7 +296,7 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const tank = {
+const car = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -654,7 +655,7 @@ const renderSystem = {
         gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 
         //Textures
-        tankTexture.init(gl);
+        carTexture.init(gl);
 
         //Shaders
         basicShader.init(gl);
@@ -664,7 +665,7 @@ const renderSystem = {
         grid.init(gl, basicShader);
         xAxis.init(gl, basicShader);
         yAxis.init(gl, basicShader);
-        tank.init(gl, textureShader, tankTexture);
+        car.init(gl, textureShader, carTexture);
     },
     update() {
         const gl = this.gl;
@@ -705,8 +706,8 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // tank
-        tank.draw(gl);
+        // car
+        car.draw(gl);
 
         //---------------------------------------------------
     }
@@ -816,6 +817,8 @@ const physicsInfo = {
     mesh: null,
     // Speed
     speed: 0,
+    // acceleration
+    acceleration: 200,
     // Unit Direction Vector
     directionX: 1.0,
     directionY: 0.0,
@@ -826,7 +829,9 @@ const physicsInfo = {
     // Control booleans
     state: {
         angleUp: false,
-        angleDown: false
+        angleDown: false,
+        speedUp: false,
+        speedDown: false
     },
 
     init(mesh) {
@@ -837,14 +842,16 @@ const physicsInfo = {
         this.velocityY = this.speed * this.directionY;
     },
     update(deltaTime) {
-        // key controls
+        // key Controls
+        if(this.state.speedUp) this.speed += deltaTime * this.acceleration;
+        if(this.state.speedDown) this.speed -= deltaTime * this.acceleration;
         if(this.state.angleUp) this.directionAngle += 1.0;
         if(this.state.angleDown) this.directionAngle -= 1.0;
 
         // direction unit vector
         this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
         this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
-        // Velocity
+        // velocity
         this.velocityX = this.speed * this.directionX;
         this.velocityY = this.speed * this.directionY;
         // mesh transforms
@@ -862,7 +869,7 @@ const physicsInfo = {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfo.init(tank);
+        physicsInfo.init(car);
     },
     update() {
         physicsInfo.update(clock.deltaTime);
@@ -879,9 +886,10 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        const physicsFolder = gui.addFolder("Unit Vector");
+        const physicsFolder = gui.addFolder("Physics");
+        physicsFolder.add(physicsInfo, "directionAngle", 0, 360).name("Angle");
         physicsFolder.add(physicsInfo, "speed", 0, 1000).name("Speed");
-        physicsFolder.add(physicsInfo, "directionAngle", 0, 180).name("Angle");
+        physicsFolder.add(physicsInfo, "acceleration", -1000, 1000).name("Acceleration");
 
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
@@ -928,7 +936,6 @@ const keyEvent = {
                 case "_":
                     camera.state.zoomOut = true;
                     break;
-                
                 case "A":
                 case "a":
                     physicsInfo.state.angleUp = true;
@@ -936,6 +943,14 @@ const keyEvent = {
                 case "D":
                 case "d":
                     physicsInfo.state.angleDown = true;
+                    break;
+                case "W":
+                case "w":
+                    physicsInfo.state.speedUp = true;
+                    break;
+                case "S":
+                case "s":
+                    physicsInfo.state.speedDown = true;
                     break;
                 default:
             }
@@ -970,6 +985,14 @@ const keyEvent = {
                 case "D":
                 case "d":
                     physicsInfo.state.angleDown = false;
+                    break;
+                case "W":
+                case "w":
+                    physicsInfo.state.speedUp = false;
+                    break;
+                case "S":
+                case "s":
+                    physicsInfo.state.speedDown = false;
                     break;
                 default:
             }

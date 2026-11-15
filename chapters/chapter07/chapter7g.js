@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 7g: Sckorpio driving car Accelerated (top view)
+   CHAPTER 7g: Sckorpio driving car Accelerated + Friction(top view)
 
    Topics:
    - Apply 2D Accelerated Motion on car
@@ -315,18 +315,16 @@ const car = {
         100,  100,      1, 1
     ]),
 
-    initialTranslationX: 0,
+        initialTranslationX: 0,
     initialTranslationY: 0,
     initialRotation: 0,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
-
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
-
     modelMatrix: mat3.create(),
 
     //GPU DATA
@@ -819,6 +817,8 @@ const physicsInfo = {
     speed: 0,
     // acceleration
     acceleration: 200,
+    // friction
+    friction: 50,
     // Unit Direction Vector
     directionX: 1.0,
     directionY: 0.0,
@@ -842,19 +842,25 @@ const physicsInfo = {
         this.velocityY = this.speed * this.directionY;
     },
     update(deltaTime) {
-        // key Controls
+        // key controls
         if(this.state.speedUp) this.speed += deltaTime * this.acceleration;
         if(this.state.speedDown) this.speed -= deltaTime * this.acceleration;
         if(this.state.angleUp) this.directionAngle += 1.0;
         if(this.state.angleDown) this.directionAngle -= 1.0;
-
-        // direction unit vector
+        
+        // friction 
+        if(this.speed > 0) this.speed -= deltaTime * this.friction;
+        if(this.speed < 0) this.speed += deltaTime * this.friction;
+        
+        // direction
         this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
         this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        
         // velocity
         this.velocityX = this.speed * this.directionX;
         this.velocityY = this.speed * this.directionY;
-        // mesh transforms
+        
+        // Mesh transforms
         this.mesh.translationX += deltaTime * this.velocityX;
         this.mesh.translationY += deltaTime * this.velocityY;
         this.mesh.rotation = this.directionAngle;
@@ -890,6 +896,8 @@ const gui = {
         physicsFolder.add(physicsInfo, "directionAngle", 0, 360).name("Angle");
         physicsFolder.add(physicsInfo, "speed", 0, 1000).name("Speed");
         physicsFolder.add(physicsInfo, "acceleration", -1000, 1000).name("Acceleration");
+        physicsFolder.add(physicsInfo, "friction", -1000, 1000).name("Friction");
+
 
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");

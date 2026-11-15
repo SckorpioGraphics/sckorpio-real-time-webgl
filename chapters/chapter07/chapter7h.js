@@ -315,16 +315,18 @@ const car = {
         100,  100,      1, 1
     ]),
 
-        initialTranslationX: 0,
+    initialTranslationX: 0,
     initialTranslationY: 0,
     initialRotation: 0,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
+
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+    
     modelMatrix: mat3.create(),
 
     //GPU DATA
@@ -667,17 +669,13 @@ const renderSystem = {
     },
     update() {
         const gl = this.gl;
-
         camera.updateProjectionMatrix(gl);
         camera.updateViewMatrix(gl);
-
     },
     render() {
         const gl = this.gl;
 
         // -------------------------------------
-        // -------------------------------------
-        // ---------------------------------------
         gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
         // Background
@@ -864,6 +862,10 @@ const physicsInfo = {
         this.mesh.translationX += deltaTime * this.velocityX;
         this.mesh.translationY += deltaTime * this.velocityY;
         this.mesh.rotation = this.directionAngle;
+
+        // camera follow
+        camera.positionX = this.mesh.translationX * camera.zoom - 500;
+        camera.positionY = this.mesh.translationY * camera.zoom - 400;
     },
     reset() {
         this.mesh.resetTransform();
