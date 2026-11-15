@@ -479,8 +479,8 @@ const billiardBall1 = {
         100,  100,      1, 1
     ]),
 
-    initialTranslationX: 600,
-    initialTranslationY: 100,
+    initialTranslationX: 400,
+    initialTranslationY: 400,
     initialRotation: 0,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
@@ -598,8 +598,8 @@ const billiardBall2 = {
         100,  100,      1, 1
     ]),
 
-    initialTranslationX: 1200,
-    initialTranslationY: 200,
+    initialTranslationX: 700,
+    initialTranslationY: 500,
     initialRotation: 30,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
@@ -717,8 +717,8 @@ const billiardBall3 = {
         100,  100,      1, 1
     ]),
 
-    initialTranslationX: 600,
-    initialTranslationY: 600,
+    initialTranslationX: 800,
+    initialTranslationY: 700,
     initialRotation: 45,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
@@ -1395,7 +1395,7 @@ const physicsInfoSckorpio = {
     // Previous position
     previousX: 0,
     previousY: 0,
-    speedTransferFraction: 0.5,
+    speedTransferFraction: 0.8,
     isCollision: false,
 
     init(mesh) {
@@ -1510,7 +1510,7 @@ const physicsInfoBall1 = {
     // Previous position
     previousX: 0,
     previousY: 0,
-    speedTransferFraction: 0.5,
+    speedTransferFraction: 0.8,
     isCollision: false,
 
     init(mesh) {
@@ -1614,7 +1614,7 @@ const physicsInfoBall2 = {
     // Previous position
     previousX: 0,
     previousY: 0,
-    speedTransferFraction: 0.5,
+    speedTransferFraction: 0.8,
     isCollision: false,
 
     init(mesh) {
@@ -1719,7 +1719,7 @@ const physicsInfoBall3 = {
     // Previous position
     previousX: 0,
     previousY: 0,
-    speedTransferFraction: 0.5,
+    speedTransferFraction: 0.8,
     isCollision: false,
 
     init(mesh) {
@@ -1911,7 +1911,7 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        const physicsFolder1 = gui.addFolder("Physics Rectangle0");
+        const physicsFolder1 = gui.addFolder("Physics Sckorpio");
         physicsFolder1.add(physicsInfoSckorpio, "speed", 0, 1000).name("Speed");
 
         const animationFolder = gui.addFolder("Clock");
