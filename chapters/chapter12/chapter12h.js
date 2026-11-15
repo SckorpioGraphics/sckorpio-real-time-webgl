@@ -1,9 +1,9 @@
 /* #############################################################
-   CHAPTER 12h: Also add previous rotations, 
+   CHAPTER 12h: Resolve Collision while rotating objects
 
    Topics:
-   - Collisions can happen by rotations too
    - Add control to Square and Rectangle 
+   - Make physics info use speed, direction vector
    - Freeze their velocities = 0 as they collided
    - Apply 1-D Linear Motion on Rectangle & square
    - Observe it they collided 
@@ -975,10 +975,17 @@ const physicsInfoRectangle = {
 };
 
 const physicsInfoSquare = {
-    // Object
+    // mesh
     mesh: null,
+    // Speed
+    speed: 0,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 0,
     // Velocity
-    velocityX: 0,
+    velocityX: 100,
+    velocityY: 50,
     // Bounding Box
     boundingInfo: {
         local: {
@@ -1001,6 +1008,10 @@ const physicsInfoSquare = {
 
     init(mesh) {
         this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
         calculateBoundingInfoLocal(this);
         updateBoundingInfoAABB(this);
     },
@@ -1008,13 +1019,24 @@ const physicsInfoSquare = {
         // save prev
         this.previousX = this.mesh.translationX;
         this.previousY = this.mesh.translationY;
+        // direction unit vector
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        // friction
+        if(this.speed > 0) this.speed -= deltaTime * this.friction;
+        if(this.speed < 0) this.speed += deltaTime * this.friction;
+        // velocity
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        // mesh transforms
         this.mesh.translationX += deltaTime * this.velocityX;
+        this.mesh.translationY += deltaTime * this.velocityY;
         // Update matrix for collision calculations
         setupModelMatrix(this.mesh);
         updateBoundingInfoAABB(this);
     },
     onCollision(){
-        this.velocityX = 0;
+        this.speed = 0;
         this.mesh.translationX = this.previousX;
         this.mesh.translationY = this.previousY;
         setupModelMatrix(this.mesh);
