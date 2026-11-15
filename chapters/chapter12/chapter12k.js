@@ -1,11 +1,11 @@
 /* #############################################################
-   CHAPTER 12k: Add multiple sqaures and rectangles
+   CHAPTER 12k: Add multiple sqaures and rectangle0s
 
    Topics:
    - On collison transfer speed and direction angle
    - transfer with speedTransferFraction
-   - Add friction for the squares
-   - Add key control to Rectangle 
+   - Add friction for the rectangles
+   - Add key control to Rectangle0 
    #############################################################
 */
 
@@ -162,7 +162,7 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const rectangle = {
+const rectangle0 = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -260,7 +260,7 @@ const rectangle = {
     }
 };
 
-const square1 = {
+const rectangle1 = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -269,21 +269,121 @@ const square1 = {
 
     // CPU DATA
     vertexData: new Float32Array([
-        -100, -100,      // Left Bottom
-        100, -100,      // Right Bottom
-        -100, 100,      // Left Top
+        -200, -100,      // Left Bottom
+        200, -100,      // Right Bottom
+        -200, 100,      // Left Top
 
-        -100, 100,      // Left Top
-        100, -100,      // Right Bottom
-        100, 100       // Right Top
+        -200, 100,      // Left Top
+        200, -100,      // Right Bottom
+        200, 100       // Right Top
     ]),
 
-    initialTranslationX: 800,
+    initialTranslationX: 600,
     initialTranslationY: 0,
     initialRotation: 0,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
-    translationX: 800,
+
+    translationX: 0,
+    translationY: 0,
+    rotation: 0,
+    scaleX: 1.0,
+    scaleY: 1.0,
+
+    modelMatrix: mat3.create(),
+    color: [0.0, 1.0, 0.0, 0.3],
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        // Connect shader to mesh
+        this.shader = shader;
+
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,                                      // size: 2 components (X, Y)
+            gl.FLOAT,                               // type: 32-bit float
+            false,                                  // normalize
+            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
+            0                                       // offset: start of buffer
+        );
+
+        // Important for retrieving position data
+        this.positionOffset = 0;
+        this.stride = 2;
+
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = 6;
+
+        // first model matrix update
+        setupModelMatrix(this);
+        this.resetTransform();
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
+    },
+    draw(gl) {
+        setupModelMatrix(this);
+        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
+        gl.uniform4fv(this.shader.uniforms.color,this.color);
+        gl.bindVertexArray(this.vao);
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
+    }
+};
+
+const rectangle2 = {
+    //    v1--------v2
+    //    | \        |
+    //    |    \     |
+    //    |       \  |
+    //    v0--------v1
+
+    // CPU DATA
+    vertexData: new Float32Array([
+        -200, -100,      // Left Bottom
+        200, -100,      // Right Bottom
+        -200, 100,      // Left Top
+
+        -200, 100,      // Left Top
+        200, -100,      // Right Bottom
+        200, 100       // Right Top
+    ]),
+
+    initialTranslationX: 1200,
+    initialTranslationY: -150,
+    initialRotation: 0,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+    translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
@@ -340,6 +440,7 @@ const square1 = {
 
         // first model matrix update
         setupModelMatrix(this);
+        this.resetTransform();
     },
     resetTransform() {
         this.translationX = this.initialTranslationX;
@@ -357,7 +458,7 @@ const square1 = {
     }
 };
 
-const square2 = {
+const rectangle3 = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -366,122 +467,27 @@ const square2 = {
 
     // CPU DATA
     vertexData: new Float32Array([
-        -100, -100,      // Left Bottom
-        100, -100,      // Right Bottom
-        -100, 100,      // Left Top
+        -200, -100,      // Left Bottom
+        200, -100,      // Right Bottom
+        -200, 100,      // Left Top
 
-        -100, 100,      // Left Top
-        100, -100,      // Right Bottom
-        100, 100       // Right Top
+        -200, 100,      // Left Top
+        200, -100,      // Right Bottom
+        200, 100       // Right Top
     ]),
 
-    initialTranslationX: 1200,
-    initialTranslationY: -150,
+    initialTranslationX: 1100,
+    initialTranslationY: 150,
     initialRotation: 0,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
-    translationX: 1200,
-    translationY: -150,
-    rotation: 0,
-    scaleX: 1.0,
-    scaleY: 1.0,
-    modelMatrix: mat3.create(),
-    color: [0.0, 1.0, 0.0, 0.3],
 
-    //GPU DATA
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0,
-
-    //FUNCTIONS
-    init(gl, shader) {
-        // Connect shader to mesh
-        this.shader = shader;
-
-        // Vertex Buffer
-        this.vbo = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
-
-        // Vertex Array
-        this.vao = gl.createVertexArray();
-        gl.bindVertexArray(this.vao);
-
-        // Enable position attribute
-        gl.enableVertexAttribArray(this.shader.attributes.position);
-
-        // Bind Vertex Buffer
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-
-        // Vertex data format
-        gl.vertexAttribPointer(
-            this.shader.attributes.position,
-            2,                                      // size: 2 components (X, Y)
-            gl.FLOAT,                               // type: 32-bit float
-            false,                                  // normalize
-            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
-            0                                       // offset: start of buffer
-        );
-
-        // Important for retrieving position data
-        this.positionOffset = 0;
-        this.stride = 2;
-
-        // Draw data
-        this.drawMode = gl.TRIANGLES;
-        this.drawOffset = 0;
-        this.drawCount = 6;
-
-        // first model matrix update
-        setupModelMatrix(this);
-    },
-    resetTransform() {
-        this.translationX = this.initialTranslationX;
-        this.translationY = this.initialTranslationY;
-        this.rotation = this.initialRotation;
-        this.scaleX = this.initialScaleX;
-        this.scaleY = this.initialScaleY;
-    },
-    draw(gl) {
-        setupModelMatrix(this);
-        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-        gl.uniform4fv(this.shader.uniforms.color,this.color);
-        gl.bindVertexArray(this.vao);
-        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
-    }
-};
-
-const square3 = {
-    //    v1--------v2
-    //    | \        |
-    //    |    \     |
-    //    |       \  |
-    //    v0--------v1
-
-    // CPU DATA
-    vertexData: new Float32Array([
-        -100, -100,      // Left Bottom
-        100, -100,      // Right Bottom
-        -100, 100,      // Left Top
-
-        -100, 100,      // Left Top
-        100, -100,      // Right Bottom
-        100, 100       // Right Top
-    ]),
-
-    initialTranslationX: 1000,
-    initialTranslationY: 200,
-    initialRotation: 0,
-    initialScaleX: 1.0,
-    initialScaleY: 1.0,
     translationX: 1100,
     translationY: 100,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
+
     modelMatrix: mat3.create(),
     color: [0.0, 1.0, 0.0, 0.3],
 
@@ -534,6 +540,7 @@ const square3 = {
 
         // first model matrix update
         setupModelMatrix(this);
+        this.resetTransform();
     },
     resetTransform() {
         this.translationX = this.initialTranslationX;
@@ -623,10 +630,10 @@ const boundingInfos = {
         gl.bindVertexArray(this.vao);
 
         // bboxes
-        const boundingInfo0 = physicsInfoRectangle.boundingInfo;
-        const boundingInfo1 = physicsInfoSquare1.boundingInfo;
-        const boundingInfo2 = physicsInfoSquare2.boundingInfo;
-        const boundingInfo3 = physicsInfoSquare3.boundingInfo;
+        const boundingInfo0 = physicsInfoRectangle0.boundingInfo;
+        const boundingInfo1 = physicsInfoRectangle1.boundingInfo;
+        const boundingInfo2 = physicsInfoRectangle2.boundingInfo;
+        const boundingInfo3 = physicsInfoRectangle3.boundingInfo;
         const boundingInfos = [
             boundingInfo0,
             boundingInfo1,
@@ -913,10 +920,10 @@ const renderSystem = {
         grid.init(gl, shader);
         xAxis.init(gl, shader);
         yAxis.init(gl, shader);
-        rectangle.init(gl, shader);
-        square1.init(gl, shader);
-        square2.init(gl, shader);
-        square3.init(gl, shader);
+        rectangle0.init(gl, shader);
+        rectangle1.init(gl, shader);
+        rectangle2.init(gl, shader);
+        rectangle3.init(gl, shader);
         boundingInfos.init(gl, shader);
 
     },
@@ -955,14 +962,14 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
+        // Rectangle0
+        rectangle0.draw(gl);
         // Rectangle
-        rectangle.draw(gl);
-        // Square
-        square1.draw(gl);
-        square2.draw(gl);
-        square3.draw(gl);
+        rectangle1.draw(gl);
+        rectangle2.draw(gl);
+        rectangle3.draw(gl);
 
-        // Rectangle BBox
+        // Rectangle0 BBox
         boundingInfos.draw(gl);
 
         //---------------------------------------------------
@@ -1068,7 +1075,7 @@ const clock = {
 // =============================================================
 // PHYSICS INFOS
 // =============================================================
-const physicsInfoRectangle = {
+const physicsInfoRectangle0 = {
     // Object connected
     mesh: null,
     // Speed
@@ -1186,7 +1193,7 @@ const physicsInfoRectangle = {
     }
 };
 
-const physicsInfoSquare1 = {
+const physicsInfoRectangle1 = {
     // mesh
     mesh: null,
     // Speed
@@ -1277,7 +1284,7 @@ const physicsInfoSquare1 = {
     }
 };
 
-const physicsInfoSquare2 = {
+const physicsInfoRectangle2 = {
     // mesh
     mesh: null,
     // Speed
@@ -1368,7 +1375,7 @@ const physicsInfoSquare2 = {
     }
 };
 
-const physicsInfoSquare3 = {
+const physicsInfoRectangle3 = {
     // mesh
     mesh: null,
     // Speed
@@ -1550,31 +1557,31 @@ function checkAABBCollision(physicsInfoA, physicsInfoB) {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfoRectangle.init(rectangle);
-        physicsInfoSquare1.init(square1);
-        physicsInfoSquare2.init(square2);
-        physicsInfoSquare3.init(square3);
+        physicsInfoRectangle0.init(rectangle0);
+        physicsInfoRectangle1.init(rectangle1);
+        physicsInfoRectangle2.init(rectangle2);
+        physicsInfoRectangle3.init(rectangle3);
     },
     update() {
-        physicsInfoRectangle.update(clock.deltaTime);
-        physicsInfoSquare1.update(clock.deltaTime);
-        physicsInfoSquare2.update(clock.deltaTime);
-        physicsInfoSquare3.update(clock.deltaTime);
+        physicsInfoRectangle0.update(clock.deltaTime);
+        physicsInfoRectangle1.update(clock.deltaTime);
+        physicsInfoRectangle2.update(clock.deltaTime);
+        physicsInfoRectangle3.update(clock.deltaTime);
         
         // check collision
-        physicsInfoRectangle.checkCollision(physicsInfoSquare1);
-        physicsInfoRectangle.checkCollision(physicsInfoSquare2);
-        physicsInfoRectangle.checkCollision(physicsInfoSquare3);
+        physicsInfoRectangle0.checkCollision(physicsInfoRectangle1);
+        physicsInfoRectangle0.checkCollision(physicsInfoRectangle2);
+        physicsInfoRectangle0.checkCollision(physicsInfoRectangle3);
 
-        physicsInfoSquare1.checkCollision(physicsInfoSquare2);
-        physicsInfoSquare1.checkCollision(physicsInfoSquare3);
-        physicsInfoSquare2.checkCollision(physicsInfoSquare3);
+        physicsInfoRectangle1.checkCollision(physicsInfoRectangle2);
+        physicsInfoRectangle1.checkCollision(physicsInfoRectangle3);
+        physicsInfoRectangle2.checkCollision(physicsInfoRectangle3);
     },
     reset() {
-        physicsInfoRectangle.reset();
-        physicsInfoSquare1.reset();
-        physicsInfoSquare2.reset();
-        physicsInfoSquare3.reset();
+        physicsInfoRectangle0.reset();
+        physicsInfoRectangle1.reset();
+        physicsInfoRectangle2.reset();
+        physicsInfoRectangle3.reset();
     }
 };
 
@@ -1585,30 +1592,30 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        // Square
-        const square1Folder = gui.addFolder("Square1");
-        square1Folder.add(square1, "translationX", -1000, 1000).name("translationX");
-        square1Folder.add(square1, "translationY", -1000, 1000).name("translationY");
-        square1Folder.add(square1, "rotation", 0, 360).name("rotation");
-        square1Folder.add(square1, "scaleX", 0.1, 3.0).name("scaleX");
-        square1Folder.add(square1, "scaleY", 0.1, 3.0).name("scaleY");
+        // Rectangle
+        const rectangle1Folder = gui.addFolder("Rectangle1");
+        rectangle1Folder.add(rectangle1, "translationX", -1000, 1000).name("translationX");
+        rectangle1Folder.add(rectangle1, "translationY", -1000, 1000).name("translationY");
+        rectangle1Folder.add(rectangle1, "rotation", 0, 360).name("rotation");
+        rectangle1Folder.add(rectangle1, "scaleX", 0.1, 3.0).name("scaleX");
+        rectangle1Folder.add(rectangle1, "scaleY", 0.1, 3.0).name("scaleY");
 
-        const square2Folder = gui.addFolder("Square2");
-        square2Folder.add(square2, "translationX", -1000, 1000).name("translationX");
-        square2Folder.add(square2, "translationY", -1000, 1000).name("translationY");
-        square2Folder.add(square2, "rotation", 0, 360).name("rotation");
-        square2Folder.add(square2, "scaleX", 0.1, 3.0).name("scaleX");
-        square2Folder.add(square2, "scaleY", 0.1, 3.0).name("scaleY");
+        const rectangle2Folder = gui.addFolder("Rectangle2");
+        rectangle2Folder.add(rectangle2, "translationX", -1000, 1000).name("translationX");
+        rectangle2Folder.add(rectangle2, "translationY", -1000, 1000).name("translationY");
+        rectangle2Folder.add(rectangle2, "rotation", 0, 360).name("rotation");
+        rectangle2Folder.add(rectangle2, "scaleX", 0.1, 3.0).name("scaleX");
+        rectangle2Folder.add(rectangle2, "scaleY", 0.1, 3.0).name("scaleY");
 
-        const square3Folder = gui.addFolder("Square3");
-        square3Folder.add(square3, "translationX", -1000, 1000).name("translationX");
-        square3Folder.add(square3, "translationY", -1000, 1000).name("translationY");
-        square3Folder.add(square3, "rotation", 0, 360).name("rotation");
-        square3Folder.add(square3, "scaleX", 0.1, 3.0).name("scaleX");
-        square3Folder.add(square3, "scaleY", 0.1, 3.0).name("scaleY");
+        const rectangle3Folder = gui.addFolder("Rectangle3");
+        rectangle3Folder.add(rectangle3, "translationX", -1000, 1000).name("translationX");
+        rectangle3Folder.add(rectangle3, "translationY", -1000, 1000).name("translationY");
+        rectangle3Folder.add(rectangle3, "rotation", 0, 360).name("rotation");
+        rectangle3Folder.add(rectangle3, "scaleX", 0.1, 3.0).name("scaleX");
+        rectangle3Folder.add(rectangle3, "scaleY", 0.1, 3.0).name("scaleY");
 
-        const physicsFolder1 = gui.addFolder("Physics Rectangle");
-        physicsFolder1.add(physicsInfoRectangle, "speed", 0, 1000).name("Speed");
+        const physicsFolder1 = gui.addFolder("Physics Rectangle0");
+        physicsFolder1.add(physicsInfoRectangle0, "speed", 0, 1000).name("Speed");
 
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
@@ -1658,19 +1665,19 @@ const keyEvent = {
                 
                 case "A":
                 case "a":
-                    physicsInfoRectangle.state.angleUp = true;
+                    physicsInfoRectangle0.state.angleUp = true;
                     break;
                 case "D":
                 case "d":
-                    physicsInfoRectangle.state.angleDown = true;
+                    physicsInfoRectangle0.state.angleDown = true;
                     break;
                 case "W":
                 case "w":
-                    physicsInfoRectangle.state.forward = true;
+                    physicsInfoRectangle0.state.forward = true;
                     break;
                 case "S":
                 case "s":
-                    physicsInfoRectangle.state.backward = true;
+                    physicsInfoRectangle0.state.backward = true;
                     break;
                 default:
             }
@@ -1700,19 +1707,19 @@ const keyEvent = {
                     break;
                 case "A":
                 case "a":
-                    physicsInfoRectangle.state.angleUp = false;
+                    physicsInfoRectangle0.state.angleUp = false;
                     break;
                 case "D":
                 case "d":
-                    physicsInfoRectangle.state.angleDown = false;
+                    physicsInfoRectangle0.state.angleDown = false;
                     break;
                 case "W":
                 case "w":
-                    physicsInfoRectangle.state.forward = false;
+                    physicsInfoRectangle0.state.forward = false;
                     break;
                 case "S":
                 case "s":
-                    physicsInfoRectangle.state.backward = false;
+                    physicsInfoRectangle0.state.backward = false;
                     break;
                 default:
             }

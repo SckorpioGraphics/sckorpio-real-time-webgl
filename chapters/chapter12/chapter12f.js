@@ -2,9 +2,9 @@
    CHAPTER 12f: Resolve penetration by returning to prev position
 
    Topics:
-   - Simulate Square and Rectangle and log collisons
+   - Simulate Rectangle1 and Rectangle0 and log collisons
    - Freeze their velocities = 0 as they collided
-   - Apply 1-D Linear Motion on Rectangle & square
+   - Apply 1-D Linear Motion on Rectangle0 & rectangle1
    - Observe it they collided 
    - Add prev positions so that we can return on it
    #############################################################
@@ -163,7 +163,7 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const rectangle = {
+const rectangle0 = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -261,7 +261,7 @@ const rectangle = {
     }
 };
 
-const square = {
+const rectangle1 = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -270,13 +270,13 @@ const square = {
 
     // CPU DATA
     vertexData: new Float32Array([
-        -100, -100,      // Left Bottom
-        100, -100,      // Right Bottom
-        -100, 100,      // Left Top
+        -200, -100,      // Left Bottom
+        200, -100,      // Right Bottom
+        -200, 100,      // Left Top
 
-        -100, 100,      // Left Top
-        100, -100,      // Right Bottom
-        100, 100       // Right Top
+        -200, 100,      // Left Top
+        200, -100,      // Right Bottom
+        200, 100       // Right Top
     ]),
 
     initialTranslationX: 800,
@@ -430,8 +430,8 @@ const boundingInfos = {
         gl.bindVertexArray(this.vao);
 
         // bboxes
-        const boundingInfo1 = physicsInfoRectangle.boundingInfo;
-        const boundingInfo2 = physicsInfoSquare.boundingInfo;
+        const boundingInfo1 = physicsInfoRectangle0.boundingInfo;
+        const boundingInfo2 = physicsInfoRectangle1.boundingInfo;
         const boundingInfos = [
             boundingInfo1,
             boundingInfo2
@@ -716,8 +716,8 @@ const renderSystem = {
         grid.init(gl, shader);
         xAxis.init(gl, shader);
         yAxis.init(gl, shader);
-        rectangle.init(gl, shader);
-        square.init(gl, shader);
+        rectangle0.init(gl, shader);
+        rectangle1.init(gl, shader);
         boundingInfos.init(gl, shader);
 
     },
@@ -756,12 +756,12 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // Rectangle
-        rectangle.draw(gl);
-        // Square
-        square.draw(gl);
+        // Rectangle0
+        rectangle0.draw(gl);
+        // Rectangle1
+        rectangle1.draw(gl);
 
-        // Rectangle BBox
+        // Rectangle0 BBox
         boundingInfos.draw(gl);
 
         //---------------------------------------------------
@@ -867,7 +867,7 @@ const clock = {
 // =============================================================
 // PHYSICS INFOS
 // =============================================================
-const physicsInfoRectangle = {
+const physicsInfoRectangle0 = {
     // Object
     mesh: null,
     // Velocity
@@ -935,7 +935,7 @@ const physicsInfoRectangle = {
     }
 };
 
-const physicsInfoSquare = {
+const physicsInfoRectangle1 = {
     // Object
     mesh: null,
     // Velocity
@@ -1079,19 +1079,19 @@ function checkAABBCollision(physicsInfoA, physicsInfoB) {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfoRectangle.init(rectangle);
-        physicsInfoSquare.init(square);
+        physicsInfoRectangle0.init(rectangle0);
+        physicsInfoRectangle1.init(rectangle1);
     },
     update() {
-        physicsInfoRectangle.update(clock.deltaTime);
-        physicsInfoSquare.update(clock.deltaTime);
+        physicsInfoRectangle0.update(clock.deltaTime);
+        physicsInfoRectangle1.update(clock.deltaTime);
 
         // check collision
-        physicsInfoRectangle.checkCollision(physicsInfoSquare);
+        physicsInfoRectangle0.checkCollision(physicsInfoRectangle1);
     },
     reset() {
-        physicsInfoRectangle.reset();
-        physicsInfoSquare.reset();
+        physicsInfoRectangle0.reset();
+        physicsInfoRectangle1.reset();
     }
 };
 
@@ -1102,27 +1102,27 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        // Rectangle
-        const rectangleFolder = gui.addFolder("Rectangle");
-        rectangleFolder.add(rectangle, "translationX", -1000, 1000).name("translationX");
-        rectangleFolder.add(rectangle, "translationY", -1000, 1000).name("translationY");
-        rectangleFolder.add(rectangle, "rotation", 0, 360).name("rotation");
-        rectangleFolder.add(rectangle, "scaleX", 0.1, 3.0).name("scaleX");
-        rectangleFolder.add(rectangle, "scaleY", 0.1, 3.0).name("scaleY");
+        // Rectangle0
+        const rectangle0Folder = gui.addFolder("Rectangle0");
+        rectangle0Folder.add(rectangle0, "translationX", -1000, 1000).name("translationX");
+        rectangle0Folder.add(rectangle0, "translationY", -1000, 1000).name("translationY");
+        rectangle0Folder.add(rectangle0, "rotation", 0, 360).name("rotation");
+        rectangle0Folder.add(rectangle0, "scaleX", 0.1, 3.0).name("scaleX");
+        rectangle0Folder.add(rectangle0, "scaleY", 0.1, 3.0).name("scaleY");
 
-        // Square
-        const squareFolder = gui.addFolder("Square");
-        squareFolder.add(square, "translationX", -1000, 1000).name("translationX");
-        squareFolder.add(square, "translationY", -1000, 1000).name("translationY");
-        squareFolder.add(square, "rotation", 0, 360).name("rotation");
-        squareFolder.add(square, "scaleX", 0.1, 3.0).name("scaleX");
-        squareFolder.add(square, "scaleY", 0.1, 3.0).name("scaleY");
+        // Rectangle1
+        const rectangle1Folder = gui.addFolder("Rectangle1");
+        rectangle1Folder.add(rectangle1, "translationX", -1000, 1000).name("translationX");
+        rectangle1Folder.add(rectangle1, "translationY", -1000, 1000).name("translationY");
+        rectangle1Folder.add(rectangle1, "rotation", 0, 360).name("rotation");
+        rectangle1Folder.add(rectangle1, "scaleX", 0.1, 3.0).name("scaleX");
+        rectangle1Folder.add(rectangle1, "scaleY", 0.1, 3.0).name("scaleY");
 
-        const physicsFolder1 = gui.addFolder("Physics Rectangle");
-        physicsFolder1.add(physicsInfoRectangle, "velocityX", -1000, 1000).name("velocityX");
+        const physicsFolder1 = gui.addFolder("Physics Rectangle0");
+        physicsFolder1.add(physicsInfoRectangle0, "velocityX", -1000, 1000).name("velocityX");
 
-        const physicsFolder2 = gui.addFolder("Physics Square");
-        physicsFolder2.add(physicsInfoSquare, "velocityX", -1000, 1000).name("velocityX");
+        const physicsFolder2 = gui.addFolder("Physics Rectangle1");
+        physicsFolder2.add(physicsInfoRectangle1, "velocityX", -1000, 1000).name("velocityX");
     
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");

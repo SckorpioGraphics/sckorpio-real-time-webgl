@@ -3,7 +3,7 @@
 
    Topics:
    - On collison transfer speed and direction angle
-   - Add key control to Rectangle 
+   - Add key control to Rectangle0 
    #############################################################
 */
 
@@ -160,7 +160,7 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const rectangle = {
+const rectangle0 = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -258,7 +258,7 @@ const rectangle = {
     }
 };
 
-const square = {
+const rectangle1 = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -267,13 +267,13 @@ const square = {
 
     // CPU DATA
     vertexData: new Float32Array([
-        -100, -100,      // Left Bottom
-        100, -100,      // Right Bottom
-        -100, 100,      // Left Top
+        -200, -100,      // Left Bottom
+        200, -100,      // Right Bottom
+        -200, 100,      // Left Top
 
-        -100, 100,      // Left Top
-        100, -100,      // Right Bottom
-        100, 100       // Right Top
+        -200, 100,      // Left Top
+        200, -100,      // Right Bottom
+        200, 100       // Right Top
     ]),
 
     initialTranslationX: 800,
@@ -427,8 +427,8 @@ const boundingInfos = {
         gl.bindVertexArray(this.vao);
 
         // bboxes
-        const boundingInfo1 = physicsInfoRectangle.boundingInfo;
-        const boundingInfo2 = physicsInfoSquare.boundingInfo;
+        const boundingInfo1 = physicsInfoRectangle0.boundingInfo;
+        const boundingInfo2 = physicsInfoRectangle1.boundingInfo;
         const boundingInfos = [
             boundingInfo1,
             boundingInfo2
@@ -713,8 +713,8 @@ const renderSystem = {
         grid.init(gl, shader);
         xAxis.init(gl, shader);
         yAxis.init(gl, shader);
-        rectangle.init(gl, shader);
-        square.init(gl, shader);
+        rectangle0.init(gl, shader);
+        rectangle1.init(gl, shader);
         boundingInfos.init(gl, shader);
 
     },
@@ -753,12 +753,12 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // Rectangle
-        rectangle.draw(gl);
-        // Square
-        square.draw(gl);
+        // Rectangle0
+        rectangle0.draw(gl);
+        // Rectangle1
+        rectangle1.draw(gl);
 
-        // Rectangle BBox
+        // Rectangle0 BBox
         boundingInfos.draw(gl);
 
         //---------------------------------------------------
@@ -864,7 +864,7 @@ const clock = {
 // =============================================================
 // PHYSICS INFOS
 // =============================================================
-const physicsInfoRectangle = {
+const physicsInfoRectangle0 = {
     // Object connected
     mesh: null,
     // Speed
@@ -981,7 +981,7 @@ const physicsInfoRectangle = {
     }
 };
 
-const physicsInfoSquare = {
+const physicsInfoRectangle1 = {
     // mesh
     mesh: null,
     // Speed
@@ -1146,19 +1146,19 @@ function checkAABBCollision(physicsInfoA, physicsInfoB) {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfoRectangle.init(rectangle);
-        physicsInfoSquare.init(square);
+        physicsInfoRectangle0.init(rectangle0);
+        physicsInfoRectangle1.init(rectangle1);
     },
     update() {
-        physicsInfoRectangle.update(clock.deltaTime);
-        physicsInfoSquare.update(clock.deltaTime);
+        physicsInfoRectangle0.update(clock.deltaTime);
+        physicsInfoRectangle1.update(clock.deltaTime);
         
         // check collision
-        physicsInfoRectangle.checkCollision(physicsInfoSquare);
+        physicsInfoRectangle0.checkCollision(physicsInfoRectangle1);
     },
     reset() {
-        physicsInfoRectangle.reset();
-        physicsInfoSquare.reset();
+        physicsInfoRectangle0.reset();
+        physicsInfoRectangle1.reset();
     }
 };
 
@@ -1169,20 +1169,17 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        // Square
-        const squareFolder = gui.addFolder("Square");
-        squareFolder.add(square, "translationX", -1000, 1000).name("translationX");
-        squareFolder.add(square, "translationY", -1000, 1000).name("translationY");
-        squareFolder.add(square, "rotation", 0, 360).name("rotation");
-        squareFolder.add(square, "scaleX", 0.1, 3.0).name("scaleX");
-        squareFolder.add(square, "scaleY", 0.1, 3.0).name("scaleY");
+        // Rectangle1
+        const rectangle1Folder = gui.addFolder("Rectangle1");
+        rectangle1Folder.add(rectangle1, "translationX", -1000, 1000).name("translationX");
+        rectangle1Folder.add(rectangle1, "translationY", -1000, 1000).name("translationY");
+        rectangle1Folder.add(rectangle1, "rotation", 0, 360).name("rotation");
+        rectangle1Folder.add(rectangle1, "scaleX", 0.1, 3.0).name("scaleX");
+        rectangle1Folder.add(rectangle1, "scaleY", 0.1, 3.0).name("scaleY");
 
-        const physicsFolder1 = gui.addFolder("Physics Rectangle");
-        physicsFolder1.add(physicsInfoRectangle, "speed", 0, 1000).name("Speed");
+        const physicsFolder1 = gui.addFolder("Physics Rectangle0");
+        physicsFolder1.add(physicsInfoRectangle0, "speed", 0, 1000).name("Speed");
 
-        const physicsFolder2 = gui.addFolder("Physics Square");
-        physicsFolder2.add(physicsInfoSquare, "velocityX", -1000, 1000).name("velocityX");
-    
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
@@ -1231,19 +1228,19 @@ const keyEvent = {
                 
                 case "A":
                 case "a":
-                    physicsInfoRectangle.state.angleUp = true;
+                    physicsInfoRectangle0.state.angleUp = true;
                     break;
                 case "D":
                 case "d":
-                    physicsInfoRectangle.state.angleDown = true;
+                    physicsInfoRectangle0.state.angleDown = true;
                     break;
                 case "W":
                 case "w":
-                    physicsInfoRectangle.state.forward = true;
+                    physicsInfoRectangle0.state.forward = true;
                     break;
                 case "S":
                 case "s":
-                    physicsInfoRectangle.state.backward = true;
+                    physicsInfoRectangle0.state.backward = true;
                     break;
                 default:
             }
@@ -1273,19 +1270,19 @@ const keyEvent = {
                     break;
                 case "A":
                 case "a":
-                    physicsInfoRectangle.state.angleUp = false;
+                    physicsInfoRectangle0.state.angleUp = false;
                     break;
                 case "D":
                 case "d":
-                    physicsInfoRectangle.state.angleDown = false;
+                    physicsInfoRectangle0.state.angleDown = false;
                     break;
                 case "W":
                 case "w":
-                    physicsInfoRectangle.state.forward = false;
+                    physicsInfoRectangle0.state.forward = false;
                     break;
                 case "S":
                 case "s":
-                    physicsInfoRectangle.state.backward = false;
+                    physicsInfoRectangle0.state.backward = false;
                     break;
                 default:
             }
