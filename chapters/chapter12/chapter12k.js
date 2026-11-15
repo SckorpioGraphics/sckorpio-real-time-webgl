@@ -1114,7 +1114,7 @@ const physicsInfoRectangle0 = {
     previousY: 0,
     previousDirectionAngle: 0,
     isCollision: false,
-    speedTransferFraction: 0.4,
+    speedTransferFraction: 0.7,
 
     init(mesh) {
         this.mesh = mesh;
