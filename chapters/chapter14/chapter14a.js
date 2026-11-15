@@ -1,10 +1,11 @@
 /* #############################################################
-   Chapter11a: Starting with a Circle
+   Chapter14a: Revisit AABB
 
    Topics:
-   - Just render a circle
-   - Add basic Physic to it
-   - Linear velocity in X
+   - Apply AABB on all rectangles
+   - Add control to Rectangle0 
+   - Freeze their velocities = 0 as they collided
+   - Observe it they collided 
    #############################################################
 */
 
@@ -161,32 +162,34 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const circle = {
-    /*
-             v6---v5
-           /   \ /   \
-         v1     v0    v4
-           \         /
-             v2---v3
-    */
+const rectangle0 = {
+    //    v1--------v2
+    //    | \        |
+    //    |    \     |
+    //    |       \  |
+    //    v0--------v1
 
-    points: 100,
-    radius: 100,
-    positions: null,
-    indices: null,
-    
+    // CPU DATA
+    vertexData: new Float32Array([
+        -200, -100,      // Left Bottom
+        200, -100,      // Right Bottom
+        -200, 100,      // Left Top
+
+        -200, 100,      // Left Top
+        200, -100,      // Right Bottom
+        200, 100       // Right Top
+    ]),
+
     initialTranslationX: 0,
     initialTranslationY: 0,
     initialRotation: 0,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
-
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
-
     modelMatrix: mat3.create(),
     color: [1.0, 0.0, 0.0, 0.3],
 
@@ -194,6 +197,7 @@ const circle = {
     shader: null,
     vao: null,
     vbo: null,
+    stride: 0,
     drawMode: null,
     drawOffset: 0,
     drawCount: 0,
@@ -203,42 +207,10 @@ const circle = {
         // Connect shader to mesh
         this.shader = shader;
 
-        // Allocate CPU vertex data
-        // 1 center + points perimeter vertices
-        this.positions = new Float32Array((this.points + 1) * 2);
-        this.indices = new Uint16Array(this.points + 2);
-
-        // Center vertex
-        this.positions[0] = 0.0;
-        this.positions[1] = 0.0;
-        this.indices[0] = 0;
-
-        // Perimeter vertices
-        for (let i = 0; i < this.points; i++) {
-            const angle = (i / this.points) * (2 * Math.PI);
-
-            const pX = this.radius * Math.cos(angle);
-            const pY = this.radius * Math.sin(angle);
-
-            const vertex = i + 1;
-
-            this.positions[vertex * 2] = pX;
-            this.positions[vertex * 2 + 1] = pY;
-            this.indices[vertex] = vertex;
-        }
-
-        // Repeat First one again
-        this.indices[this.points + 1] = 1;
-
         // Vertex Buffer
         this.vbo = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.positions, gl.STATIC_DRAW);
-
-        // Index Buffer
-        this.ibo = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
 
         // Vertex Array
         this.vao = gl.createVertexArray();
@@ -260,17 +232,17 @@ const circle = {
             0                                       // offset: start of buffer
         );
 
-        // Index buffer
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo);
+        // Important for retrieving position data
+        this.positionOffset = 0;
+        this.stride = 2;
 
         // Draw data
-        this.drawMode = gl.TRIANGLE_FAN;
+        this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
-        this.drawCount = this.indices.length;
-        this.drawType = gl.UNSIGNED_SHORT;
+        this.drawCount = 6;
 
-        // Unbind VAO
-        gl.bindVertexArray(null);
+        // first model matrix update
+        setupModelMatrix(this);
     },
     resetTransform() {
         this.translationX = this.initialTranslationX;
@@ -280,17 +252,320 @@ const circle = {
         this.scaleY = this.initialScaleY;
     },
     draw(gl) {
-        setupModelMatrix(this);
         gl.useProgram(this.shader.program);
+        setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
         gl.uniform4fv(this.shader.uniforms.color,this.color);
         gl.bindVertexArray(this.vao);
-        gl.drawElements(
-            this.drawMode,
-            this.drawCount,
-            this.drawType,
-            this.drawOffset
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
+    }
+};
+
+const rectangle1 = {
+    //    v1--------v2
+    //    | \        |
+    //    |    \     |
+    //    |       \  |
+    //    v0--------v1
+
+    // CPU DATA
+    vertexData: new Float32Array([
+        -200, -100,      // Left Bottom
+        200, -100,      // Right Bottom
+        -200, 100,      // Left Top
+
+        -200, 100,      // Left Top
+        200, -100,      // Right Bottom
+        200, 100       // Right Top
+    ]),
+
+    initialTranslationX: 800,
+    initialTranslationY: 0,
+    initialRotation: 30,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+
+    translationX: 800,
+    translationY: 0,
+    rotation: 0,
+    scaleX: 1.0,
+    scaleY: 1.0,
+    modelMatrix: mat3.create(),
+    color: [0.0, 1.0, 0.0, 0.3],
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        // Connect shader to mesh
+        this.shader = shader;
+
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,                                      // size: 2 components (X, Y)
+            gl.FLOAT,                               // type: 32-bit float
+            false,                                  // normalize
+            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
+            0                                       // offset: start of buffer
         );
+
+        // Important for retrieving position data
+        this.positionOffset = 0;
+        this.stride = 2;
+
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = 6;
+
+        // first model matrix update
+        setupModelMatrix(this);
+        this.resetTransform();
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
+    },
+    draw(gl) {
+        gl.useProgram(this.shader.program);
+        setupModelMatrix(this);
+        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
+        gl.uniform4fv(this.shader.uniforms.color,this.color);
+        gl.bindVertexArray(this.vao);
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
+    }
+};
+
+const rectangle2 = {
+    //    v1--------v2
+    //    | \        |
+    //    |    \     |
+    //    |       \  |
+    //    v0--------v1
+
+    // CPU DATA
+    vertexData: new Float32Array([
+        -200, -100,      // Left Bottom
+        200, -100,      // Right Bottom
+        -200, 100,      // Left Top
+
+        -200, 100,      // Left Top
+        200, -100,      // Right Bottom
+        200, 100       // Right Top
+    ]),
+
+    initialTranslationX: 400,
+    initialTranslationY: 500,
+    initialRotation: 45,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+    translationX: 800,
+    translationY: 0,
+    rotation: 0,
+    scaleX: 1.0,
+    scaleY: 1.0,
+    modelMatrix: mat3.create(),
+    color: [0.0, 0.0, 1.0, 0.3],
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        // Connect shader to mesh
+        this.shader = shader;
+
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,                                      // size: 2 components (X, Y)
+            gl.FLOAT,                               // type: 32-bit float
+            false,                                  // normalize
+            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
+            0                                       // offset: start of buffer
+        );
+
+        // Important for retrieving position data
+        this.positionOffset = 0;
+        this.stride = 2;
+
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = 6;
+
+        // first model matrix update
+        setupModelMatrix(this);
+        this.resetTransform();
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
+    },
+    draw(gl) {
+        gl.useProgram(this.shader.program);
+        setupModelMatrix(this);
+        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
+        gl.uniform4fv(this.shader.uniforms.color,this.color);
+        gl.bindVertexArray(this.vao);
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
+    }
+};
+
+const boundingInfos = {
+    //    v1--------v2
+    //    |          |
+    //    |          |
+    //    |          |
+    //    v0--------v1
+
+    // CPU DATA
+    vertexData: null,
+
+    translationX: 0,
+    translationY: 0,
+    rotation: 0,
+    scaleX: 1.0,
+    scaleY: 1.0,
+    modelMatrix: mat3.create(),
+    color: [0.0, 0.0, 0.0, 1.0],     // BLACK
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        // Connect shader to mesh
+        this.shader = shader;
+
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        // NOTE: Vertex data will be updated from the UI during rendering.
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,                                      // size: 2 components (X, Y)
+            gl.FLOAT,                               // type: 32-bit float
+            false,                                  // normalize
+            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
+            0                                       // offset: start of buffer
+        );
+
+        // Draw data
+        this.drawMode = gl.LINES;
+        this.drawOffset = 0;
+        this.drawCount = 3 * 8;
+    },
+    draw(gl) {
+        gl.useProgram(this.shader.program);
+        setupModelMatrix(this);
+        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
+        gl.uniform4fv(this.shader.uniforms.color,this.color);
+        gl.bindVertexArray(this.vao);
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
+    },
+    updateData(gl) {
+        gl.bindVertexArray(this.vao);
+
+        // bboxes
+        const boundingInfo0 = physicsInfoRectangle0.boundingInfo;
+        const boundingInfo1 = physicsInfoRectangle1.boundingInfo;
+        const boundingInfo2 = physicsInfoRectangle2.boundingInfo;
+        const boundingInfos = [
+            boundingInfo0,
+            boundingInfo1,
+            boundingInfo2
+        ];
+
+        // Vertex data CPU side
+        const vertices = [];
+
+        for (const boundingInfo of boundingInfos) {
+            vertices.push(
+                boundingInfo.aabb.minX, boundingInfo.aabb.minY,  // Left Bottom
+                boundingInfo.aabb.maxX, boundingInfo.aabb.minY,  // Right Bottom
+
+                boundingInfo.aabb.maxX, boundingInfo.aabb.minY,  // Right Bottom
+                boundingInfo.aabb.maxX, boundingInfo.aabb.maxY,  // Right Top
+
+                boundingInfo.aabb.maxX, boundingInfo.aabb.maxY,  // Right Top
+                boundingInfo.aabb.minX, boundingInfo.aabb.maxY,  // Left Top
+
+                boundingInfo.aabb.minX, boundingInfo.aabb.maxY,  // Left Top
+                boundingInfo.aabb.minX, boundingInfo.aabb.minY   // Left Bottom
+            );
+        }
+
+        this.vertexData = new Float32Array(vertices);
+
+        // Update vertex data on the GPU
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.DYNAMIC_DRAW);
     }
 };
 
@@ -546,13 +821,18 @@ const renderSystem = {
         grid.init(gl, shader);
         xAxis.init(gl, shader);
         yAxis.init(gl, shader);
-        circle.init(gl, shader);
+        rectangle0.init(gl, shader);
+        rectangle1.init(gl, shader);
+        rectangle2.init(gl, shader);
+        boundingInfos.init(gl, shader);
+
     },
     update() {
         const gl = this.gl;
 
         camera.updateProjectionMatrix(gl);
         camera.updateViewMatrix(gl);
+        boundingInfos.updateData(gl);
 
     },
     render() {
@@ -575,7 +855,6 @@ const renderSystem = {
         gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
         // Pass Model Matrix (Identity as default)
         gl.uniformMatrix3fv(shader.uniforms.modelMatrix,false,mat3.create());
-
         // RENDER MESHES
         // Grid
         grid.draw(gl);
@@ -583,8 +862,15 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // circle
-        circle.draw(gl);
+        // Rectangle0
+        rectangle0.draw(gl);
+        // Rectangle1
+        rectangle1.draw(gl);
+        // Rectangle2
+        rectangle2.draw(gl);
+
+        // Bounding Boxes
+        boundingInfos.draw(gl);
     }
 };
 
@@ -663,7 +949,7 @@ const clock = {
 
         // Log only once every second
         if (this.currentTime - this.lastLogTime >= 100) {
-            this.log();
+            //this.log();
             this.lastLogTime = this.currentTime;
         }
 
@@ -687,35 +973,369 @@ const clock = {
 // =============================================================
 // PHYSICS INFOS
 // =============================================================
-const physicsInfoCircle = {
-    // Object
+const physicsInfoRectangle0 = {
+    // Object connected
     mesh: null,
+    // Speed
+    speed: 500,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 0,
     // Velocity
-    velocityX: 200,
+    velocityX: 100,
+    velocityY: 50,
+    // Control booleans
+    state: {
+        angleUp: false,
+        angleDown: false,
+        forward: false,
+        backward: false,
+    },
+    // Bounding Box
+    boundingInfo: {
+        local: {
+            minX: 0,
+            minY: 0,
+            maxX: 0,
+            maxY: 0
+        },
+        aabb: {
+            minX: 0,
+            minY: 0,
+            maxX: 0,
+            maxY: 0,
+        }
+    },
+    // Previous position
+    previousX: 0,
+    previousY: 0,
+    previousDirectionAngle: 0,
+    isCollision: false,
 
     init(mesh) {
         this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        calculateBoundingInfoLocal(this);
+        updateBoundingInfoAABB(this);
     },
     update(deltaTime) {
+        // save prev
+        this.previousX = this.mesh.translationX;
+        this.previousY = this.mesh.translationY;
+        this.previousDirectionAngle = this.mesh.rotation;
+        // key controls
+        if(this.state.angleUp) this.directionAngle += 1.0;
+        if(this.state.angleDown) this.directionAngle -= 1.0;
+        // direction unit vector
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        // velocity
+        if(this.state.forward){
+            this.velocityX = this.speed * this.directionX;
+            this.velocityY = this.speed * this.directionY;
+        } else if(this.state.backward){
+            this.velocityX = -this.speed * this.directionX;
+            this.velocityY = -this.speed * this.directionY;
+        } else {
+            this.velocityX = 0;
+            this.velocityY = 0;
+        }
+        // mesh transforms
         this.mesh.translationX += deltaTime * this.velocityX;
+        this.mesh.translationY += deltaTime * this.velocityY;
+        this.mesh.rotation = this.directionAngle;
+        // Update matrix for collision calculations
+        setupModelMatrix(this.mesh);
+        updateBoundingInfoAABB(this);
+    },
+    checkCollision(other) {
+        // Detect collision
+        const isCollision = checkAABBCollision(this,other);
+
+        if (isCollision) {
+            console.log("Collision detected!");
+            this.onCollision();
+            other.onCollision();
+        }
+
+        // save collison state
+        this.isCollision = isCollision;
+        other.isCollision = isCollision;
+    },
+    onCollision(){
+        this.velocityX = 0;
+        this.mesh.translationX = this.previousX;
+        this.mesh.translationY = this.previousY;
+        this.mesh.rotation = this.previousDirectionAngle;
+        setupModelMatrix(this.mesh);
+        updateBoundingInfoAABB(this);
+        this.collision = false;
     },
     reset() {
         this.mesh.resetTransform();
     }
 };
 
+const physicsInfoRectangle1 = {
+    // mesh
+    mesh: null,
+    // Speed
+    speed: 0,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 0,
+    // Velocity
+    velocityX: 100,
+    velocityY: 50,
+    // Bounding Box
+    boundingInfo: {
+        local: {
+            minX: 0,
+            minY: 0,
+            maxX: 0,
+            maxY: 0
+        },
+        aabb: {
+            minX: 0,
+            minY: 0,
+            maxX: 0,
+            maxY: 0,
+        }
+    },
+    // Previous position
+    previousX: 0,
+    previousY: 0,
+    isCollision: false,
+
+    init(mesh) {
+        this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        calculateBoundingInfoLocal(this);
+        updateBoundingInfoAABB(this);
+    },
+    update(deltaTime) {
+        // save prev
+        this.previousX = this.mesh.translationX;
+        this.previousY = this.mesh.translationY;
+        // direction unit vector
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        // friction
+        if(this.speed > 0) this.speed -= deltaTime * this.friction;
+        if(this.speed < 0) this.speed += deltaTime * this.friction;
+        // velocity
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        // mesh transforms
+        this.mesh.translationX += deltaTime * this.velocityX;
+        this.mesh.translationY += deltaTime * this.velocityY;
+        // Update matrix for collision calculations
+        setupModelMatrix(this.mesh);
+        updateBoundingInfoAABB(this);
+    },
+    onCollision(){
+        this.speed = 0;
+        this.mesh.translationX = this.previousX;
+        this.mesh.translationY = this.previousY;
+        setupModelMatrix(this.mesh);
+        updateBoundingInfoAABB(this);
+        this.collision = false;
+    },
+    reset() {
+        this.mesh.resetTransform();
+    }
+};
+
+const physicsInfoRectangle2 = {
+    // mesh
+    mesh: null,
+    // Speed
+    speed: 0,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 0,
+    // Velocity
+    velocityX: 100,
+    velocityY: 50,
+    // Bounding Box
+    boundingInfo: {
+        local: {
+            minX: 0,
+            minY: 0,
+            maxX: 0,
+            maxY: 0
+        },
+        aabb: {
+            minX: 0,
+            minY: 0,
+            maxX: 0,
+            maxY: 0,
+        }
+    },
+    // Previous position
+    previousX: 0,
+    previousY: 0,
+    isCollision: false,
+
+    init(mesh) {
+        this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        calculateBoundingInfoLocal(this);
+        updateBoundingInfoAABB(this);
+    },
+    update(deltaTime) {
+        // save prev
+        this.previousX = this.mesh.translationX;
+        this.previousY = this.mesh.translationY;
+        // direction unit vector
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        // friction
+        if(this.speed > 0) this.speed -= deltaTime * this.friction;
+        if(this.speed < 0) this.speed += deltaTime * this.friction;
+        // velocity
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        // mesh transforms
+        this.mesh.translationX += deltaTime * this.velocityX;
+        this.mesh.translationY += deltaTime * this.velocityY;
+        // Update matrix for collision calculations
+        setupModelMatrix(this.mesh);
+        updateBoundingInfoAABB(this);
+    },
+    onCollision(){
+        this.speed = 0;
+        this.mesh.translationX = this.previousX;
+        this.mesh.translationY = this.previousY;
+        setupModelMatrix(this.mesh);
+        updateBoundingInfoAABB(this);
+        this.collision = false;
+    },
+    reset() {
+        this.mesh.resetTransform();
+    }
+};
+
+function calculateBoundingInfoLocal(physicsInfo) {
+    const mesh = physicsInfo.mesh;
+    const vertexData = mesh.vertexData;
+
+    // For retrieving pos values from vertex data
+    const stride = mesh.stride;
+    const positionOffset = mesh.positionOffset;
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (let i = positionOffset; i < vertexData.length; i += stride) {
+        const x = vertexData[i];
+        const y = vertexData[i + 1];
+
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+    }
+
+    physicsInfo.boundingInfo.local.minX = minX;
+    physicsInfo.boundingInfo.local.minY = minY;
+    physicsInfo.boundingInfo.local.maxX = maxX;
+    physicsInfo.boundingInfo.local.maxY = maxY;
+}
+
+function updateBoundingInfoAABB(physicsInfo) {
+    const mesh = physicsInfo.mesh;
+    const modelMatrix = mesh.modelMatrix;
+    const boundingInfo = physicsInfo.boundingInfo;
+
+    const minX = boundingInfo.local.minX;
+    const minY = boundingInfo.local.minY;
+    const maxX = boundingInfo.local.maxX;
+    const maxY = boundingInfo.local.maxY;
+
+    // Four local-space corners
+    const corners = [
+        [minX, minY, 1],
+        [maxX, minY, 1],
+        [maxX, maxY, 1],
+        [minX, maxY, 1]
+    ];
+
+    let worldMinX = Infinity;
+    let worldMinY = Infinity;
+    let worldMaxX = -Infinity;
+    let worldMaxY = -Infinity;
+
+    for (const corner of corners) {
+        const worldVertex = vec3.transformMat3(
+            vec3.create(),
+            corner,
+            modelMatrix
+        );
+
+        worldMinX = Math.min(worldMinX, worldVertex[0]);
+        worldMinY = Math.min(worldMinY, worldVertex[1]);
+
+        worldMaxX = Math.max(worldMaxX, worldVertex[0]);
+        worldMaxY = Math.max(worldMaxY, worldVertex[1]);
+    }
+
+    physicsInfo.boundingInfo.aabb.minX = worldMinX;
+    physicsInfo.boundingInfo.aabb.minY = worldMinY;
+    physicsInfo.boundingInfo.aabb.maxX = worldMaxX;
+    physicsInfo.boundingInfo.aabb.maxY = worldMaxY;
+}
+
+function checkAABBCollision(physicsInfoA, physicsInfoB) {
+    const a = physicsInfoA.boundingInfo;
+    const b = physicsInfoB.boundingInfo;
+
+    // Check whether the bounding boxes overlap
+    const isCollision =
+        a.aabb.minX < b.aabb.maxX &&
+        a.aabb.maxX > b.aabb.minX &&
+        a.aabb.minY < b.aabb.maxY &&
+        a.aabb.maxY > b.aabb.minY;
+
+    return isCollision;
+}
+
 // =============================================================
 // PHYSICS SYSTEM
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfoCircle.init(circle);
+        physicsInfoRectangle0.init(rectangle0);
+        physicsInfoRectangle1.init(rectangle1);
+        physicsInfoRectangle2.init(rectangle2);
     },
     update() {
-        physicsInfoCircle.update(clock.deltaTime);
+        physicsInfoRectangle0.update(clock.deltaTime);
+        physicsInfoRectangle1.update(clock.deltaTime);
+        physicsInfoRectangle2.update(clock.deltaTime);
+        
+        // check collision
+        physicsInfoRectangle0.checkCollision(physicsInfoRectangle1);
+        physicsInfoRectangle0.checkCollision(physicsInfoRectangle2);
     },
     reset() {
-        physicsInfoCircle.reset();
+        physicsInfoRectangle0.reset();
+        physicsInfoRectangle1.reset();
+        physicsInfoRectangle2.reset();
     }
 };
 
@@ -726,8 +1346,24 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        const physicsFolder1 = gui.addFolder("Physics circle");
-        physicsFolder1.add(physicsInfoCircle, "velocityX", -1000, 1000).name("velocityX");
+        // Rectangle1
+        const rectangle1Folder = gui.addFolder("Rectangle1");
+        rectangle1Folder.add(rectangle1, "translationX", -1000, 1000).name("translationX");
+        rectangle1Folder.add(rectangle1, "translationY", -1000, 1000).name("translationY");
+        rectangle1Folder.add(rectangle1, "rotation", 0, 360).name("rotation");
+        rectangle1Folder.add(rectangle1, "scaleX", 0.1, 3.0).name("scaleX");
+        rectangle1Folder.add(rectangle1, "scaleY", 0.1, 3.0).name("scaleY");
+
+        // Rectangle1
+        const rectangle2Folder = gui.addFolder("Rectangle2");
+        rectangle2Folder.add(rectangle2, "translationX", -1000, 1000).name("translationX");
+        rectangle2Folder.add(rectangle2, "translationY", -1000, 1000).name("translationY");
+        rectangle2Folder.add(rectangle2, "rotation", 0, 360).name("rotation");
+        rectangle2Folder.add(rectangle2, "scaleX", 0.1, 3.0).name("scaleX");
+        rectangle2Folder.add(rectangle2, "scaleY", 0.1, 3.0).name("scaleY");
+
+        const physicsFolder1 = gui.addFolder("Physics Rectangle0");
+        physicsFolder1.add(physicsInfoRectangle0, "speed", 0, 1000).name("Speed");
 
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
@@ -774,6 +1410,23 @@ const keyEvent = {
                 case "_":
                     camera.state.zoomOut = true;
                     break;
+                
+                case "A":
+                case "a":
+                    physicsInfoRectangle0.state.angleUp = true;
+                    break;
+                case "D":
+                case "d":
+                    physicsInfoRectangle0.state.angleDown = true;
+                    break;
+                case "W":
+                case "w":
+                    physicsInfoRectangle0.state.forward = true;
+                    break;
+                case "S":
+                case "s":
+                    physicsInfoRectangle0.state.backward = true;
+                    break;
                 default:
             }
         });
@@ -799,6 +1452,22 @@ const keyEvent = {
                 case "-":
                 case "_":
                     camera.state.zoomOut = false;
+                    break;
+                case "A":
+                case "a":
+                    physicsInfoRectangle0.state.angleUp = false;
+                    break;
+                case "D":
+                case "d":
+                    physicsInfoRectangle0.state.angleDown = false;
+                    break;
+                case "W":
+                case "w":
+                    physicsInfoRectangle0.state.forward = false;
+                    break;
+                case "S":
+                case "s":
+                    physicsInfoRectangle0.state.backward = false;
                     break;
                 default:
             }
