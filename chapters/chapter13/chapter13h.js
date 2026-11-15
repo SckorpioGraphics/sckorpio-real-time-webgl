@@ -158,7 +158,7 @@ function createProgram(gl, vertexShader, fragmentShader) {
 // TEXTURE OBJECTS
 // =============================================================
 const sckorpioTexture = {
-    imagePath: "chapters/chapter12/assets/sckorpio_Texture.png",
+    imagePath: "chapters/chapter13/assets/sckorpio_Texture.png",
 
     image: null,
     handle: null,
@@ -175,7 +175,7 @@ const sckorpioTexture = {
 };
 
 const dominoTexture = {
-    imagePath: "chapters/chapter12/assets/domino_Texture.png",
+    imagePath: "chapters/chapter13/assets/domino_Texture.png",
 
     image: null,
     handle: null,
