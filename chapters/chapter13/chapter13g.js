@@ -1,7 +1,11 @@
 /* #############################################################
-   CHAPTER 13g: Using OBB & SAT with player car and 2 parked cars(rotated at angle)
+   CHAPTER 13g: Rotate the rectangles in experiment with OBB
+
    Topics:
-   - Finally enable transparency for cars texture
+   - On collison transfer speed and direction angle
+   - transfer with speedTransferFraction
+   - Add friction for the rectangles
+   - Add key control to Rectangle0 
    #############################################################
 */
 
@@ -9,7 +13,7 @@
 // SHADER OBJECTS
 // =============================================================
 //Shader Object1
-const basicShader = {
+const shader = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -62,67 +66,6 @@ const basicShader = {
     }
 };
 
-const textureShader = {
-    vertexShaderSource: `#version 300 es
-        in vec2 a_position;
-        in vec2 a_texCoord;
-
-        uniform mat3 u_modelMatrix;
-        uniform mat3 u_viewMatrix;
-        uniform mat3 u_projectionMatrix;
-
-        out vec2 v_texCoord;
-
-        void main() {
-            vec3 localPosition = vec3(a_position, 1.0);
-            vec3 clipPosition = u_projectionMatrix * u_viewMatrix * u_modelMatrix * localPosition;
-            gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
-            v_texCoord = a_texCoord;
-        }
-    `,
-
-    fragmentShaderSource: `#version 300 es
-        precision mediump float;
-
-        uniform sampler2D u_texture;
-        in vec2 v_texCoord;
-        out vec4 out_color;
-
-        void main() {
-            out_color = texture(u_texture, v_texCoord);
-        }
-    `,
-
-    program: null,
-
-    attributes: {
-        position: null,
-        texCoord: null
-    },
-
-    uniforms: {
-        modelMatrix: null,
-        viewMatrix: null,
-        projectionMatrix: null,
-        texture: null
-    },
-
-    init(gl) {
-        const vertexShader = createShader(gl, gl.VERTEX_SHADER, this.vertexShaderSource);
-        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, this.fragmentShaderSource);
-        // program
-        this.program = createProgram(gl, vertexShader, fragmentShader);
-        // attribute
-        this.attributes.position = gl.getAttribLocation(this.program, "a_position");
-        this.attributes.texCoord = gl.getAttribLocation(this.program, "a_texCoord");
-        // uniform
-        this.uniforms.modelMatrix = gl.getUniformLocation(this.program, "u_modelMatrix");
-        this.uniforms.viewMatrix = gl.getUniformLocation(this.program, "u_viewMatrix");
-        this.uniforms.projectionMatrix = gl.getUniformLocation(this.program, "u_projectionMatrix");
-        this.uniforms.texture = gl.getUniformLocation(this.program, "u_texture");
-    }
-};
-
 // Compile Shader
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
@@ -150,111 +93,6 @@ function createProgram(gl, vertexShader, fragmentShader) {
 
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
-}
-
-// =============================================================
-// TEXTURE OBJECTS
-// =============================================================
-const sckorpioCarTexture = {
-    imagePath: "chapters/chapter12/assets/sckorpioCar_Texture.png",
-
-    image: null,
-    handle: null,
-    loaded: false,
-
-    init(gl) {
-        createTexture(gl, this);
-    },
-
-    bind(gl, textureUnit = 0) {
-        gl.activeTexture(gl.TEXTURE0 + textureUnit);
-        gl.bindTexture(gl.TEXTURE_2D, this.handle);
-    }
-};
-
-const car1Texture = {
-    imagePath: "chapters/chapter12/assets/car1_Texture.png",
-
-    image: null,
-    handle: null,
-    loaded: false,
-
-    init(gl) {
-        createTexture(gl, this);
-    },
-
-    bind(gl, textureUnit = 0) {
-        gl.activeTexture(gl.TEXTURE0 + textureUnit);
-        gl.bindTexture(gl.TEXTURE_2D, this.handle);
-    }
-};
-
-const car2Texture = {
-    imagePath: "chapters/chapter12/assets/car2_Texture.png",
-
-    image: null,
-    handle: null,
-    loaded: false,
-
-    init(gl) {
-        createTexture(gl, this);
-    },
-
-    bind(gl, textureUnit = 0) {
-        gl.activeTexture(gl.TEXTURE0 + textureUnit);
-        gl.bindTexture(gl.TEXTURE_2D, this.handle);
-    }
-};
-
-function createTexture(gl, texture) {
-    texture.handle = gl.createTexture();
-
-    gl.bindTexture(gl.TEXTURE_2D, texture.handle);
-
-    // Temporary cyan pixel while the image loads.
-    gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        1,
-        1,
-        0,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        new Uint8Array([82, 161, 171, 255])
-    );
-
-    // No mipmaps yet.
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-
-    texture.image = new Image();
-
-    texture.image.onload = () => {
-        gl.bindTexture(gl.TEXTURE_2D, texture.handle);
-
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
-        gl.texImage2D(
-            gl.TEXTURE_2D,
-            0,
-            gl.RGBA,
-            gl.RGBA,
-            gl.UNSIGNED_BYTE,
-            texture.image
-        );
-
-        texture.loaded = true;
-        console.log("Texture loaded:", texture.imagePath);
-    };
-
-    texture.image.onerror = () => {
-        console.error(
-            "Could not load texture image:",
-            texture.imagePath
-        );
-    };
-
-    texture.image.src = texture.imagePath;
 }
 
 // =============================================================
@@ -324,7 +162,7 @@ const camera = {
 // =============================================================
 // MESHES
 // =============================================================
-const sckorpioCar = {
+const rectangle0 = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -333,14 +171,13 @@ const sckorpioCar = {
 
     // CPU DATA
     vertexData: new Float32Array([
-        // Position     // UV
-        -150, -100,     0, 0,
-        150, -100,      1, 0,
-        -150,  100,     0, 1,
+        -200, -100,      // Left Bottom
+        200, -100,      // Right Bottom
+        -200, 100,      // Left Top
 
-        -150,  100,     0, 1,
-        150, -100,      1, 0,
-        150,  100,      1, 1
+        -200, 100,      // Left Top
+        200, -100,      // Right Bottom
+        200, 100       // Right Top
     ]),
 
     initialTranslationX: 0,
@@ -348,32 +185,27 @@ const sckorpioCar = {
     initialRotation: 0,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
-
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
-    
     modelMatrix: mat3.create(),
+    color: [1.0, 0.0, 0.0, 0.3],
 
     //GPU DATA
     shader: null,
-    texture: null,
     vao: null,
     vbo: null,
+    stride: 0,
     drawMode: null,
     drawOffset: 0,
     drawCount: 0,
 
     //FUNCTIONS
-    init(gl, shader, texture) {
-        // reset transform
-        this.resetTransform();
-
+    init(gl, shader) {
         // Connect shader to mesh
         this.shader = shader;
-        this.texture = texture;
 
         // Vertex Buffer
         this.vbo = gl.createBuffer();
@@ -393,32 +225,24 @@ const sckorpioCar = {
         // Vertex data format
         gl.vertexAttribPointer(
             this.shader.attributes.position,
-            2,          // size: 2 components (X, Y)
-            gl.FLOAT,   // type: 32-bit float
-            false,      // normalize
-            4 * Float32Array.BYTES_PER_ELEMENT, // stride: 4(tightly packed)
-            0           // offset: start of buffer
-        );
-
-        // Texture coordinates: u, v
-        gl.enableVertexAttribArray(this.shader.attributes.texCoord);
-        gl.vertexAttribPointer(
-            this.shader.attributes.texCoord,
-            2,
-            gl.FLOAT,
-            false,
-            4 * Float32Array.BYTES_PER_ELEMENT,
-            2 * Float32Array.BYTES_PER_ELEMENT
+            2,                                      // size: 2 components (X, Y)
+            gl.FLOAT,                               // type: 32-bit float
+            false,                                  // normalize
+            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
+            0                                       // offset: start of buffer
         );
 
         // Important for retrieving position data
         this.positionOffset = 0;
-        this.stride = 4;
+        this.stride = 2;
 
         // Draw data
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+
+        // first model matrix update
+        setupModelMatrix(this);
     },
     resetTransform() {
         this.translationX = this.initialTranslationX;
@@ -428,22 +252,15 @@ const sckorpioCar = {
         this.scaleY = this.initialScaleY;
     },
     draw(gl) {
-        // Shader
-        gl.useProgram(this.shader.program);
-        // Modle Matrix
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-        // Texture
-        this.texture.bind(gl, 0);
-        gl.uniform1i(this.shader.uniforms.texture, 0);
-        // vao
+        gl.uniform4fv(this.shader.uniforms.color,this.color);
         gl.bindVertexArray(this.vao);
-        // draw call
         gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
-const car1 = {
+const rectangle1 = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -452,18 +269,17 @@ const car1 = {
 
     // CPU DATA
     vertexData: new Float32Array([
-        // Position     // UV
-        -150, -100,     0, 0,
-        150, -100,      1, 0,
-        -150,  100,     0, 1,
+        -200, -100,      // Left Bottom
+        200, -100,      // Right Bottom
+        -200, 100,      // Left Top
 
-        -150,  100,     0, 1,
-        150, -100,      1, 0,
-        150,  100,      1, 1
+        -200, 100,      // Left Top
+        200, -100,      // Right Bottom
+        200, 100       // Right Top
     ]),
 
-    initialTranslationX: 400,
-    initialTranslationY: -50,
+    initialTranslationX: 600,
+    initialTranslationY: 0,
     initialRotation: 30,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
@@ -473,12 +289,12 @@ const car1 = {
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
-    
+
     modelMatrix: mat3.create(),
+    color: [0.0, 1.0, 0.0, 0.3],
 
     //GPU DATA
     shader: null,
-    texture: null,
     vao: null,
     vbo: null,
     drawMode: null,
@@ -486,13 +302,9 @@ const car1 = {
     drawCount: 0,
 
     //FUNCTIONS
-    init(gl, shader, texture) {
-        // reset transform
-        this.resetTransform();
-
+    init(gl, shader) {
         // Connect shader to mesh
         this.shader = shader;
-        this.texture = texture;
 
         // Vertex Buffer
         this.vbo = gl.createBuffer();
@@ -512,32 +324,25 @@ const car1 = {
         // Vertex data format
         gl.vertexAttribPointer(
             this.shader.attributes.position,
-            2,          // size: 2 components (X, Y)
-            gl.FLOAT,   // type: 32-bit float
-            false,      // normalize
-            4 * Float32Array.BYTES_PER_ELEMENT, // stride: 4(tightly packed)
-            0           // offset: start of buffer
-        );
-
-        // Texture coordinates: u, v
-        gl.enableVertexAttribArray(this.shader.attributes.texCoord);
-        gl.vertexAttribPointer(
-            this.shader.attributes.texCoord,
-            2,
-            gl.FLOAT,
-            false,
-            4 * Float32Array.BYTES_PER_ELEMENT,
-            2 * Float32Array.BYTES_PER_ELEMENT
+            2,                                      // size: 2 components (X, Y)
+            gl.FLOAT,                               // type: 32-bit float
+            false,                                  // normalize
+            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
+            0                                       // offset: start of buffer
         );
 
         // Important for retrieving position data
         this.positionOffset = 0;
-        this.stride = 4;
+        this.stride = 2;
 
         // Draw data
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+
+        // first model matrix update
+        setupModelMatrix(this);
+        this.resetTransform();
     },
     resetTransform() {
         this.translationX = this.initialTranslationX;
@@ -547,22 +352,15 @@ const car1 = {
         this.scaleY = this.initialScaleY;
     },
     draw(gl) {
-        // Shader
-        gl.useProgram(this.shader.program);
-        // Modle Matrix
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-        // Texture
-        this.texture.bind(gl, 0);
-        gl.uniform1i(this.shader.uniforms.texture, 0);
-        // vao
+        gl.uniform4fv(this.shader.uniforms.color,this.color);
         gl.bindVertexArray(this.vao);
-        // draw call
         gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
-const car2 = {
+const rectangle2 = {
     //    v1--------v2
     //    | \        |
     //    |    \     |
@@ -571,33 +369,30 @@ const car2 = {
 
     // CPU DATA
     vertexData: new Float32Array([
-        // Position     // UV
-        -150, -100,     0, 0,
-        150, -100,      1, 0,
-        -150,  100,     0, 1,
+        -200, -100,      // Left Bottom
+        200, -100,      // Right Bottom
+        -200, 100,      // Left Top
 
-        -150,  100,     0, 1,
-        150, -100,      1, 0,
-        150,  100,      1, 1
+        -200, 100,      // Left Top
+        200, -100,      // Right Bottom
+        200, 100       // Right Top
     ]),
 
-    initialTranslationX: 300,
-    initialTranslationY: 450,
-    initialRotation: 30,
+    initialTranslationX: 1200,
+    initialTranslationY: -150,
+    initialRotation: 45,
     initialScaleX: 1.0,
     initialScaleY: 1.0,
-
     translationX: 0,
     translationY: 0,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0,
-    
     modelMatrix: mat3.create(),
+    color: [0.0, 1.0, 0.0, 0.3],
 
     //GPU DATA
     shader: null,
-    texture: null,
     vao: null,
     vbo: null,
     drawMode: null,
@@ -605,13 +400,9 @@ const car2 = {
     drawCount: 0,
 
     //FUNCTIONS
-    init(gl, shader, texture) {
-        // reset transform
-        this.resetTransform();
-
+    init(gl, shader) {
         // Connect shader to mesh
         this.shader = shader;
-        this.texture = texture;
 
         // Vertex Buffer
         this.vbo = gl.createBuffer();
@@ -631,32 +422,25 @@ const car2 = {
         // Vertex data format
         gl.vertexAttribPointer(
             this.shader.attributes.position,
-            2,          // size: 2 components (X, Y)
-            gl.FLOAT,   // type: 32-bit float
-            false,      // normalize
-            4 * Float32Array.BYTES_PER_ELEMENT, // stride: 4(tightly packed)
-            0           // offset: start of buffer
-        );
-
-        // Texture coordinates: u, v
-        gl.enableVertexAttribArray(this.shader.attributes.texCoord);
-        gl.vertexAttribPointer(
-            this.shader.attributes.texCoord,
-            2,
-            gl.FLOAT,
-            false,
-            4 * Float32Array.BYTES_PER_ELEMENT,
-            2 * Float32Array.BYTES_PER_ELEMENT
+            2,                                      // size: 2 components (X, Y)
+            gl.FLOAT,                               // type: 32-bit float
+            false,                                  // normalize
+            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
+            0                                       // offset: start of buffer
         );
 
         // Important for retrieving position data
         this.positionOffset = 0;
-        this.stride = 4;
+        this.stride = 2;
 
         // Draw data
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+
+        // first model matrix update
+        setupModelMatrix(this);
+        this.resetTransform();
     },
     resetTransform() {
         this.translationX = this.initialTranslationX;
@@ -666,17 +450,110 @@ const car2 = {
         this.scaleY = this.initialScaleY;
     },
     draw(gl) {
-        // Shader
-        gl.useProgram(this.shader.program);
-        // Modle Matrix
         setupModelMatrix(this);
         gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
-        // Texture
-        this.texture.bind(gl, 0);
-        gl.uniform1i(this.shader.uniforms.texture, 0);
-        // vao
+        gl.uniform4fv(this.shader.uniforms.color,this.color);
         gl.bindVertexArray(this.vao);
-        // draw call
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
+    }
+};
+
+const rectangle3 = {
+    //    v1--------v2
+    //    | \        |
+    //    |    \     |
+    //    |       \  |
+    //    v0--------v1
+
+    // CPU DATA
+    vertexData: new Float32Array([
+        -200, -100,      // Left Bottom
+        200, -100,      // Right Bottom
+        -200, 100,      // Left Top
+
+        -200, 100,      // Left Top
+        200, -100,      // Right Bottom
+        200, 100       // Right Top
+    ]),
+
+    initialTranslationX: 1100,
+    initialTranslationY: 150,
+    initialRotation: 60,
+    initialScaleX: 1.0,
+    initialScaleY: 1.0,
+
+    translationX: 1100,
+    translationY: 100,
+    rotation: 0,
+    scaleX: 1.0,
+    scaleY: 1.0,
+
+    modelMatrix: mat3.create(),
+    color: [0.0, 1.0, 0.0, 0.3],
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        // Connect shader to mesh
+        this.shader = shader;
+
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,                                      // size: 2 components (X, Y)
+            gl.FLOAT,                               // type: 32-bit float
+            false,                                  // normalize
+            2 * Float32Array.BYTES_PER_ELEMENT,     // stride: 2
+            0                                       // offset: start of buffer
+        );
+
+        // Important for retrieving position data
+        this.positionOffset = 0;
+        this.stride = 2;
+
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = 6;
+
+        // first model matrix update
+        setupModelMatrix(this);
+        this.resetTransform();
+    },
+    resetTransform() {
+        this.translationX = this.initialTranslationX;
+        this.translationY = this.initialTranslationY;
+        this.rotation = this.initialRotation;
+        this.scaleX = this.initialScaleX;
+        this.scaleY = this.initialScaleY;
+    },
+    draw(gl) {
+        setupModelMatrix(this);
+        gl.uniformMatrix3fv(this.shader.uniforms.modelMatrix,false,this.modelMatrix);
+        gl.uniform4fv(this.shader.uniforms.color,this.color);
+        gl.bindVertexArray(this.vao);
         gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
@@ -740,7 +617,7 @@ const boundingInfos = {
         // Draw data
         this.drawMode = gl.LINES;
         this.drawOffset = 0;
-        this.drawCount = 3 * 8;
+        this.drawCount = 4 * 8;
     },
     draw(gl) {
         setupModelMatrix(this);
@@ -753,13 +630,15 @@ const boundingInfos = {
         gl.bindVertexArray(this.vao);
 
         // bboxes
-        const bbox0 = physicsInfoSckorpioCar.boundingInfo;
-        const boundingInfo1 = physicsInfoCar1.boundingInfo;
-        const boundingInfo2 = physicsInfoCar2.boundingInfo;
+        const boundingInfo0 = physicsInfoRectangle0.boundingInfo;
+        const boundingInfo1 = physicsInfoRectangle1.boundingInfo;
+        const boundingInfo2 = physicsInfoRectangle2.boundingInfo;
+        const boundingInfo3 = physicsInfoRectangle3.boundingInfo;
         const boundingInfos = [
-            bbox0,
+            boundingInfo0,
             boundingInfo1,
-            boundingInfo2
+            boundingInfo2,
+            boundingInfo3,
         ];
 
         // Vertex data CPU side
@@ -767,7 +646,6 @@ const boundingInfos = {
 
         for (const boundingInfo of boundingInfos) {
             const corners = boundingInfo.obb.corners;
-
             vertices.push(
                 corners[0][0], corners[0][1], // Bottom Left
                 corners[1][0], corners[1][1], // Bottom Right
@@ -1036,53 +914,48 @@ const renderSystem = {
         gl.enable(gl.BLEND);
         // Set Blend Function
         gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
-
-        //Textures
-        sckorpioCarTexture.init(gl);
-        car1Texture.init(gl);
-        car2Texture.init(gl);
-
         //Shaders
-        basicShader.init(gl);
-        textureShader.init(gl);
+        shader.init(gl);
 
         //Objects
-        grid.init(gl, basicShader);
-        xAxis.init(gl, basicShader);
-        yAxis.init(gl, basicShader);
-        sckorpioCar.init(gl, textureShader, sckorpioCarTexture);
-        car1.init(gl, textureShader, car1Texture);
-        car2.init(gl, textureShader, car2Texture);
-        boundingInfos.init(gl, basicShader);
+        grid.init(gl, shader);
+        xAxis.init(gl, shader);
+        yAxis.init(gl, shader);
+        rectangle0.init(gl, shader);
+        rectangle1.init(gl, shader);
+        rectangle2.init(gl, shader);
+        rectangle3.init(gl, shader);
+        boundingInfos.init(gl, shader);
+
     },
     update() {
         const gl = this.gl;
+
         camera.updateProjectionMatrix(gl);
         camera.updateViewMatrix(gl);
         boundingInfos.updateData(gl);
+
     },
     render() {
         const gl = this.gl;
 
         // -------------------------------------
+        // -------------------------------------
+        // ---------------------------------------
         gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
         // Background
         gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
         gl.clear(gl.COLOR_BUFFER_BIT);
         // COMMON UNIFORMS
-        // Shader 1
-        gl.useProgram(basicShader.program);
-        gl.uniformMatrix3fv(basicShader.uniforms.projectionMatrix,false,camera.projectionMatrix);
-        gl.uniformMatrix3fv(basicShader.uniforms.viewMatrix,false,camera.viewMatrix);
-        gl.uniformMatrix3fv(basicShader.uniforms.modelMatrix,false,mat3.create());
-
-        // Shader 2
-        gl.useProgram(textureShader.program);
-        gl.uniformMatrix3fv(textureShader.uniforms.viewMatrix,false,camera.viewMatrix);
-        gl.uniformMatrix3fv(textureShader.uniforms.projectionMatrix,false,camera.projectionMatrix);
-        gl.uniformMatrix3fv(textureShader.uniforms.modelMatrix,false,mat3.create());
-
+        // Shader
+        gl.useProgram(shader.program);
+        // Pass projection matrix to shader
+        gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
+        // Pass View matrix to shader
+        gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
+        // Pass Model Matrix (Identity as default)
+        gl.uniformMatrix3fv(shader.uniforms.modelMatrix,false,mat3.create());
         // RENDER MESHES
         // Grid
         grid.draw(gl);
@@ -1090,14 +963,15 @@ const renderSystem = {
         xAxis.draw(gl);
         // Y-Axis
         yAxis.draw(gl);
-        // Rectangle BBox
+        // Rectangle0
+        rectangle0.draw(gl);
+        // Rectangle
+        rectangle1.draw(gl);
+        rectangle2.draw(gl);
+        rectangle3.draw(gl);
+
+        // Rectangle0 BBox
         boundingInfos.draw(gl);
-        // sckorpioCar
-        sckorpioCar.draw(gl);
-        // Car1
-        car1.draw(gl);
-        // Car2
-        car2.draw(gl);
 
         //---------------------------------------------------
     }
@@ -1202,7 +1076,7 @@ const clock = {
 // =============================================================
 // PHYSICS INFOS
 // =============================================================
-const physicsInfoSckorpioCar = {
+const physicsInfoRectangle0 = {
     // Object connected
     mesh: null,
     // Speed
@@ -1229,8 +1103,14 @@ const physicsInfoSckorpioCar = {
             maxX: 0,
             maxY: 0
         },
+        aabb: {
+            minX: 0,
+            minY: 0,
+            maxX: 0,
+            maxY: 0,
+        },
         obb: {
-            corners: []
+            corners:[]
         }
     },
     // Previous position
@@ -1238,6 +1118,7 @@ const physicsInfoSckorpioCar = {
     previousY: 0,
     previousDirectionAngle: 0,
     isCollision: false,
+    speedTransferFraction: 0.4,
 
     init(mesh) {
         this.mesh = mesh;
@@ -1284,12 +1165,26 @@ const physicsInfoSckorpioCar = {
 
         if (isCollision) {
             console.log("Collision detected!");
+            
+            // Push
+            if(this.state.forward) {
+                other.speed = this.speed * this.speedTransferFraction;
+                other.directionAngle = this.directionAngle;
+            } else if(this.state.backward) {
+                other.speed = this.speed * this.speedTransferFraction;
+                other.directionAngle = this.directionAngle + 180;
+            }
+            
             this.onCollision();
-            other.onCollision();
+            //other.onCollision();
         }
+
+        // save collison state
+        this.isCollision = isCollision;
+        other.isCollision = isCollision;
     },
     onCollision(){
-        this.velocityX = 0;
+        //this.speed = 0;
         this.mesh.translationX = this.previousX;
         this.mesh.translationY = this.previousY;
         this.mesh.rotation = this.previousDirectionAngle;
@@ -1302,11 +1197,20 @@ const physicsInfoSckorpioCar = {
     }
 };
 
-const physicsInfoCar1 = {
-    // Object
+const physicsInfoRectangle1 = {
+    // mesh
     mesh: null,
+    // Speed
+    speed: 0,
+    // friction
+    friction: 50,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 0,
     // Velocity
-    velocityX: 0,
+    velocityX: 100,
+    velocityY: 50,
     // Bounding Box
     boundingInfo: {
         local: {
@@ -1315,8 +1219,14 @@ const physicsInfoCar1 = {
             maxX: 0,
             maxY: 0
         },
+        aabb: {
+            minX: 0,
+            minY: 0,
+            maxX: 0,
+            maxY: 0,
+        },
         obb: {
-            corners: []
+            corners:[]
         }
     },
     // Previous position
@@ -1326,6 +1236,10 @@ const physicsInfoCar1 = {
 
     init(mesh) {
         this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
         calculateBoundingInfoLocal(this);
         updateBoundingInfoOBB(this);
     },
@@ -1333,13 +1247,39 @@ const physicsInfoCar1 = {
         // save prev
         this.previousX = this.mesh.translationX;
         this.previousY = this.mesh.translationY;
+        // direction unit vector
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        // friction
+        if(this.speed > 0) this.speed -= deltaTime * this.friction;
+        if(this.speed < 0) this.speed += deltaTime * this.friction;
+        // velocity
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        // mesh transforms
         this.mesh.translationX += deltaTime * this.velocityX;
+        this.mesh.translationY += deltaTime * this.velocityY;
         // Update matrix for collision calculations
         setupModelMatrix(this.mesh);
         updateBoundingInfoOBB(this);
     },
-    onCollision() {
-        this.velocityX = 0;
+    checkCollision(other) {
+        // Detect collision
+        const isCollision = checkOBBCollision(this,other);
+
+        if (isCollision) {
+            console.log("Collision detected!");
+            
+            this.onCollision();
+            other.onCollision();
+        }
+
+        // save collison state
+        this.isCollision = isCollision;
+        other.isCollision = isCollision;
+    },
+    onCollision(){
+        this.speed = 0;
         this.mesh.translationX = this.previousX;
         this.mesh.translationY = this.previousY;
         setupModelMatrix(this.mesh);
@@ -1351,11 +1291,20 @@ const physicsInfoCar1 = {
     }
 };
 
-const physicsInfoCar2 = {
-    // Object
+const physicsInfoRectangle2 = {
+    // mesh
     mesh: null,
+    // Speed
+    speed: 0,
+    // friction
+    friction: 50,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 0,
     // Velocity
-    velocityX: 0,
+    velocityX: 100,
+    velocityY: 50,
     // Bounding Box
     boundingInfo: {
         local: {
@@ -1364,8 +1313,14 @@ const physicsInfoCar2 = {
             maxX: 0,
             maxY: 0
         },
+        aabb: {
+            minX: 0,
+            minY: 0,
+            maxX: 0,
+            maxY: 0,
+        },
         obb: {
-            corners: []
+            corners:[]
         }
     },
     // Previous position
@@ -1375,6 +1330,10 @@ const physicsInfoCar2 = {
 
     init(mesh) {
         this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
         calculateBoundingInfoLocal(this);
         updateBoundingInfoOBB(this);
     },
@@ -1382,13 +1341,133 @@ const physicsInfoCar2 = {
         // save prev
         this.previousX = this.mesh.translationX;
         this.previousY = this.mesh.translationY;
+        // direction unit vector
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        // friction
+        if(this.speed > 0) this.speed -= deltaTime * this.friction;
+        if(this.speed < 0) this.speed += deltaTime * this.friction;
+        // velocity
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        // mesh transforms
         this.mesh.translationX += deltaTime * this.velocityX;
+        this.mesh.translationY += deltaTime * this.velocityY;
         // Update matrix for collision calculations
         setupModelMatrix(this.mesh);
         updateBoundingInfoOBB(this);
     },
+    checkCollision(other) {
+        // Detect collision
+        const isCollision = checkOBBCollision(this,other);
+
+        if (isCollision) {
+            console.log("Collision detected!");
+            
+            this.onCollision();
+            other.onCollision();
+        }
+
+        // save collison state
+        this.isCollision = isCollision;
+        other.isCollision = isCollision;
+    },
     onCollision(){
-        this.velocityX = 0;
+        this.speed = 0;
+        this.mesh.translationX = this.previousX;
+        this.mesh.translationY = this.previousY;
+        setupModelMatrix(this.mesh);
+        updateBoundingInfoOBB(this);
+        this.collision = false;
+    },
+    reset() {
+        this.mesh.resetTransform();
+    }
+};
+
+const physicsInfoRectangle3 = {
+    // mesh
+    mesh: null,
+    // Speed
+    speed: 0,
+    // friction
+    friction: 50,
+    // Unit Direction Vector
+    directionX: 1.0,
+    directionY: 0.0,
+    directionAngle: 0,
+    // Velocity
+    velocityX: 100,
+    velocityY: 50,
+    // Bounding Box
+    boundingInfo: {
+        local: {
+            minX: 0,
+            minY: 0,
+            maxX: 0,
+            maxY: 0
+        },
+        aabb: {
+            minX: 0,
+            minY: 0,
+            maxX: 0,
+            maxY: 0,
+        },
+        obb: {
+            corners:[]
+        }
+    },
+    // Previous position
+    previousX: 0,
+    previousY: 0,
+    isCollision: false,
+
+    init(mesh) {
+        this.mesh = mesh;
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        calculateBoundingInfoLocal(this);
+        updateBoundingInfoOBB(this);
+    },
+    update(deltaTime) {
+        // save prev
+        this.previousX = this.mesh.translationX;
+        this.previousY = this.mesh.translationY;
+        // direction unit vector
+        this.directionX = Math.cos(this.directionAngle * Math.PI / 180);
+        this.directionY = Math.sin(this.directionAngle * Math.PI / 180);
+        // friction
+        if(this.speed > 0) this.speed -= deltaTime * this.friction;
+        if(this.speed < 0) this.speed += deltaTime * this.friction;
+        // velocity
+        this.velocityX = this.speed * this.directionX;
+        this.velocityY = this.speed * this.directionY;
+        // mesh transforms
+        this.mesh.translationX += deltaTime * this.velocityX;
+        this.mesh.translationY += deltaTime * this.velocityY;
+        // Update matrix for collision calculations
+        setupModelMatrix(this.mesh);
+        updateBoundingInfoOBB(this);
+    },
+    checkCollision(other) {
+        // Detect collision
+        const isCollision = checkOBBCollision(this,other);
+
+        if (isCollision) {
+            console.log("Collision detected!");
+            
+            this.onCollision();
+            other.onCollision();
+        }
+
+        // save collison state
+        this.isCollision = isCollision;
+        other.isCollision = isCollision;
+    },
+    onCollision(){
+        this.speed = 0;
         this.mesh.translationX = this.previousX;
         this.mesh.translationY = this.previousY;
         setupModelMatrix(this.mesh);
@@ -1532,23 +1611,31 @@ function checkOBBCollision(physicsInfoA, physicsInfoB) {
 // =============================================================
 const physicsSystem = {
     init() {
-        physicsInfoSckorpioCar.init(sckorpioCar);
-        physicsInfoCar1.init(car1);
-        physicsInfoCar2.init(car2);
+        physicsInfoRectangle0.init(rectangle0);
+        physicsInfoRectangle1.init(rectangle1);
+        physicsInfoRectangle2.init(rectangle2);
+        physicsInfoRectangle3.init(rectangle3);
     },
     update() {
-        physicsInfoSckorpioCar.update(clock.deltaTime);
-        physicsInfoCar1.update(clock.deltaTime);
-        physicsInfoCar2.update(clock.deltaTime);
-
+        physicsInfoRectangle0.update(clock.deltaTime);
+        physicsInfoRectangle1.update(clock.deltaTime);
+        physicsInfoRectangle2.update(clock.deltaTime);
+        physicsInfoRectangle3.update(clock.deltaTime);
+        
         // check collision
-        physicsInfoSckorpioCar.checkCollision(physicsInfoCar1);
-        physicsInfoSckorpioCar.checkCollision(physicsInfoCar2);
+        physicsInfoRectangle0.checkCollision(physicsInfoRectangle1);
+        physicsInfoRectangle0.checkCollision(physicsInfoRectangle2);
+        physicsInfoRectangle0.checkCollision(physicsInfoRectangle3);
+
+        physicsInfoRectangle1.checkCollision(physicsInfoRectangle2);
+        physicsInfoRectangle1.checkCollision(physicsInfoRectangle3);
+        physicsInfoRectangle2.checkCollision(physicsInfoRectangle3);
     },
     reset() {
-        physicsInfoSckorpioCar.reset();
-        physicsInfoCar1.reset();
-        physicsInfoCar2.reset();
+        physicsInfoRectangle0.reset();
+        physicsInfoRectangle1.reset();
+        physicsInfoRectangle2.reset();
+        physicsInfoRectangle3.reset();
     }
 };
 
@@ -1559,31 +1646,31 @@ const gui = {
     init() {
         const gui = new lil.GUI();
 
-        // Car1
-        const car1Folder = gui.addFolder("Car1");
-        car1Folder.add(car1, "translationX", -1000, 1000).name("translationX");
-        car1Folder.add(car1, "translationY", -1000, 1000).name("translationY");
-        car1Folder.add(car1, "rotation", 0, 360).name("rotation");
-        car1Folder.add(car1, "scaleX", 0.1, 3.0).name("scaleX");
-        car1Folder.add(car1, "scaleY", 0.1, 3.0).name("scaleY");
+        // Rectangle
+        const rectangle1Folder = gui.addFolder("Rectangle1");
+        rectangle1Folder.add(rectangle1, "translationX", -1000, 1000).name("translationX");
+        rectangle1Folder.add(rectangle1, "translationY", -1000, 1000).name("translationY");
+        rectangle1Folder.add(rectangle1, "rotation", 0, 360).name("rotation");
+        rectangle1Folder.add(rectangle1, "scaleX", 0.1, 3.0).name("scaleX");
+        rectangle1Folder.add(rectangle1, "scaleY", 0.1, 3.0).name("scaleY");
 
-        // Car2
-        const car2Folder = gui.addFolder("Car2");
-        car2Folder.add(car2, "translationX", -1000, 1000).name("translationX");
-        car2Folder.add(car2, "translationY", -1000, 1000).name("translationY");
-        car2Folder.add(car2, "rotation", 0, 360).name("rotation");
-        car2Folder.add(car2, "scaleX", 0.1, 3.0).name("scaleX");
-        car2Folder.add(car2, "scaleY", 0.1, 3.0).name("scaleY");
+        const rectangle2Folder = gui.addFolder("Rectangle2");
+        rectangle2Folder.add(rectangle2, "translationX", -1000, 1000).name("translationX");
+        rectangle2Folder.add(rectangle2, "translationY", -1000, 1000).name("translationY");
+        rectangle2Folder.add(rectangle2, "rotation", 0, 360).name("rotation");
+        rectangle2Folder.add(rectangle2, "scaleX", 0.1, 3.0).name("scaleX");
+        rectangle2Folder.add(rectangle2, "scaleY", 0.1, 3.0).name("scaleY");
 
-        const physicsFolderSckorpioCar = gui.addFolder("Physics Sckorpio Car");
-        physicsFolderSckorpioCar.add(physicsInfoSckorpioCar, "speed", 0, 1000).name("Speed");
+        const rectangle3Folder = gui.addFolder("Rectangle3");
+        rectangle3Folder.add(rectangle3, "translationX", -1000, 1000).name("translationX");
+        rectangle3Folder.add(rectangle3, "translationY", -1000, 1000).name("translationY");
+        rectangle3Folder.add(rectangle3, "rotation", 0, 360).name("rotation");
+        rectangle3Folder.add(rectangle3, "scaleX", 0.1, 3.0).name("scaleX");
+        rectangle3Folder.add(rectangle3, "scaleY", 0.1, 3.0).name("scaleY");
 
-        const physicsFolderCar1 = gui.addFolder("Physics Car1");
-        physicsFolderCar1.add(physicsInfoCar1, "velocityX", -1000, 1000).name("velocityX");
+        const physicsFolder1 = gui.addFolder("Physics Rectangle0");
+        physicsFolder1.add(physicsInfoRectangle0, "speed", 0, 1000).name("Speed");
 
-        const physicsFolderCar2 = gui.addFolder("Physics Car2");
-        physicsFolderCar2.add(physicsInfoCar2, "velocityX", -1000, 1000).name("velocityX");
-    
         const animationFolder = gui.addFolder("Clock");
         animationFolder.add(clock, "play");
         animationFolder.add(clock, "pause");
@@ -1632,19 +1719,19 @@ const keyEvent = {
                 
                 case "A":
                 case "a":
-                    physicsInfoSckorpioCar.state.angleUp = true;
+                    physicsInfoRectangle0.state.angleUp = true;
                     break;
                 case "D":
                 case "d":
-                    physicsInfoSckorpioCar.state.angleDown = true;
+                    physicsInfoRectangle0.state.angleDown = true;
                     break;
                 case "W":
                 case "w":
-                    physicsInfoSckorpioCar.state.forward = true;
+                    physicsInfoRectangle0.state.forward = true;
                     break;
                 case "S":
                 case "s":
-                    physicsInfoSckorpioCar.state.backward = true;
+                    physicsInfoRectangle0.state.backward = true;
                     break;
                 default:
             }
@@ -1674,19 +1761,19 @@ const keyEvent = {
                     break;
                 case "A":
                 case "a":
-                    physicsInfoSckorpioCar.state.angleUp = false;
+                    physicsInfoRectangle0.state.angleUp = false;
                     break;
                 case "D":
                 case "d":
-                    physicsInfoSckorpioCar.state.angleDown = false;
+                    physicsInfoRectangle0.state.angleDown = false;
                     break;
                 case "W":
                 case "w":
-                    physicsInfoSckorpioCar.state.forward = false;
+                    physicsInfoRectangle0.state.forward = false;
                     break;
                 case "S":
                 case "s":
-                    physicsInfoSckorpioCar.state.backward = false;
+                    physicsInfoRectangle0.state.backward = false;
                     break;
                 default:
             }
